@@ -2,14 +2,14 @@
 
 import { useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { io, Socket } from 'socket.io-client';
+// Use native WebSocket to match backend plain WebSocket endpoint
 import { apiClient } from '@/lib/api-client';
 import { useUIStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Notification } from '@/types/api';
 import { toast } from 'sonner';
 
-let socket: Socket | null = null;
+let socket: WebSocket | null = null;
 
 export function useNotifications() {
   const { isAuthenticated } = useAuthStore();
@@ -23,30 +23,54 @@ export function useNotifications() {
     refetchInterval: 60_000,
   });
 
-  // Setup WebSocket
+  // Setup WebSocket (native) to backend `/ws/{user_id}`
+  const currentUser = useAuthStore((s) => s.user);
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    socket = io(process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:8000', {
-      withCredentials: true,
-      transports: ['websocket'],
-    });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+    const apiPrefix = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
+    const proto = apiUrl.startsWith('https') ? 'wss' : 'ws';
+    const host = apiUrl.replace(/^https?:\/\//, '');
+    const userId = currentUser?.id ?? 'anonymous';
+    try {
+      // Backend websocket endpoint is mounted under the API prefix: /api/v1/ws/{user_id}
+      socket = new WebSocket(`${proto}://${host}${apiPrefix}/ws/${userId}`);
 
-    socket.on('notification', (notification: Notification) => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      setUnreadNotifications((notifications?.unread || 0) + 1);
+      socket.onopen = () => {
+        // Optionally subscribe to topics
+        try { socket?.send(JSON.stringify({ type: 'subscribe', topics: ['notifications'] })); } catch (e) {}
+      };
 
-      // Show toast for alerts
-      if (notification.type === 'alert') {
-        toast.warning(notification.title, { description: notification.message });
-      }
-    });
+      socket.onmessage = (ev) => {
+        try {
+          const payload = JSON.parse(ev.data);
+          if (payload?.type === 'notification' || payload?.type === 'alert') {
+            const notification: Notification = payload.data;
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+            setUnreadNotifications((notifications?.unread || 0) + 1);
+            if (notification.type === 'alert') {
+              toast.warning(notification.title, { description: notification.message });
+            }
+          }
+        } catch (e) {
+          // ignore non-json messages
+        }
+      };
+
+      socket.onerror = (err) => {
+        console.warn('[Notifications] WebSocket error', err);
+      };
+    } catch (err) {
+      console.warn('[Notifications] WebSocket init failed', err);
+      socket = null;
+    }
 
     return () => {
-      socket?.disconnect();
+      try { socket?.close(); } catch (e) {}
       socket = null;
     };
-  }, [isAuthenticated, queryClient, notifications?.unread, setUnreadNotifications]);
+  }, [isAuthenticated, queryClient, notifications?.unread, setUnreadNotifications, currentUser]);
 
   // Update unread count
   useEffect(() => {
@@ -72,7 +96,11 @@ export function useNotifications() {
   });
 
   const emitEvent = useCallback((event: string, data?: unknown) => {
-    socket?.emit(event, data);
+    try {
+      socket?.send(JSON.stringify({ event, data }));
+    } catch (e) {
+      // ignore
+    }
   }, []);
 
   return {

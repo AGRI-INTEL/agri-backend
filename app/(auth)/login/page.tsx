@@ -3,18 +3,11 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
-import { AuthField } from '@/components/auth/auth-field';
-import {
-  AuthCardHeader,
-  AuthCheckbox,
-  AuthDivider,
-  AuthFooterLink,
-  AuthGoogleButton,
-  AuthPrimaryButton,
-  GoogleIcon,
-} from '@/components/auth/auth-ui';
+import { motion } from '@/lib/motion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormData } from '@/lib/validators';
 
@@ -29,94 +22,193 @@ export default function LoginPage() {
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
   });
 
+  const onSubmit = async (data: LoginFormData) => {
+    setApiError(null);
+    try {
+      await loginAsync(data);
+    } catch (e) {
+      const error = e as { message?: string };
+      setApiError(error?.message ?? 'Erreur de connexion. Veuillez vérifier vos identifiants.');
+    }
+  };
+
   return (
-    <div>
-      <AuthCardHeader title="Connectez-vous" />
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-sm"
+    >
+      {/* Header */}
+      <div className="mb-8 text-center">
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">
+          Bienvenue
+        </h1>
+        <p className="text-slate-600">
+          Connectez-vous à votre compte AgriIntel
+        </p>
+      </div>
 
-      {apiError ? (
-        <div className="rounded-md bg-red-50 border border-red-200 p-3 mb-3 text-sm text-red-700" data-testid="error-message">
-          {apiError}
-        </div>
-      ) : null}
+      {/* Error Alert */}
+      {apiError && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4"
+          data-testid="error-message"
+        >
+          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-600" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-red-900">{apiError}</p>
+          </div>
+        </motion.div>
+      )}
 
+      {/* Form */}
       <form
-        onSubmit={handleSubmit(async (data) => {
-          setApiError(null);
-          try {
-            await (loginAsync as any)(data);
-          } catch (e: any) {
-            setApiError(e?.message ?? 'Erreur de connexion au serveur');
-          }
-        })}
-        className="space-y-3.5"
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5"
         noValidate
       >
-        <AuthField
-          id="identifier"
-          type="text"
-          placeholder="Email ou nom d'utilisateur"
-          autoComplete="username"
-          leftIcon={<Mail className="h-[18px] w-[18px]" strokeWidth={1.75} />}
-          error={errors.identifier?.message || errors.email?.message}
-          data-testid="identifier-input"
-          {...register('identifier')}
-        />
-
+        {/* Email/Username Field */}
         <div>
-          <AuthField
-            id="password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Mot de passe"
-            autoComplete="current-password"
-            leftIcon={<Lock className="h-[18px] w-[18px]" strokeWidth={1.75} />}
-            error={errors.password?.message}
-            data-testid="password-input"
-            rightElement={
-              <button
-                type="button"
-                data-testid="toggle-password"
-                className="p-1 text-gray-400 hover:text-gray-600"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-[18px] w-[18px]" />
-                ) : (
-                  <Eye className="h-[18px] w-[18px]" />
-                )}
-              </button>
-            }
-            {...register('password')}
-          />
-          <div className="mt-1.5 flex justify-end">
+          <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 mb-2">
+            Email ou nom d&apos;utilisateur
+          </label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" strokeWidth={1.5} />
+            <Input
+              id="identifier"
+              type="text"
+              placeholder="votreemail@exemple.com"
+              autoComplete="username"
+              className="pl-10 h-11"
+              data-testid="identifier-input"
+              {...register('identifier')}
+            />
+          </div>
+          {errors.identifier && (
+            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+              <span className="inline-block w-1 h-1 bg-red-600 rounded-full" />
+              {errors.identifier.message}
+            </p>
+          )}
+        </div>
+
+        {/* Password Field */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+              Mot de passe
+            </label>
             <Link
               href="/forgot-password"
-              className="text-sm font-medium text-[#059669] hover:text-[#047857] hover:underline transition-colors"
+              className="text-sm font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
             >
-              Mot de passe oublié ?
+              Oublié&nbsp;?
             </Link>
           </div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" strokeWidth={1.5} />
+            <Input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className="pl-10 pr-12 h-11"
+              data-testid="password-input"
+              {...register('password')}
+            />
+            <button
+              type="button"
+              data-testid="toggle-password"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1"
+              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+            >
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
+            </button>
+          </div>
+          {errors.password && (
+            <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+              <span className="inline-block w-1 h-1 bg-red-600 rounded-full" />
+              {errors.password.message}
+            </p>
+          )}
         </div>
 
-        <div className="pt-1">
-          <AuthCheckbox label="Se souvenir de moi" {...register('remember_me')} />
+        {/* Remember Me */}
+        <div className="flex items-center">
+          <input
+            id="remember_me"
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+            {...register('remember_me')}
+          />
+          <label htmlFor="remember_me" className="ml-2 text-sm text-slate-600 cursor-pointer">
+            Se souvenir de moi
+          </label>
         </div>
 
-        <AuthPrimaryButton data-testid="login-submit" loading={isLoginLoading}>
-          {isLoginLoading ? 'Connexion…' : 'Connexion'}
-        </AuthPrimaryButton>
+        {/* Submit Button */}
+        <Button
+          type="submit"
+          disabled={isLoginLoading}
+          className="w-full h-11 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+          data-testid="login-submit"
+        >
+          {isLoginLoading ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1 }}
+              className="inline-block"
+            >
+              ⏳
+            </motion.div>
+          ) : (
+            'Se connecter'
+          )}
+        </Button>
       </form>
 
-      <AuthDivider />
+      {/* Divider */}
+      <div className="my-6 flex items-center gap-4">
+        <div className="flex-1 h-px bg-slate-200" />
+        <span className="text-sm text-slate-500">ou</span>
+        <div className="flex-1 h-px bg-slate-200" />
+      </div>
 
-      <AuthGoogleButton>
-        <GoogleIcon />
-        Continuer avec Google
-      </AuthGoogleButton>
+      {/* Sign Up Link */}
+      <div className="text-center">
+        <p className="text-slate-600">
+          Pas encore de compte ?{' '}
+          <Link
+            href="/register"
+            className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
+          >
+            S&apos;inscrire
+          </Link>
+        </p>
+      </div>
 
-      <AuthFooterLink text="Pas encore de compte ?" linkText="S'inscrire" href="/register" />
-    </div>
+      {/* Footer Note */}
+      <p className="mt-8 text-center text-xs text-slate-500">
+        En vous connectant, vous acceptez nos{' '}
+        <Link href="/terms" className="underline hover:text-slate-700">
+          conditions d&apos;utilisation
+        </Link>
+        {' '}et notre{' '}
+        <Link href="/privacy" className="underline hover:text-slate-700">
+          politique de confidentialité
+        </Link>
+      </p>
+    </motion.div>
   );
 }

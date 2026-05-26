@@ -475,6 +475,7 @@ export interface RegisterData {
 
   // Step 2: Profile
   country: string;
+  sector?: string;
   region?: string;
   city?: string;
   organisation?: string;

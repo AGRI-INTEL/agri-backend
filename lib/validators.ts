@@ -79,11 +79,11 @@ export const registerStep2Schema = z.object({
 // Registration - Step 3: Terms
 // ─────────────────────────────────────────────────────────────────────────────
 export const registerStep3Schema = z.object({
-  accept_terms: z.literal(true, {
-    errorMap: () => ({ message: "Vous devez accepter les conditions générales d'utilisation" }),
+  accept_terms: z.boolean().refine((v) => v === true, {
+    message: "Vous devez accepter les conditions générales d'utilisation",
   }),
-  accept_privacy: z.literal(true, {
-    errorMap: () => ({ message: 'Vous devez accepter la politique de confidentialité' }),
+  accept_privacy: z.boolean().refine((v) => v === true, {
+    message: 'Vous devez accepter la politique de confidentialité',
   }),
   newsletter: z.boolean().optional().default(false),
 });

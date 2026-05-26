@@ -1,11 +1,11 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import Link from 'next/link';
+// Link removed (use LinkButton)
+import LinkButton from '@/components/ui/link-button';
 import Image from 'next/image';
 import { motion, useInView, useMotionValue, useSpring, animate } from '@/lib/motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
 
 function AnimatedCounter({ value }: { value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -52,7 +52,7 @@ export function HeroSection() {
           alt="Paysage agricole avec informations en surimpression"
           fill
           priority
-          sizes="100vw"
+          sizes="(max-width: 1024px) 100vw, 55vw"
           className="object-cover"
         />
       </div>
@@ -90,15 +90,13 @@ export function HeroSection() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4 }}>
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Button variant="glow" size="xl" asChild>
-              <Link href="/register">
-                Créer un compte gratuit
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button variant="outline" size="xl" asChild className="border-white/30 text-white hover:text-white hover:bg-white/10">
-              <Link href="#fonctionnalites">Voir les fonctionnalités</Link>
-            </Button>
+            <LinkButton href="/register" variant="glow" size="xl">
+              Créer un compte gratuit
+              <ArrowRight className="h-4 w-4" />
+            </LinkButton>
+            <LinkButton href="#fonctionnalites" variant="outline" size="xl" className="border-white/30 text-white hover:text-white hover:bg-white/10">
+              Voir les fonctionnalités
+            </LinkButton>
           </div>
         </motion.div>
 

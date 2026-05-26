@@ -47,8 +47,8 @@ export function useAuth() {
     onSuccess: (data) => {
       persistAuthSession(data.access_token, data.refresh_token, data.expires_in);
       setUser(mapBackendUser(data.user));
-      toast.success('Connexion réussie !');
-      router.push('/');
+      toast.success('Connexion réussie ! Redirection vers le tableau de bord...');
+      router.push('/dashboard');
     },
     onError: (error: { message: string }) => {
       toast.error(error.message || 'Identifiants incorrects');
@@ -56,7 +56,19 @@ export function useAuth() {
   });
 
   const registerMutation = useMutation({
-    mutationFn: (data: RegisterData) => apiClient.post('/auth/register', data),
+    mutationFn: (data: RegisterData) => {
+      // Map frontend register shape to backend expectations
+      // Build a safe username: prefer email local-part, fallback to name; keep only a-z0-9_ characters
+      const rawUsername = (data.email ? String(data.email).split('@')[0] : data.name) ?? '';
+      const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '').slice(0, 30);
+
+      const payload = {
+        ...data,
+        username,
+        full_name: data.name,
+      } as Record<string, unknown>;
+      return apiClient.post('/auth/register', payload);
+    },
     onSuccess: () => {
       toast.success('Compte créé ! Vérifiez votre email.');
       router.push('/verify-email');

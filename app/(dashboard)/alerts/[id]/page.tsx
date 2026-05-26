@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import LinkButton from '@/components/ui/link-button';
 import { use } from 'react';
 import { ArrowLeft, MapPin, Clock } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
@@ -28,7 +28,7 @@ export default function AlertDetailPage({ params }: { params: Promise<{ id: stri
   if (!alert) {
     return (
       <PageWrapper title="Alerte introuvable">
-        <Button variant="ghost" asChild><Link href="/alerts">← Retour</Link></Button>
+        <LinkButton href="/alerts" variant="ghost">← Retour</LinkButton>
       </PageWrapper>
     );
   }
@@ -42,9 +42,9 @@ export default function AlertDetailPage({ params }: { params: Promise<{ id: stri
         )
       }
     >
-      <Button variant="ghost" size="sm" className="mb-4 gap-2" asChild>
-        <Link href="/alerts"><ArrowLeft className="h-4 w-4" />Retour</Link>
-      </Button>
+      <LinkButton href="/alerts" variant="ghost" size="sm" className="mb-4 gap-2">
+        <ArrowLeft className="h-4 w-4" />Retour
+      </LinkButton>
 
       <Card>
         <CardContent className="p-6 space-y-4">

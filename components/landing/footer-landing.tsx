@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Leaf, Facebook, Twitter, Linkedin, Youtube } from 'lucide-react';
+import { Facebook, Twitter, Linkedin, Youtube } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { APP_CONTACT_EMAIL, APP_SUPPORT_PHONE } from '@/lib/constants';
 

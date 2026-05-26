@@ -120,9 +120,10 @@ export const MAP_MIN_ZOOM = 2;
 export const MAP_MAX_ZOOM = 18;
 
 export const MAP_STYLE_STREETS = 'https://demotiles.maplibre.org/style.json';
-export const MAP_STYLE_SATELLITE = 'https://api.maptiler.com/maps/satellite/style.json';
-export const MAP_STYLE_TERRAIN = 'https://api.maptiler.com/maps/hybrid/style.json';
-export const MAP_STYLE_DARK = 'https://api.maptiler.com/maps/dark-matter/style.json';
+// During local development use demotiles to avoid MapTiler API key issues (403)
+export const MAP_STYLE_SATELLITE = MAP_STYLE_STREETS;
+export const MAP_STYLE_TERRAIN = MAP_STYLE_STREETS;
+export const MAP_STYLE_DARK = MAP_STYLE_STREETS;
 
 export const MAP_STYLES = [
   { id: 'streets', name: 'Rues', url: MAP_STYLE_STREETS, icon: '🗺️' },
