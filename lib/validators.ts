@@ -8,7 +8,7 @@ import { z } from 'zod';
 // Login
 // ─────────────────────────────────────────────────────────────────────────────
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email requis').email('Email invalide'),
+  identifier: z.string().min(1, 'Identifiant requis'),
   password: z.string().min(1, 'Mot de passe requis').min(8, 'Mot de passe trop court (min 8 caractères)'),
   remember_me: z.boolean().optional().default(false),
 });

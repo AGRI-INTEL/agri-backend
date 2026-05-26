@@ -125,6 +125,7 @@ export default function RegisterPage() {
               <Input
                 placeholder="Amadou Diallo"
                 error={step1Form.formState.errors.name?.message}
+                data-testid="name-input"
                 {...step1Form.register('name')}
               />
             </div>
@@ -134,6 +135,7 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="vous@exemple.com"
                 error={step1Form.formState.errors.email?.message}
+                data-testid="email-input"
                 {...step1Form.register('email')}
               />
             </div>
@@ -143,6 +145,7 @@ export default function RegisterPage() {
                 type="tel"
                 placeholder="+221 77 000 00 00"
                 error={step1Form.formState.errors.phone?.message}
+                data-testid="phone-input"
                 {...step1Form.register('phone')}
               />
             </div>
@@ -152,11 +155,12 @@ export default function RegisterPage() {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 rightIcon={
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}>
+                  <button type="button" data-testid="register-toggle-password" onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 }
                 error={step1Form.formState.errors.password?.message}
+                data-testid="password-input"
                 {...step1Form.register('password')}
               />
               {password && (
@@ -180,10 +184,11 @@ export default function RegisterPage() {
                 type="password"
                 placeholder="••••••••"
                 error={step1Form.formState.errors.password_confirm?.message}
+                data-testid="password-confirm-input"
                 {...step1Form.register('password_confirm')}
               />
             </div>
-            <Button type="submit" className="w-full" size="lg">
+            <Button type="submit" className="w-full" size="lg" data-testid="register-continue">
               Continuer →
             </Button>
           </motion.form>
@@ -350,7 +355,7 @@ export default function RegisterPage() {
               <Button type="button" variant="outline" className="flex-1" onClick={() => setStep(2)}>
                 ← Retour
               </Button>
-              <Button type="submit" className="flex-1 gap-2" loading={isRegisterLoading}>
+              <Button type="submit" className="flex-1 gap-2" loading={isRegisterLoading} data-testid="register-submit">
                 <Check className="h-4 w-4" />
                 Créer mon compte
               </Button>

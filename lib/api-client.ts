@@ -340,6 +340,7 @@ class ApiClient {
           method,
           headers,
           credentials: this.config.credentials,
+          mode: 'cors',
           signal: controller.signal,
           body: method !== 'GET' && method !== 'HEAD' ? JSON.stringify(requestConfig.body || undefined) : undefined,
         });

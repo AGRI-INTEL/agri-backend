@@ -1,0 +1,173 @@
+{
+  "stats": {
+    "suites": 1,
+    "tests": 4,
+    "passes": 0,
+    "pending": 0,
+    "failures": 4,
+    "start": "2026-05-26T07:55:27.937Z",
+    "end": "2026-05-26T07:55:53.736Z",
+    "duration": 25799,
+    "testsRegistered": 4,
+    "passPercent": 0,
+    "pendingPercent": 0,
+    "other": 0,
+    "hasOther": false,
+    "skipped": 0,
+    "hasSkipped": false
+  },
+  "results": [
+    {
+      "uuid": "043f8ac6-7c1a-4bfc-963a-39a89e57401b",
+      "title": "",
+      "fullFile": "cypress/e2e/auth/register.cy.ts",
+      "file": "cypress/e2e/auth/register.cy.ts",
+      "beforeHooks": [],
+      "afterHooks": [],
+      "tests": [],
+      "suites": [
+        {
+          "uuid": "7353cf24-41d0-472d-94b1-327b469c699f",
+          "title": "Authentication - Register",
+          "fullFile": "",
+          "file": "",
+          "beforeHooks": [],
+          "afterHooks": [],
+          "tests": [
+            {
+              "title": "should complete full registration flow",
+              "fullTitle": "Authentication - Register should complete full registration flow",
+              "timedOut": null,
+              "duration": 6304,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": null,
+              "code": "// Étape 1: Informations de compte\ncy.get('[data-testid=\"username-input\"]').type('new_farmer_2024');\ncy.get('[data-testid=\"email-input\"]').type('new@farmer.com');\ncy.get('[data-testid=\"password-input\"]').type('SecurePass123!');\ncy.get('[data-testid=\"confirm-password-input\"]').type('SecurePass123!');\ncy.get('[data-testid=\"step-1-next\"]').click();\n// Étape 2: Informations personnelles\ncy.get('[data-testid=\"firstname-input\"]').type('Jean');\ncy.get('[data-testid=\"lastname-input\"]').type('Dupont');\ncy.get('[data-testid=\"phone-input\"]').type('+33612345678');\ncy.get('[data-testid=\"step-2-next\"]').click();\n// Étape 3: Informations professionnelles\ncy.get('[data-testid=\"user-type-select\"]').select('Agriculteur');\ncy.get('[data-testid=\"farm-name-input\"]').type('Ferme du Soleil');\ncy.get('[data-testid=\"location-input\"]').type('Lyon, France');\ncy.get('[data-testid=\"step-3-next\"]').click();\n// Étape 4: Confirmation\ncy.get('[data-testid=\"terms-checkbox\"]').check();\ncy.get('[data-testid=\"register-submit\"]').click();\ncy.url().should('include', '/verify-email');\ncy.get('[data-testid=\"success-message\"]').should('contain', 'Vérifiez votre email');",
+              "err": {
+                "message": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-testid=\"username-input\"]`, but never found it.",
+                "estack": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-testid=\"username-input\"]`, but never found it.\n    at Context.eval (webpack:///./cypress/e2e/auth/register.cy.ts:7:0)",
+                "diff": null
+              },
+              "uuid": "a5955dda-d33c-445d-94d1-606e044543c4",
+              "parentUUID": "7353cf24-41d0-472d-94b1-327b469c699f",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "should validate password strength",
+              "fullTitle": "Authentication - Register should validate password strength",
+              "timedOut": null,
+              "duration": 6470,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": null,
+              "code": "cy.get('[data-testid=\"password-input\"]').type('weak');\ncy.get('[data-testid=\"password-strength\"]').should('contain', 'Faible');\ncy.get('[data-testid=\"password-input\"]').clear().type('StrongPass123!');\ncy.get('[data-testid=\"password-strength\"]').should('contain', 'Fort');",
+              "err": {
+                "message": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-testid=\"password-strength\"]`, but never found it.",
+                "estack": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-testid=\"password-strength\"]`, but never found it.\n    at Context.eval (webpack:///./cypress/e2e/auth/register.cy.ts:30:0)",
+                "diff": null
+              },
+              "uuid": "8872a2b3-6624-441c-bff4-00070ad97a00",
+              "parentUUID": "7353cf24-41d0-472d-94b1-327b469c699f",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "should validate matching passwords",
+              "fullTitle": "Authentication - Register should validate matching passwords",
+              "timedOut": null,
+              "duration": 6947,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": null,
+              "code": "cy.get('[data-testid=\"password-input\"]').type('Password123!');\ncy.get('[data-testid=\"confirm-password-input\"]').type('DifferentPass123!');\ncy.get('[data-testid=\"password-match-error\"]').should('be.visible');",
+              "err": {
+                "message": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-testid=\"confirm-password-input\"]`, but never found it.",
+                "estack": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-testid=\"confirm-password-input\"]`, but never found it.\n    at Context.eval (webpack:///./cypress/e2e/auth/register.cy.ts:36:0)",
+                "diff": null
+              },
+              "uuid": "46db2279-a914-45f6-8e9b-a1b03d3e2c67",
+              "parentUUID": "7353cf24-41d0-472d-94b1-327b469c699f",
+              "isHook": false,
+              "skipped": false
+            },
+            {
+              "title": "should validate unique username and email",
+              "fullTitle": "Authentication - Register should validate unique username and email",
+              "timedOut": null,
+              "duration": 5782,
+              "state": "failed",
+              "speed": null,
+              "pass": false,
+              "fail": true,
+              "pending": false,
+              "context": null,
+              "code": "// Mock API pour simuler un utilisateur existant\ncy.intercept('GET', '/api/v1/auth/check-username*', { exists: true });\ncy.get('[data-testid=\"username-input\"]').type('existing_user');\ncy.get('[data-testid=\"username-error\"]').should('contain', \"Nom d'utilisateur déjà pris\");",
+              "err": {
+                "message": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-testid=\"username-input\"]`, but never found it.",
+                "estack": "AssertionError: Timed out retrying after 4000ms: Expected to find element: `[data-testid=\"username-input\"]`, but never found it.\n    at Context.eval (webpack:///./cypress/e2e/auth/register.cy.ts:42:0)",
+                "diff": null
+              },
+              "uuid": "367a83be-0618-4f6d-b247-47f6052d1ef5",
+              "parentUUID": "7353cf24-41d0-472d-94b1-327b469c699f",
+              "isHook": false,
+              "skipped": false
+            }
+          ],
+          "suites": [],
+          "passes": [],
+          "failures": [
+            "a5955dda-d33c-445d-94d1-606e044543c4",
+            "8872a2b3-6624-441c-bff4-00070ad97a00",
+            "46db2279-a914-45f6-8e9b-a1b03d3e2c67",
+            "367a83be-0618-4f6d-b247-47f6052d1ef5"
+          ],
+          "pending": [],
+          "skipped": [],
+          "duration": 25503,
+          "root": false,
+          "rootEmpty": false,
+          "_timeout": 2000
+        }
+      ],
+      "passes": [],
+      "failures": [],
+      "pending": [],
+      "skipped": [],
+      "duration": 0,
+      "root": true,
+      "rootEmpty": true,
+      "_timeout": 2000
+    }
+  ],
+  "meta": {
+    "mocha": {
+      "version": "7.0.1"
+    },
+    "mochawesome": {
+      "options": {
+        "quiet": false,
+        "reportFilename": "mochawesome",
+        "saveHtml": true,
+        "saveJson": true,
+        "consoleReporter": "spec",
+        "useInlineDiffs": false,
+        "code": true
+      },
+      "version": "7.1.3"
+    },
+    "marge": {
+      "options": null,
+      "version": "6.3.2"
+    }
+  }
+}

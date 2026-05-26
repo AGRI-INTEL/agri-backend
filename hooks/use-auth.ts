@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -36,8 +36,9 @@ export function useAuth() {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
+      const identifier = (credentials as any).identifier ?? (credentials as any).email;
       const response = await apiClient.post<BackendLoginResponse>('/auth/login', {
-        username: credentials.email,
+        username: identifier,
         password: credentials.password,
         remember_me: credentials.remember_me ?? false,
       });

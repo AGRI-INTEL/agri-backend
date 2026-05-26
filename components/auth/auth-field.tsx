@@ -42,8 +42,12 @@ export const AuthField = React.forwardRef<HTMLInputElement, AuthFieldProps>(
             <div className="absolute right-3 top-1/2 z-10 -translate-y-1/2">{rightElement}</div>
           )}
         </div>
-        {error && (
-          <p className="mt-1.5 flex items-center gap-1 text-xs text-red-600" role="alert">
+          {error && (
+          <p
+            className="mt-1.5 flex items-center gap-1 text-xs text-red-600"
+            role="alert"
+            data-testid={props.id ? `${props.id}-error` : undefined}
+          >
             <span>⚠</span> {error}
           </p>
         )}

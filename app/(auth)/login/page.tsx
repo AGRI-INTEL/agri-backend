@@ -19,8 +19,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormData } from '@/lib/validators';
 
 export default function LoginPage() {
-  const { login, isLoginLoading } = useAuth();
+  const { loginAsync, isLoginLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const {
     register,
@@ -34,15 +35,33 @@ export default function LoginPage() {
     <div>
       <AuthCardHeader title="Connectez-vous" />
 
-      <form onSubmit={handleSubmit((data) => login(data))} className="space-y-3.5" noValidate>
+      {apiError ? (
+        <div className="rounded-md bg-red-50 border border-red-200 p-3 mb-3 text-sm text-red-700" data-testid="error-message">
+          {apiError}
+        </div>
+      ) : null}
+
+      <form
+        onSubmit={handleSubmit(async (data) => {
+          setApiError(null);
+          try {
+            await (loginAsync as any)(data);
+          } catch (e: any) {
+            setApiError(e?.message ?? 'Erreur de connexion au serveur');
+          }
+        })}
+        className="space-y-3.5"
+        noValidate
+      >
         <AuthField
-          id="email"
-          type="email"
-          placeholder="Email"
-          autoComplete="email"
+          id="identifier"
+          type="text"
+          placeholder="Email ou nom d'utilisateur"
+          autoComplete="username"
           leftIcon={<Mail className="h-[18px] w-[18px]" strokeWidth={1.75} />}
-          error={errors.email?.message}
-          {...register('email')}
+          error={errors.identifier?.message || errors.email?.message}
+          data-testid="identifier-input"
+          {...register('identifier')}
         />
 
         <div>
@@ -53,9 +72,11 @@ export default function LoginPage() {
             autoComplete="current-password"
             leftIcon={<Lock className="h-[18px] w-[18px]" strokeWidth={1.75} />}
             error={errors.password?.message}
+            data-testid="password-input"
             rightElement={
               <button
                 type="button"
+                data-testid="toggle-password"
                 className="p-1 text-gray-400 hover:text-gray-600"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
@@ -83,7 +104,7 @@ export default function LoginPage() {
           <AuthCheckbox label="Se souvenir de moi" {...register('remember_me')} />
         </div>
 
-        <AuthPrimaryButton loading={isLoginLoading}>
+        <AuthPrimaryButton data-testid="login-submit" loading={isLoginLoading}>
           {isLoginLoading ? 'Connexion…' : 'Connexion'}
         </AuthPrimaryButton>
       </form>

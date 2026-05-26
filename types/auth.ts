@@ -447,7 +447,9 @@ export interface DisplayPreferences {
 // ============================================================================
 
 export interface LoginCredentials {
-  email: string;
+  // `identifier` can be either email or username; keep `email` for backward compatibility
+  identifier?: string;
+  email?: string;
   password: string;
   remember_me?: boolean;
   device_name?: string;
