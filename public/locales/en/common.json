@@ -1,0 +1,70 @@
+{
+  "app": {
+    "name": "AgriIntel360",
+    "tagline": "Agricultural intelligence for Africa"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "production": "Crop Production",
+    "animal": "Livestock",
+    "halieutique": "Fisheries",
+    "forestier": "Forestry",
+    "actors": "Actors",
+    "indicators": "Indicators",
+    "analytics": "Analytics",
+    "predictions": "AI Predictions",
+    "weather": "Weather",
+    "alerts": "Alerts",
+    "map": "Map",
+    "chatbot": "AgriBot AI",
+    "community": "Community",
+    "files": "Files",
+    "settings": "Settings"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "logout": "Sign Out",
+    "email": "Email",
+    "password": "Password",
+    "forgot_password": "Forgot password?",
+    "remember_me": "Remember me",
+    "no_account": "Don't have an account?",
+    "already_account": "Already have an account?"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "all": "All",
+    "none": "None",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "sectors": {
+    "vegetal": "Crops",
+    "animal": "Livestock",
+    "halieutique": "Fisheries",
+    "forestier": "Forestry"
+  },
+  "severity": {
+    "info": "Info",
+    "warning": "Warning",
+    "critical": "Critical",
+    "emergency": "Emergency"
+  }
+}

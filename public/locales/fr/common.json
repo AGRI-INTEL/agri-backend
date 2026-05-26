@@ -1,0 +1,70 @@
+{
+  "app": {
+    "name": "AgriIntel360",
+    "tagline": "Intelligence agricole pour l'Afrique"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "production": "Production Végétale",
+    "animal": "Élevage & Animal",
+    "halieutique": "Halieutique",
+    "forestier": "Forestier",
+    "actors": "Acteurs",
+    "indicators": "Indicateurs",
+    "analytics": "Analytics",
+    "predictions": "Prédictions IA",
+    "weather": "Météo",
+    "alerts": "Alertes",
+    "map": "Carte",
+    "chatbot": "AgriBot IA",
+    "community": "Communauté",
+    "files": "Fichiers",
+    "settings": "Paramètres"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "logout": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgot_password": "Mot de passe oublié ?",
+    "remember_me": "Se souvenir de moi",
+    "no_account": "Pas encore de compte ?",
+    "already_account": "Déjà un compte ?"
+  },
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "import": "Importer",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Réessayer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "close": "Fermer",
+    "all": "Tous",
+    "none": "Aucun",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "sectors": {
+    "vegetal": "Végétal",
+    "animal": "Animal",
+    "halieutique": "Halieutique",
+    "forestier": "Forestier"
+  },
+  "severity": {
+    "info": "Info",
+    "warning": "Attention",
+    "critical": "Critique",
+    "emergency": "Urgence"
+  }
+}
