@@ -1,171 +1,308 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { Layers, Target, Satellite, Map as MapIcon } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Layers, Target, Satellite, Map as MapIcon, AlertCircle, Users, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
-import { useMapStore } from '@/stores/map-store';
-import { useMapMarkers } from '@/hooks/use-geolocation';
-import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM, MAP_STYLE_STREETS, MAP_STYLE_SATELLITE } from '@/lib/constants';
+import { useMapStore, selectStyleUrl, selectVisibleLayers, selectSelectedMarker } from '@/stores/map-store';
+import { useMapMarkers, type MapMarker } from '@/hooks/use-geolocation';
+import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+
+const STATIC_WEATHER_STATIONS: MapMarker[] = [
+  {
+    id: 'weather-1',
+    label: 'Station météo Dakar',
+    lng: -17.4441,
+    lat: 14.6928,
+    type: 'weather',
+    color: '#3B82F6',
+    description: '28°C • Ensoleillé',
+  },
+  {
+    id: 'weather-2',
+    label: 'Station météo Bamako',
+    lng: -8.0029,
+    lat: 12.6392,
+    type: 'weather',
+    color: '#3B82F6',
+    description: '31°C • Faible vent',
+  },
+  {
+    id: 'weather-3',
+    label: 'Station météo Accra',
+    lng: -0.1870,
+    lat: 5.6037,
+    type: 'weather',
+    color: '#3B82F6',
+    description: '29°C • Nuageux',
+  },
+];
 
 export function InteractiveMap({ className }: { className?: string }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<unknown>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRefs = useRef<any[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
-  const { style, layers, setStyle, toggleLayer } = useMapStore();
+
+  const styleUrl = useMapStore(selectStyleUrl);
+  const mapStyle = useMapStore((state) => state.style);
+  const layers = useMapStore(selectVisibleLayers);
+  const selectedMarkerId = useMapStore(selectSelectedMarker);
+  const setStyle = useMapStore((state) => state.setStyle);
+  const toggleLayer = useMapStore((state) => state.toggleLayer);
+  const setSelectedMarker = useMapStore((state) => state.setSelectedMarker);
+  const visibleLayerIds = useMemo(() => layers.map((l) => l.id), [layers]);
   const { data: apiMarkers } = useMapMarkers();
+  const weatherMarkers = useMemo(
+    () => (visibleLayerIds.includes('weather') ? STATIC_WEATHER_STATIONS : []),
+    [visibleLayerIds]
+  );
+
+  const filteredMarkers = useMemo(() => {
+    const activeTypes = new Set<string>();
+    if (visibleLayerIds.includes('actors')) activeTypes.add('actor');
+    if (visibleLayerIds.includes('alerts')) activeTypes.add('alert');
+    if (visibleLayerIds.includes('weather')) activeTypes.add('weather');
+
+    return [
+      ...(apiMarkers ?? []),
+      ...weatherMarkers,
+    ].filter((marker) => activeTypes.has(marker.type));
+  }, [apiMarkers, weatherMarkers, visibleLayerIds]);
+
+  const clearMarkers = (markers: any[]) => {
+    markers.forEach((marker) => marker?.remove?.());
+    markers.length = 0;
+  };
+
+  const createMarkerElement = (marker: MapMarker) => {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'flex items-center justify-center rounded-full shadow-lg border-2 border-white';
+    el.style.cssText = `
+      width: 32px;
+      height: 32px;
+      background: ${marker.color};
+      cursor: pointer;
+      border-radius: 9999px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.18);
+    `;
+    el.title = marker.label;
+    el.onclick = () => {
+      setSelectedMarker(selectedMarkerId === marker.id ? null : marker.id);
+    };
+    return el;
+  };
+
+  const renderMarkers = (map: any) => {
+    clearMarkers(markerRefs.current);
+
+    filteredMarkers.forEach((marker) => {
+      const markerEl = createMarkerElement(marker);
+
+      const popup = new map.Popup({ offset: 16, className: 'map-popup' }).setHTML(
+        `<div style="padding:12px;font-family:Inter,sans-serif;max-width:220px">
+          <strong style="font-size:13px;display:block;margin-bottom:4px">${marker.label}</strong>
+          ${marker.description ? `<p style="font-size:12px;color:#64748B;margin:0">${marker.description}</p>` : ''}
+        </div>`
+      );
+
+      const mapMarker = new map.Marker({ element: markerEl })
+        .setLngLat([marker.lng, marker.lat])
+        .setPopup(popup)
+        .addTo(map);
+
+      markerRefs.current.push(mapMarker);
+    });
+  };
 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return;
 
-    const mapStyle = style === 'satellite' ? MAP_STYLE_SATELLITE : MAP_STYLE_STREETS;
-
-    import('maplibre-gl').then(({ default: maplibregl }) => {
+    import('maplibre-gl').then((mod) => {
+      const maplibregl: any = (mod as any).default ?? mod;
       const map = new maplibregl.Map({
-        container: mapRef.current!,
-        style: mapStyle,
+        container: mapRef.current as HTMLElement,
+        style: styleUrl,
         center: MAP_DEFAULT_CENTER,
         zoom: MAP_DEFAULT_ZOOM,
         attributionControl: false,
       });
 
       map.addControl(new maplibregl.NavigationControl(), 'top-right');
-      map.addControl(new maplibregl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-      }), 'top-right');
+      map.addControl(
+        new maplibregl.GeolocateControl({
+          positionOptions: { enableHighAccuracy: true },
+          trackUserLocation: true,
+        }),
+        'top-right'
+      );
       map.addControl(new maplibregl.ScaleControl({}), 'bottom-left');
       map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
-      map.on('load', () => setMapLoaded(true));
+      map.on('load', () => {
+        setMapLoaded(true);
+        renderMarkers(map);
+      });
 
       mapInstanceRef.current = map;
     });
 
     return () => {
       if (mapInstanceRef.current) {
-        (mapInstanceRef.current as { remove: () => void }).remove();
+        mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, [style]);
+  }, [styleUrl]);
 
-  // Marqueurs API (acteurs, alertes)
   useEffect(() => {
-    const map = mapInstanceRef.current as {
-      remove?: () => void;
-      getContainer?: () => HTMLElement;
-    } | null;
-    if (!map || !mapLoaded || !apiMarkers?.length) return;
+    if (!mapLoaded || !mapInstanceRef.current) return;
+    const map = mapInstanceRef.current;
 
-    import('maplibre-gl').then(({ default: maplibregl }) => {
-      apiMarkers.forEach((m) => {
-        const el = document.createElement('div');
-        el.style.cssText = `
-          width: 28px; height: 28px; border-radius: 50%;
-          background: ${m.color}; border: 2px solid white;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.25); cursor: pointer;
-        `;
-        new maplibregl.Marker({ element: el })
-          .setLngLat([m.lng, m.lat])
-          .setPopup(
-            new maplibregl.Popup({ offset: 16 }).setHTML(`
-              <div style="padding:8px;font-family:Inter,sans-serif;max-width:180px">
-                <strong style="font-size:12px">${m.label}</strong>
-                ${m.description ? `<p style="font-size:11px;color:#64748B;margin:4px 0 0">${m.description}</p>` : ''}
-              </div>
-            `)
-          )
-          .addTo(map as unknown as maplibregl.Map);
-      });
-    });
-  }, [mapLoaded, apiMarkers]);
+    if (map.getStyle && map.getStyle().sprite !== styleUrl) {
+      map.setStyle(styleUrl);
+      map.once('styledata', () => renderMarkers(map));
+    } else {
+      renderMarkers(map);
+    }
+  }, [filteredMarkers, mapLoaded, styleUrl, selectedMarkerId]);
+
+  useEffect(() => {
+    if (!mapLoaded || !mapInstanceRef.current || !selectedMarkerId || !apiMarkers?.length) return;
+    const map = mapInstanceRef.current;
+    const marker = apiMarkers.find((item) => item.id === selectedMarkerId);
+    if (marker) {
+      map.flyTo({ center: [marker.lng, marker.lat], zoom: 10 });
+    }
+  }, [selectedMarkerId, apiMarkers, mapLoaded]);
 
   const handleGeolocate = () => {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation || !mapInstanceRef.current) return;
     navigator.geolocation.getCurrentPosition((pos) => {
-      const map = mapInstanceRef.current as { flyTo: (opts: unknown) => void } | null;
-      map?.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 12 });
+      mapInstanceRef.current.flyTo({ center: [pos.coords.longitude, pos.coords.latitude], zoom: 12 });
+      setSelectedMarker(null);
     });
   };
 
   return (
-    <div className={cn('relative rounded-card overflow-hidden', className)}>
-      {/* Map container */}
+    <div className={cn('relative rounded-card overflow-hidden bg-background', className)}>
       <div ref={mapRef} className="w-full h-full" aria-label="Carte interactive agricole" />
 
-      {/* Controls overlay */}
-      <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
-        {/* Style toggle */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setStyle(style === 'streets' ? 'satellite' : 'streets')}
-          className="bg-card/90 backdrop-blur-sm gap-2 shadow-card"
-          aria-label="Changer le style de carte"
-        >
-          {style === 'streets' ? <Satellite className="h-4 w-4" /> : <MapIcon className="h-4 w-4" />}
-          {style === 'streets' ? 'Satellite' : 'Carte'}
-        </Button>
-
-        {/* Layers toggle */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowLayers(!showLayers)}
-          className="bg-card/90 backdrop-blur-sm gap-2 shadow-card"
-          aria-label="Gérer les couches"
-          aria-expanded={showLayers}
-        >
-          <Layers className="h-4 w-4" />
-          Couches
-        </Button>
-
-        {/* Geolocation */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={handleGeolocate}
-          className="bg-card/90 backdrop-blur-sm shadow-card"
-          aria-label="Ma position"
-        >
-          <Target className="h-4 w-4" />
-        </Button>
+      <div className="absolute bottom-20 right-4 flex flex-col gap-2 z-10">
+        <div className="bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+          {[
+            { id: 'streets', icon: MapIcon, label: 'Rues' },
+            { id: 'satellite', icon: Satellite, label: 'Satellite' },
+          ].map(({ id, icon: Icon, label }) => (
+            <button
+              key={id}
+              onClick={() => setStyle(id as 'streets' | 'satellite')}
+              className={cn(
+                'p-3 transition-colors border-b last:border-0 hover:bg-muted',
+                mapStyle === id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'
+              )}
+              title={label}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Layers panel */}
-      {showLayers && (
-        <div className="absolute top-3 left-36 bg-card/95 backdrop-blur-sm rounded-card border border-border p-3 shadow-modal z-10 min-w-48">
-          <p className="text-xs font-semibold mb-2 text-muted-foreground uppercase tracking-wide">Couches</p>
-          <div className="space-y-2">
-            {layers.map((layer) => (
-              <div key={layer.id} className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: layer.color }} aria-hidden="true" />
-                  <span className="text-sm">{layer.label}</span>
-                </div>
-                <Switch
-                  checked={layer.visible}
-                  onCheckedChange={() => toggleLayer(layer.id)}
-                  aria-label={`${layer.visible ? 'Masquer' : 'Afficher'} ${layer.label}`}
+      <div className="absolute top-4 left-4 z-10">
+        <button
+          onClick={() => setShowLayers(!showLayers)}
+          className="bg-card border border-border rounded-lg shadow-lg p-3 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+          title="Couches"
+        >
+          <Layers className="h-5 w-5" />
+        </button>
+
+        {showLayers && (
+          <div className="absolute top-12 left-0 bg-card border border-border rounded-lg shadow-lg p-3 space-y-2 min-w-48 mt-2">
+            <h3 className="text-xs font-semibold text-foreground mb-2">Couches</h3>
+            {[
+              { id: 'weather', label: '🌤️ Météo' },
+              { id: 'predictions', label: '📈 Prédictions' },
+              { id: 'alerts', label: '⚠️ Alertes' },
+              { id: 'actors', label: '👥 Acteurs' },
+              { id: 'markets', label: '🏪 Marchés' },
+            ].map(({ id, label }) => (
+              <label key={id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  checked={visibleLayerIds.includes(id)}
+                  onChange={() => toggleLayer(id)}
+                  className="rounded w-4 h-4"
                 />
-              </div>
+                <span className="text-muted-foreground">{label}</span>
+              </label>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      {/* Loading overlay */}
-      {!mapLoaded && (
-        <div className="absolute inset-0 bg-muted flex items-center justify-center">
-          <div className="text-center">
-            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Chargement de la carte...</p>
+      <div className="absolute bottom-4 left-4 bg-card border border-border rounded-lg shadow-lg p-3 max-w-xs z-10">
+        <h3 className="text-xs font-semibold text-foreground mb-2">Légende</h3>
+        <div className="space-y-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <span>Acteurs</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <span>Alertes</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-blue-500" />
+            <span>Météo</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-purple-500" />
+            <span>Prédictions</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-amber-500" />
+            <span>Marchés</span>
           </div>
         </div>
-      )}
+      </div>
+
+      <div className="absolute top-4 right-4 bg-card border border-border rounded-lg shadow-lg p-4 max-w-xs z-10 space-y-3">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-green-500" />
+            <span className="text-xs font-medium">Acteurs</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 text-red-500" />
+            <span className="text-xs font-medium">Alertes</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-purple-500" />
+            <span className="text-xs font-medium">Prédictions</span>
+          </div>
+        </div>
+        <div className="pt-2 border-t border-border">
+          <p className="text-xs text-muted-foreground">Cliquez sur un marqueur pour centrer la carte.</p>
+          <Button variant="outline" size="sm" className="w-full mt-2" onClick={handleGeolocate}>
+            <Target className="h-4 w-4 mr-2" /> Ma position
+          </Button>
+        </div>
+      </div>
+
+      <style>{`
+        .map-popup .maplibregl-popup-content {
+          padding: 0 !important;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        }
+        .map-popup .maplibregl-popup-tip {
+          border-top-color: hsl(var(--card)) !important;
+        }
+      `}</style>
     </div>
   );
 }

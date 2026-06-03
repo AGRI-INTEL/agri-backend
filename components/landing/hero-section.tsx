@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-// Link removed (use LinkButton)
+import Link from 'next/link';
 import LinkButton from '@/components/ui/link-button';
 import Image from 'next/image';
 import { motion, useInView, useMotionValue, useSpring, animate } from '@/lib/motion';
@@ -89,14 +89,19 @@ export function HeroSection() {
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4 }}>
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <LinkButton href="/register" variant="glow" size="xl">
               Créer un compte gratuit
               <ArrowRight className="h-4 w-4" />
             </LinkButton>
-            <LinkButton href="#fonctionnalites" variant="outline" size="xl" className="border-white/30 text-white hover:text-white hover:bg-white/10">
-              Voir les fonctionnalités
+            <LinkButton href="/login" variant="outline" size="xl" className="border-white/30 text-white hover:text-white hover:bg-white/15">
+              Se connecter
             </LinkButton>
+          </div>
+          <div className="mt-4 text-center">
+            <Link href="#fonctionnalites" className="text-sm font-semibold text-emerald-300 hover:text-emerald-100 transition-colors">
+              Voir les fonctionnalités →
+            </Link>
           </div>
         </motion.div>
 

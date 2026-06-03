@@ -13,7 +13,8 @@ const FOOTER_COLS = [
       { label: 'Secteurs', href: '#secteurs' },
       { label: 'Tarifs', href: '#tarifs' },
       { label: 'Témoignages', href: '#temoignages' },
-      { label: 'Contact', href: '/contact' },
+      { label: 'Connexion', href: '/login' },
+      { label: "S'inscrire", href: '/register' },
     ],
   },
   {

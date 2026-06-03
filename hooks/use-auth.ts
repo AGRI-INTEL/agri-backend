@@ -37,6 +37,9 @@ export function useAuth() {
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginCredentials) => {
       const identifier = (credentials as any).identifier ?? (credentials as any).email;
+      if (!identifier?.trim() || !credentials.password?.trim()) {
+        throw new Error('Identifiant et mot de passe requis');
+      }
       const response = await apiClient.post<BackendLoginResponse>('/auth/login', {
         username: identifier,
         password: credentials.password,
@@ -57,16 +60,34 @@ export function useAuth() {
 
   const registerMutation = useMutation({
     mutationFn: (data: RegisterData) => {
-      // Map frontend register shape to backend expectations
-      // Build a safe username: prefer email local-part, fallback to name; keep only a-z0-9_ characters
       const rawUsername = (data.email ? String(data.email).split('@')[0] : data.name) ?? '';
-      const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/^_+|_+$/g, '').slice(0, 30);
+      const username = rawUsername
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 30);
 
-      const payload = {
-        ...data,
+      const payload: Record<string, unknown> = {
         username,
         full_name: data.name,
-      } as Record<string, unknown>;
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+        country: data.country,
+        sector: data.sector,
+        organisation: data.organisation,
+        role: data.role,
+        language: data.language ?? 'fr',
+        timezone: data.timezone ?? 'Africa/Dakar',
+        accept_terms: data.accept_terms,
+        accept_privacy: data.accept_privacy,
+        newsletter: data.newsletter ?? false,
+        referral_code: data.referral_code,
+        utm_source: data.utm_source,
+        utm_medium: data.utm_medium,
+        utm_campaign: data.utm_campaign,
+      };
+
       return apiClient.post('/auth/register', payload);
     },
     onSuccess: () => {

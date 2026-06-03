@@ -23,6 +23,22 @@ export function clearAuthSession() {
   localStorage.removeItem(AUTH_TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);
   document.cookie = `${COOKIE_NAME}=; max-age=0; path=/`;
+  // Clear caches (service worker) and unregister service workers to free cached assets
+  try {
+    if ('caches' in window) {
+      caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
+    }
+  } catch (e) {
+    // ignore
+  }
+
+  try {
+    if (navigator && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
+    }
+  } catch (e) {
+    // ignore
+  }
 }
 
 export function getStoredAccessToken(): string | null {

@@ -28,7 +28,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setApiError(null);
     try {
-      await loginAsync(data);
+      await loginAsync(data as any);
     } catch (e) {
       const error = e as { message?: string };
       setApiError(error?.message ?? 'Erreur de connexion. Veuillez vérifier vos identifiants.');

@@ -1,12 +1,11 @@
 import type { Metadata } from 'next';
-import { InteractiveMap } from '@/components/map/interactive-map';
+import { MapPageClient } from '@/components/map/map-page-client';
 
-export const metadata: Metadata = { title: 'Carte Interactive' };
+export const metadata: Metadata = { 
+  title: 'Carte Interactive | Agri Intel',
+  description: 'Explorez la carte interactive avec des marqueurs agricoles, des prédictions et des alertes'
+};
 
 export default function MapPage() {
-  return (
-    <div className="h-[calc(100vh-64px)] p-4">
-      <InteractiveMap className="h-full" />
-    </div>
-  );
+  return <MapPageClient />;
 }

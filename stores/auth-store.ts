@@ -39,81 +39,74 @@ export const selectUserPermissions = (state: AuthState) => state.user?.permissio
 // ── Store ──
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
-      // ── État initial ──
-      user: null,
-      isAuthenticated: false,
-      isLoading: true,
-      hydrationState: 'pending',
+    (set, get) => {
+      // Chargement initial à partir du localStorage
+      const token = getStoredAccessToken();
 
-      // ── Actions ──
-      setUser: (user) => set({
-        user,
-        isAuthenticated: !!user,
-        isLoading: false,
-        hydrationState: 'complete',
-      }),
+      return {
+        // état initial
+        user: null,
+        isAuthenticated: !!token,
+        isLoading: !!token,
+        hydrationState: 'pending',
 
-      setLoading: (isLoading) => set({ isLoading }),
-
-      updateUser: (partial) => {
-        const current = get().user;
-        if (!current) return;
-        set({
-          user: { ...current, ...partial },
-          isAuthenticated: true,
-        });
-      },
-
-      logout: async () => {
-        set({ isLoading: true });
-        try {
-          // Optionnel: appel API de déconnexion
-          // await api.post('/auth/logout');
-          clearAuthSession();
+        // actions
+        setUser: (user) =>
           set({
-            user: null,
-            isAuthenticated: false,
+            user,
+            isAuthenticated: !!user,
             isLoading: false,
             hydrationState: 'complete',
-          });
-        } catch (error) {
-          console.error('[AuthStore] Logout error:', error);
-          // Force clear même en cas d'erreur
-          clearAuthSession();
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
+          }),
 
-      rehydrate: async () => {
-        set({ hydrationState: 'hydrating', isLoading: true });
-        try {
-          const token = getStoredAccessToken();
-          if (!token) {
-            set({ hydrationState: 'complete', isLoading: false });
-            return;
+        setLoading: (isLoading) => set({ isLoading }),
+
+        updateUser: (partial) => {
+          const current = get().user;
+          if (!current) return;
+          set({ user: { ...current, ...partial }, isAuthenticated: true });
+        },
+
+        logout: async () => {
+          set({ isLoading: true });
+          try {
+            clearAuthSession();
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              hydrationState: 'complete',
+            });
+          } catch (error) {
+            console.error('[AuthStore] Logout error:', error);
+            clearAuthSession();
+            set({ user: null, isAuthenticated: false, isLoading: false });
+            throw error;
           }
-          // Optionnel: valider le token avec le backend
-          // const user = await api.get<User>('/auth/me');
-          // set({ user, isAuthenticated: true, hydrationState: 'complete', isLoading: false });
-          set({ hydrationState: 'complete', isLoading: false });
-        } catch (error) {
-          console.error('[AuthStore] Rehydration error:', error);
-          clearAuthSession();
-          set({
-            user: null,
-            isAuthenticated: false,
-            hydrationState: 'error',
-            isLoading: false,
-          });
-        }
-      },
-    }),
+        },
+
+        rehydrate: async () => {
+          set({ hydrationState: 'hydrating', isLoading: true });
+          try {
+            const token = getStoredAccessToken();
+            if (!token) {
+              set({ hydrationState: 'complete', isLoading: false });
+              return;
+            }
+            set({ hydrationState: 'complete', isLoading: false });
+          } catch (error) {
+            console.error('[AuthStore] Rehydration error:', error);
+            clearAuthSession();
+            set({
+              user: null,
+              isAuthenticated: false,
+              hydrationState: 'error',
+              isLoading: false,
+            });
+          }
+        },
+      };
+    },
     {
       name: 'agriintel360-auth',
       storage: createJSONStorage(() => localStorage),

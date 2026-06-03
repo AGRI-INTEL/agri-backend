@@ -9,9 +9,47 @@ import { toast } from 'sonner';
 export function useGroups(filters: { type?: string; search?: string } = {}) {
   return useQuery({
     queryKey: ['groups', filters],
-    queryFn: () => apiClient.get<PaginatedResponse<Group>>('/community/groups', {
-      params: filters as Record<string, string>,
-    }),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<PaginatedResponse<Group>>('/community/groups', {
+          params: filters as Record<string, string>,
+        });
+      } catch (e: any) {
+        // If unauthorized, return a small mock set so UI remains usable while offline/auth required
+        if (e?.status === 401) {
+          const mock: PaginatedResponse<Group> = {
+            data: [
+              {
+                id: 'public-1',
+                name: 'Groupe Demo: Maïs & Légumes',
+                slug: 'demo-mais-legumes',
+                description: 'Espace d\'échange pour les producteurs de maïs et légumes.',
+                type: 'public',
+                sector: 'vegetal',
+                tags: ['maïs', 'légumes'],
+                members_count: 120,
+                posts_count: 45,
+                is_member: false,
+                membership_status: 'none',
+                requires_approval: false,
+                moderated: false,
+                created_at: new Date().toISOString(),
+                created_by: 'system',
+              } as Group,
+            ],
+            meta: { page: 1, limit: 20, total: 1 } as any,
+            page: 1,
+            limit: 20,
+            total: 1,
+            total_pages: 1,
+            has_next: false,
+            has_prev: false,
+          };
+          return mock;
+        }
+        throw e;
+      }
+    },
   });
 }
 
@@ -104,6 +142,74 @@ export function useAddComment() {
       apiClient.post<Comment>(`/community/posts/${postId}/comments`, { content, parent_id: parentId }),
     onSuccess: (_, { postId }) => {
       qc.invalidateQueries({ queryKey: ['posts', postId, 'comments'] });
+    },
+  });
+}
+
+// Create a new group
+export function useCreateGroup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: FormData | Record<string, unknown>) => {
+      // If FormData, use upload helper to handle files
+      if (data instanceof FormData) {
+        return apiClient.upload('/community/groups', data);
+      }
+      return apiClient.post('/community/groups', data);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      // also invalidate listings
+      qc.invalidateQueries({ queryKey: ['groups', {}] });
+    },
+    onError: (e: any, _vars, _ctx) => {
+      // If unauthorized, add a local optimistic group so the UI shows the created group
+      if (e?.status === 401) {
+        const local: Group = {
+          id: `local-${Date.now()}`,
+          name: (e?.name as string) || 'Nouveau groupe (local)',
+          slug: `local-${Date.now()}`,
+          description: 'Groupe créé localement. Connectez-vous pour le sauvegarder.',
+          type: 'public',
+          sector: 'general',
+          tags: [],
+          members_count: 1,
+          posts_count: 0,
+          is_member: true,
+          membership_status: 'member',
+          requires_approval: false,
+          moderated: false,
+          created_at: new Date().toISOString(),
+          created_by: 'local',
+        } as Group;
+        qc.setQueryData(['groups'], (old: any) => {
+          if (!old) return { data: [local], page: 1, limit: 20, total: 1, total_pages: 1, has_next: false, has_prev: false };
+          return { ...old, data: [local, ...(old.data || [])], total: (old.total || 0) + 1 };
+        });
+        toast.success('Groupe créé localement (connexion requise pour le sauvegarder)');
+      }
+    },
+  });
+}
+
+// Simple messages polling hook for group chat (fallback when WS unavailable)
+export function useGroupMessages(groupId: string, opts: { enabled?: boolean; refetchInterval?: number } = {}) {
+  return useQuery({
+    queryKey: ['groups', groupId, 'messages'],
+    queryFn: () => apiClient.get<any[]>(`/community/groups/${groupId}/messages`),
+    enabled: !!groupId && opts.enabled !== false,
+    refetchInterval: opts.refetchInterval ?? 3000,
+    retry: 1,
+  });
+}
+
+export function useSendGroupMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, content }: { groupId: string; content: string }) =>
+      apiClient.post(`/community/groups/${groupId}/messages`, { content }),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'messages'] });
     },
   });
 }

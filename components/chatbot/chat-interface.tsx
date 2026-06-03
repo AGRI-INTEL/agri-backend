@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import type { Conversation } from '@/types/chatbot';
 import Image from 'next/image';
 import { motion } from '@/lib/motion';
 import { Send, Paperclip, Camera, Plus, Bot } from 'lucide-react';
@@ -23,6 +24,13 @@ export function ChatInterface() {
     isLoading, setProvider, setIsDemoMode,
     sendTextMessage, sendMediaMessage, newConversation, setActiveConversationId,
   } = useChatbot();
+
+  // Défensive: certains endpoints retournent parfois un objet enveloppe
+  const conversationList = (Array.isArray(conversations)
+    ? conversations
+    : (conversations && typeof conversations === 'object' && Array.isArray((conversations as unknown as Record<string, unknown>).conversations))
+    ? (conversations as unknown as Record<string, unknown>).conversations as Conversation[]
+    : []) as Conversation[];
 
   const [input, setInput] = useState('');
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -82,12 +90,12 @@ export function ChatInterface() {
           </Button>
         </div>
         <nav className="flex-1 overflow-y-auto p-3 space-y-2" aria-label="Historique des conversations">
-          {conversations.length === 0 ? (
+          {conversationList.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-32 text-center px-4">
               <p className="text-xs text-muted-foreground">Aucune conversation</p>
             </div>
-          ) : (
-            conversations.slice(0, 15).map((conv, i) => (
+            ) : (
+            conversationList.slice(0, 15).map((conv, i) => (
               <motion.button
                 key={conv.id}
                 initial={{ opacity: 0, x: -10 }}

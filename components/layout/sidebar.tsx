@@ -16,7 +16,17 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/stores/auth-store';
 
-const navItems = [
+type NavItem = {
+  href?: string;
+  icon?: any;
+  label?: string;
+  exact?: boolean;
+  badgeKey?: string | null;
+  badge?: string | null;
+  type?: 'separator';
+};
+
+const navItems: NavItem[] = [
   { href: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { href: '/production', icon: Sprout, label: 'Végétal', badge: null },
   { href: '/animal', icon: Beef, label: 'Animal' },
@@ -39,7 +49,7 @@ const navItems = [
   { href: '/settings/profile', icon: Settings, label: 'Paramètres' },
 ];
 
-const adminItems = [
+const adminItems: NavItem[] = [
   { href: '/admin', icon: Shield, label: 'Administration' },
 ];
 

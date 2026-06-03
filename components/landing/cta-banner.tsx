@@ -19,6 +19,9 @@ export function CTABanner() {
             <Button variant="glow" size="xl" asChild>
               <Link href="/register">Créer un compte gratuit</Link>
             </Button>
+            <Button variant="secondary" size="xl" asChild>
+              <Link href="/login">Se connecter</Link>
+            </Button>
             <Button variant="outline" size="xl" className="border-white/40 text-white hover:bg-white/10 hover:text-white font-semibold" asChild>
               <Link href="/contact">
                 <Phone className="h-5 w-5 mr-2" aria-hidden="true" />

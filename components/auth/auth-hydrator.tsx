@@ -6,15 +6,15 @@ import { useAuthStore } from '@/stores/auth-store';
 
 /** Synchronise le cookie middleware avec le token localStorage au chargement */
 export function AuthHydrator() {
-  const { isAuthenticated, setLoading } = useAuthStore();
+  const { setLoading } = useAuthStore();
 
   useEffect(() => {
     const token = getStoredAccessToken();
-    if (token && isAuthenticated) {
+    if (token) {
       persistAuthSession(token, undefined, 3600);
     }
     setLoading(false);
-  }, [isAuthenticated, setLoading]);
+  }, [setLoading]);
 
   return null;
 }

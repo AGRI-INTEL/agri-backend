@@ -14,6 +14,7 @@ import { CommentThread } from '@/components/community/comment-thread';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { useGroup, useGroupPosts, useGroupMembers, useJoinGroup } from '@/hooks/use-community';
+import { GroupThread } from '@/components/community/group-thread';
 
 export default function GroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -90,6 +91,7 @@ export default function GroupDetailPage() {
       <Tabs defaultValue="posts">
         <TabsList className="w-full">
           <TabsTrigger value="posts" className="flex-1">Publications</TabsTrigger>
+          <TabsTrigger value="chat" className="flex-1">Chat</TabsTrigger>
           <TabsTrigger value="members" className="flex-1">Membres</TabsTrigger>
           <TabsTrigger value="about" className="flex-1">À propos</TabsTrigger>
         </TabsList>
@@ -124,6 +126,10 @@ export default function GroupDetailPage() {
               Charger plus
             </Button>
           )}
+        </TabsContent>
+
+        <TabsContent value="chat" className="space-y-4 mt-4">
+          <GroupThread groupId={groupId} />
         </TabsContent>
 
         <TabsContent value="members" className="mt-4">

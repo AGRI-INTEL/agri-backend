@@ -362,7 +362,13 @@ class ApiClient {
 
         // Parse JSON
         if (response.ok) {
-          const data = await response.json();
+          let data;
+          try {
+            data = await response.json();
+          } catch {
+            // Empty 200 response
+            data = undefined;
+          }
           apiResponse.data = data;
 
           // Apply response interceptors
@@ -388,8 +394,15 @@ class ApiClient {
               ? errorData.detail.join(', ')
               : undefined;
 
+        const errorMessage =
+          typeof errorData.message === 'string'
+            ? errorData.message
+            : typeof (errorData as Record<string, unknown>).error === 'string'
+              ? (errorData as Record<string, unknown>).error as string
+              : detailMessage || `Erreur ${response.status}: ${response.statusText}`;
+
         const error: ApiError = {
-          message: errorData.message || detailMessage || `Erreur ${response.status}: ${response.statusText}`,
+          message: errorMessage,
           code: errorData.code,
           details: errorData.details,
           status: response.status,
@@ -672,7 +685,12 @@ export const authResponseInterceptor: ResponseInterceptor<unknown> = (response) 
   if (response.status === 401) {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token');
-      window.location.href = '/login?expired=true';
+      const authPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
+      const currentPath = window.location.pathname;
+      const isAuthPage = authPaths.some((path) => currentPath.startsWith(path));
+      if (!isAuthPage) {
+        window.location.href = '/login?expired=true';
+      }
     }
   }
   return response;

@@ -46,7 +46,19 @@ export function FileExplorer() {
   const moveFile = useMoveFile();
   const { uploads, uploadFiles, removeUpload } = useMediaUpload({ endpoint: '/files/upload' });
 
-  const currentFolderData = folders?.find((f) => f.id === currentFolder);
+  const foldersList = (Array.isArray(folders)
+    ? folders
+    : (folders && typeof folders === 'object' && Array.isArray((folders as unknown as Record<string, unknown>).folders))
+    ? (folders as unknown as Record<string, unknown>).folders as FolderType[]
+    : []) as FolderType[];
+
+  const filesList = (Array.isArray(files)
+    ? files
+    : (files && typeof files === 'object' && Array.isArray((files as unknown as Record<string, unknown>).items))
+    ? (files as unknown as Record<string, unknown>).items as FileItem[]
+    : []) as FileItem[];
+
+  const currentFolderData = foldersList?.find((f) => f.id === currentFolder);
 
   const renderPreview = () => {
     if (!previewFile) return null;
@@ -84,7 +96,7 @@ export function FileExplorer() {
           <FolderOpen className="h-4 w-4" />
           Mes Fichiers
         </button>
-        {(folders || []).map((folder) => (
+        {foldersList.map((folder) => (
           <FolderItem
             key={folder.id}
             folder={folder}
@@ -170,7 +182,7 @@ export function FileExplorer() {
         {moveFileId && (
           <div className="flex gap-2 items-center flex-wrap p-3 rounded-card border border-primary/30 bg-primary/5">
             <span className="text-sm">Déplacer vers :</span>
-            {(folders || []).map((f) => (
+            {foldersList.map((f) => (
               <Button
                 key={f.id}
                 size="sm"
@@ -209,7 +221,7 @@ export function FileExplorer() {
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-            {(files || []).map((file) => (
+            {filesList.map((file) => (
               <FileCard
                 key={file.id}
                 file={file}
@@ -221,7 +233,7 @@ export function FileExplorer() {
           </div>
         ) : (
           <div className="space-y-1">
-            {(files || []).map((file) => (
+            {filesList.map((file) => (
               <FileRow
                 key={file.id}
                 file={file}
