@@ -24,10 +24,22 @@ export function useAuth() {
   const { isLoading: isFetching } = useQuery({
     queryKey: ['auth', 'me'],
     queryFn: async () => {
-      const raw = await apiClient.get<Record<string, unknown>>('/auth/me');
-      const mapped = mapBackendUser(raw);
-      setUser(mapped);
-      return mapped;
+      try {
+        const raw = await apiClient.get<Record<string, unknown>>('/auth/me');
+        const mapped = mapBackendUser(raw);
+        setUser(mapped);
+        return mapped;
+      } catch (error: unknown) {
+        const apiError = error as { status?: number };
+        // 401 = session expirée côté serveur → déconnecter proprement
+        if (apiError?.status === 401) {
+          clearAuthSession();
+          storeLogout();
+          queryClient.clear();
+          return null;
+        }
+        throw error;
+      }
     },
     enabled: isAuthenticated,
     retry: false,

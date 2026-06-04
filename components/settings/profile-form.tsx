@@ -2,13 +2,15 @@
 
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
+import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUpdateProfile } from '@/hooks/use-auth';
 import { CountrySelector } from '@/components/shared/country-selector';
-import { Camera, X, Upload, Check } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
+import { Camera, Upload, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProfileFormValues {
@@ -49,29 +51,30 @@ export function ProfileForm() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Valider le type de fichier
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner une image');
       return;
     }
-
-    // Valider la taille (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('La taille de l\'image ne doit pas dépasser 5MB');
+      toast.error("L'image ne doit pas dépasser 5MB");
       return;
     }
 
+    // Preview local immédiatement
+    const reader = new FileReader();
+    reader.onload = (event) => setAvatarPreview(event.target?.result as string);
+    reader.readAsDataURL(file);
+
+    // Upload réel
     try {
       setIsUploadingAvatar(true);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setAvatarPreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      // Ici, vous pouvez envoyer le fichier au serveur
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulation
+      const fd = new FormData();
+      fd.append('avatar', file);
+      await apiClient.upload('/auth/avatar', fd);
       toast.success('Photo de profil mise à jour');
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      toast.error(e?.message || "Erreur lors de l'upload de la photo");
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -85,22 +88,24 @@ export function ProfileForm() {
       toast.error('Veuillez sélectionner une image');
       return;
     }
-
     if (file.size > 10 * 1024 * 1024) {
-      toast.error('La taille de l\'image ne doit pas dépasser 10MB');
+      toast.error("L'image ne doit pas dépasser 10MB");
       return;
     }
 
+    const reader = new FileReader();
+    reader.onload = (event) => setCoverPreview(event.target?.result as string);
+    reader.readAsDataURL(file);
+
     try {
       setIsUploadingCover(true);
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setCoverPreview(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      const fd = new FormData();
+      fd.append('cover', file);
+      await apiClient.upload('/auth/cover', fd);
       toast.success('Photo de couverture mise à jour');
+    } catch (err: unknown) {
+      const e = err as { message?: string };
+      toast.error(e?.message || "Erreur lors de l'upload de la couverture");
     } finally {
       setIsUploadingCover(false);
     }
@@ -108,9 +113,14 @@ export function ProfileForm() {
 
   const onSubmit = (data: ProfileFormValues) => {
     updateProfile.mutate({
-      ...data,
-      avatar: avatarPreview || user?.avatar,
-      cover_image: coverPreview || user?.cover_image,
+      full_name: data.full_name,
+      phone_number: data.phone_number,
+      organization: data.organization,
+      country: data.country,
+      bio: data.bio,
+      job_title: data.job_title,
+      department: data.department,
+      gender: data.gender,
     } as any);
   };
 

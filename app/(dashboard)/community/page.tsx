@@ -11,9 +11,18 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { useGroups } from '@/hooks/use-community';
+import { useGroups, useCommunityStats, useTrendingGroups } from '@/hooks/use-community';
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
+
+type TrendingGroup = {
+  id?: string;
+  name: string;
+  members_count?: number;
+  member_count?: number;
+  growth_percent?: number;
+  trend_score?: number;
+};
 
 export default function CommunityPage() {
   const [search, setSearch] = useState('');
@@ -25,24 +34,50 @@ export default function CommunityPage() {
   const { data, isLoading } = useGroups({
     search: debouncedSearch || undefined,
     type: type !== 'all' ? type : undefined,
+    sort: sortBy,
   });
+
+  const { data: communityStats } = useCommunityStats();
+  const { data: trendingData } = useTrendingGroups();
 
   const groups = data?.data || [];
 
-  // Mock trending groups
-  const trendingGroups = [
-    { name: 'Maraîchage bio', members: 1250, growth: 15 },
-    { name: 'Élevage durable', members: 980, growth: 12 },
-    { name: 'Coton équitable', members: 850, growth: 8 },
+  // Real or fallback stats
+  const stats = [
+    {
+      icon: Users,
+      label: 'Membres actifs',
+      value: communityStats?.active_members?.toLocaleString('fr-FR') || '—',
+      color: 'text-blue-500',
+    },
+    {
+      icon: MessageSquare,
+      label: 'Discussions',
+      value: (communityStats?.total_discussions ?? (communityStats as unknown as { total_posts?: number } | undefined)?.total_posts)?.toLocaleString('fr-FR') || '—',
+      color: 'text-green-500',
+    },
+    {
+      icon: TrendingUp,
+      label: 'Groupes',
+      value: communityStats?.total_groups?.toLocaleString('fr-FR') || String(data?.total || '—'),
+      color: 'text-purple-500',
+    },
+    {
+      icon: Flame,
+      label: 'Croissance',
+      value: communityStats?.growth_percent != null ? `+${communityStats.growth_percent}%` : '—',
+      color: 'text-orange-500',
+    },
   ];
 
-  // Mock community stats
-  const stats = [
-    { icon: Users, label: 'Membres actifs', value: '12,450', color: 'text-blue-500' },
-    { icon: MessageSquare, label: 'Discussions', value: '3,240', color: 'text-green-500' },
-    { icon: TrendingUp, label: 'Groupes', value: '284', color: 'text-purple-500' },
-    { icon: Flame, label: 'Tendance', value: '+24%', color: 'text-orange-500' },
-  ];
+  // Trending groups from API or fallback
+  const trendingGroups: TrendingGroup[] = (trendingData && (trendingData as unknown as TrendingGroup[]).length > 0)
+    ? (trendingData as unknown as TrendingGroup[])
+    : [
+        { id: '1', name: 'Maraîchage bio', members_count: 1250, growth_percent: 15 },
+        { id: '2', name: 'Élevage durable', members_count: 980, growth_percent: 12 },
+        { id: '3', name: 'Coton équitable', members_count: 850, growth_percent: 8 },
+      ];
 
   const [showCreate, setShowCreate] = useState(false);
 
@@ -135,14 +170,18 @@ export default function CommunityPage() {
                 <h3 className="font-semibold text-sm">En tendance</h3>
               </div>
               
-              {trendingGroups.map((group, idx) => (
-                <div key={idx} className="p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer">
+              {trendingGroups.map((group: TrendingGroup, idx: number) => (
+                <div key={group.id || idx} className="p-3 bg-muted/50 rounded-lg hover:bg-muted transition-colors cursor-pointer">
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <p className="text-sm font-medium">{group.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{group.members.toLocaleString()} membres</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {(group.members_count ?? group.member_count ?? 0).toLocaleString('fr-FR')} membres
+                      </p>
                     </div>
-                    <Badge variant="outline" className="text-green-600 text-xs">+{group.growth}%</Badge>
+                    <Badge variant="outline" className="text-green-600 text-xs">
+                      +{group.growth_percent ?? group.trend_score ?? 0}%
+                    </Badge>
                   </div>
                 </div>
               ))}

@@ -13,7 +13,7 @@ import { PostComposer } from '@/components/community/post-composer';
 import { CommentThread } from '@/components/community/comment-thread';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
-import { useGroup, useGroupPosts, useGroupMembers, useJoinGroup } from '@/hooks/use-community';
+import { useGroup, useGroupPosts, useGroupMembers, useJoinGroup, useLeaveGroup } from '@/hooks/use-community';
 import { GroupThread } from '@/components/community/group-thread';
 
 export default function GroupDetailPage() {
@@ -22,8 +22,9 @@ export default function GroupDetailPage() {
 
   const { data: group, isLoading: groupLoading } = useGroup(groupId);
   const { data: postsData, isLoading: postsLoading, fetchNextPage, hasNextPage } = useGroupPosts(groupId);
-  const { data: members } = useGroupMembers(groupId);
+  const { data: members, isLoading: membersLoading } = useGroupMembers(groupId);
   const join = useJoinGroup();
+  const leave = useLeaveGroup();
 
   const posts = postsData?.pages.flatMap((p) => p.data) || [];
 
@@ -68,7 +69,7 @@ export default function GroupDetailPage() {
                 </Button>
               )}
               {group.membership_status === 'member' && (
-                <Button size="sm" variant="outline" className="gap-2">
+                <Button size="sm" variant="outline" className="gap-2 border-red-200 text-red-600 hover:bg-red-50" onClick={() => leave.mutate(group.id)} disabled={leave.isPending}>
                   <UserMinus className="h-4 w-4" />
                   Quitter
                 </Button>

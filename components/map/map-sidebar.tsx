@@ -1,12 +1,14 @@
 'use client';
 
-import { Layers, Map as MapIcon, Filter, Droplet, AlertCircle, Users, TrendingUp, MapPin } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { Layers, Filter, MapPin, AlertCircle, Users, RefreshCw, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useMapStore, selectLayers, selectVisibleLayers } from '@/stores/map-store';
+import { useMapMarkers } from '@/hooks/use-geolocation';
 import { cn } from '@/lib/utils';
 
 interface MapSidebarProps {
@@ -17,195 +19,257 @@ interface MapSidebarProps {
 }
 
 export function MapSidebar({ activeTab, onTabChange, selectedMarker, onMarkerSelect }: MapSidebarProps) {
+  const layers = useMapStore(selectLayers);
+  const toggleLayer = useMapStore((s) => s.toggleLayer);
+  const showAllLayers = useMapStore((s) => s.showAllLayers);
+  const hideAllLayers = useMapStore((s) => s.hideAllLayers);
+  const resetLayers = useMapStore((s) => s.resetLayers);
+
+  const { data: markers, isLoading: markersLoading, refetch } = useMapMarkers();
+  const [markerSearch, setMarkerSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [radiusKm, setRadiusKm] = useState(100);
+
+  const filteredMarkers = (markers || []).filter((m) => {
+    const matchSearch = !markerSearch || m.label.toLowerCase().includes(markerSearch.toLowerCase());
+    const matchType = typeFilter === 'all' || m.type === typeFilter;
+    return matchSearch && matchType;
+  });
+
   const tabs = [
     { id: 'layers' as const, label: 'Couches', icon: Layers },
     { id: 'filters' as const, label: 'Filtres', icon: Filter },
     { id: 'markers' as const, label: 'Marqueurs', icon: MapPin },
   ];
 
-  const layers = [
-    { id: 'weather', label: 'Météo', enabled: true, color: '#3B82F6' },
-    { id: 'predictions', label: 'Prédictions', enabled: true, color: '#8B5CF6' },
-    { id: 'alerts', label: 'Alertes', enabled: true, color: '#EF4444' },
-    { id: 'actors', label: 'Acteurs', enabled: true, color: '#10B981' },
-    { id: 'markets', label: 'Marchés', enabled: false, color: '#F59E0B' },
-  ];
-
-  const markers = [
-    { id: '1', name: 'Ferme Daouda', type: 'actor', lat: '14.7167', lng: '-14.5833', members: 12 },
-    { id: '2', name: 'Alerte Sécheresse', type: 'alert', lat: '14.6500', lng: '-14.4000', severity: 'high' },
-    { id: '3', name: 'Marché de Kaolack', type: 'market', lat: '13.9706', lng: '-16.0067', products: 8 },
-    { id: '4', name: 'Station Météo', type: 'weather', lat: '14.8000', lng: '-14.2000', temp: '32°C' },
-  ];
-
-  const filters = [
-    { id: 'radius', label: 'Rayon (km)', type: 'range', value: 50, max: 200 },
-    { id: 'minMembers', label: 'Min. membres', type: 'number', value: 0 },
-    { id: 'severity', label: 'Alertes', type: 'select', value: 'all' },
-  ];
-
-  if (activeTab === 'layers') {
-    return (
-      <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-border">
-          <h2 className="font-semibold text-sm">Couches de la carte</h2>
-          <p className="text-xs text-muted-foreground mt-1">Affichage/masquage des couches</p>
-        </div>
-
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-3">
-            {layers.map((layer) => (
-              <div key={layer.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <div 
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: layer.color }}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{layer.label}</p>
-                </div>
-                <Switch defaultChecked={layer.enabled} />
-              </div>
-            ))}
-          </div>
-        </ScrollArea>
-
-        <div className="p-4 border-t border-border space-y-2">
-          <Button variant="outline" className="w-full text-xs" size="sm">
-            Réinitialiser
-          </Button>
-        </div>
+  return (
+    <div className="h-full flex flex-col">
+      {/* Tab navigation */}
+      <div className="flex border-b border-border">
+        {tabs.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => onTabChange(id)}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-medium transition-colors',
+              activeTab === id
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </button>
+        ))}
       </div>
-    );
-  }
 
-  if (activeTab === 'filters') {
-    return (
-      <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-border">
-          <h2 className="font-semibold text-sm">Filtres avancés</h2>
-          <p className="text-xs text-muted-foreground mt-1">Affiner votre recherche</p>
-        </div>
-
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-4">
-            {/* Type Filter */}
-            <div>
-              <label className="text-xs font-medium block mb-2">Type de marqueur</label>
-              {['Acteurs', 'Alertes', 'Marchés', 'Météo'].map((type) => (
-                <div key={type} className="flex items-center gap-2 py-1.5">
-                  <Checkbox id={`type-${type}`} defaultChecked />
-                  <label htmlFor={`type-${type}`} className="text-xs cursor-pointer">{type}</label>
+      {/* ── LAYERS TAB ── */}
+      {activeTab === 'layers' && (
+        <div className="flex-1 flex flex-col">
+          <div className="p-3 border-b border-border">
+            <p className="text-xs text-muted-foreground">Activez ou désactivez les couches</p>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="p-3 space-y-2">
+              {layers.map((layer) => (
+                <div
+                  key={layer.id}
+                  className={cn(
+                    'flex items-center gap-3 p-3 rounded-lg transition-colors',
+                    layer.visible ? 'bg-muted' : 'bg-muted/30 opacity-60'
+                  )}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: layer.color }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {layer.icon} {layer.label}
+                    </p>
+                    <p className="text-xs text-muted-foreground capitalize">{layer.type}</p>
+                  </div>
+                  <Switch
+                    checked={layer.visible}
+                    onCheckedChange={() => toggleLayer(layer.id)}
+                  />
                 </div>
               ))}
             </div>
-
-            {/* Radius */}
-            <div>
-              <label className="text-xs font-medium block mb-2">Rayon: <span className="font-bold">50 km</span></label>
-              <input 
-                type="range" 
-                min="0" 
-                max="200" 
-                defaultValue="50"
-                className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer"
-              />
+          </ScrollArea>
+          <div className="p-3 border-t border-border space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <Button variant="outline" size="sm" className="text-xs" onClick={showAllLayers}>
+                Tout afficher
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs" onClick={hideAllLayers}>
+                Tout masquer
+              </Button>
             </div>
-
-            {/* Min Members */}
-            <div>
-              <label className="text-xs font-medium block mb-2">Minimum de membres</label>
-              <Input type="number" placeholder="0" defaultValue="0" className="text-xs h-8" />
-            </div>
-
-            {/* Severity */}
-            <div>
-              <label className="text-xs font-medium block mb-2">Niveau d'alerte</label>
-              <select className="w-full px-2 py-1.5 text-xs border border-input rounded-md bg-background">
-                <option>Tous les niveaux</option>
-                <option>Critique</option>
-                <option>Élevé</option>
-                <option>Moyen</option>
-                <option>Faible</option>
-              </select>
-            </div>
+            <Button variant="ghost" size="sm" className="w-full text-xs" onClick={resetLayers}>
+              <RefreshCw className="h-3 w-3 mr-1" /> Réinitialiser
+            </Button>
           </div>
-        </ScrollArea>
-
-        <div className="p-4 border-t border-border space-y-2">
-          <Button className="w-full text-xs" size="sm">
-            Appliquer
-          </Button>
-          <Button variant="outline" className="w-full text-xs" size="sm">
-            Réinitialiser
-          </Button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-border">
-        <h2 className="font-semibold text-sm">Marqueurs</h2>
-        <p className="text-xs text-muted-foreground mt-1">{markers.length} marqueurs trouvés</p>
-      </div>
+      {/* ── FILTERS TAB ── */}
+      {activeTab === 'filters' && (
+        <div className="flex-1 flex flex-col">
+          <div className="p-3 border-b border-border">
+            <p className="text-xs text-muted-foreground">Affiner les données affichées</p>
+          </div>
+          <ScrollArea className="flex-1">
+            <div className="p-3 space-y-4">
+              {/* Type filter */}
+              <div>
+                <label className="text-xs font-semibold block mb-2">Type de donnée</label>
+                <div className="space-y-1.5">
+                  {[
+                    { value: 'all', label: 'Tous', icon: '📍' },
+                    { value: 'actor', label: 'Acteurs', icon: '👥' },
+                    { value: 'alert', label: 'Alertes', icon: '⚠️' },
+                    { value: 'weather', label: 'Météo', icon: '🌤️' },
+                    { value: 'market', label: 'Marchés', icon: '🏪' },
+                  ].map(({ value, label, icon }) => (
+                    <button
+                      key={value}
+                      onClick={() => setTypeFilter(value)}
+                      className={cn(
+                        'w-full text-left flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors',
+                        typeFilter === value
+                          ? 'bg-primary/10 text-primary'
+                          : 'hover:bg-muted text-muted-foreground'
+                      )}
+                    >
+                      <span>{icon}</span>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-      <div className="px-4 pt-4 pb-3">
-        <input 
-          type="text"
-          placeholder="Rechercher un marqueur..."
-          className="w-full px-3 py-2 text-xs border border-input rounded-md bg-background"
-        />
-      </div>
+              {/* Radius */}
+              <div>
+                <label className="text-xs font-semibold block mb-2">
+                  Rayon de recherche: <span className="text-primary font-bold">{radiusKm} km</span>
+                </label>
+                <input
+                  type="range"
+                  min="10"
+                  max="500"
+                  step="10"
+                  value={radiusKm}
+                  onChange={(e) => setRadiusKm(Number(e.target.value))}
+                  className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                  <span>10 km</span>
+                  <span>500 km</span>
+                </div>
+              </div>
 
-      <ScrollArea className="flex-1">
-        <div className="px-4 space-y-2">
-          {markers.map((marker) => (
-            <button
-              key={marker.id}
-              onClick={() => onMarkerSelect(selectedMarker === marker.id ? null : marker.id)}
-              className={cn(
-                'w-full text-left p-3 rounded-lg border transition-all',
-                selectedMarker === marker.id
-                  ? 'bg-primary/10 border-primary'
-                  : 'bg-muted/50 border-border hover:border-primary/50'
-              )}
-            >
-              <div className="flex items-start gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{marker.name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {marker.lat}, {marker.lng}
-                  </p>
-                  {marker.type === 'actor' && (
-                    <Badge variant="outline" className="text-xs mt-1.5">
-                      <Users className="h-3 w-3 mr-1" />
-                      {marker.members} membres
+              {/* Layer visibility summary */}
+              <div>
+                <label className="text-xs font-semibold block mb-2">Couches actives</label>
+                <div className="flex flex-wrap gap-1">
+                  {layers.filter((l) => l.visible).map((l) => (
+                    <Badge
+                      key={l.id}
+                      variant="outline"
+                      className="text-xs cursor-pointer hover:opacity-70"
+                      style={{ borderColor: l.color, color: l.color }}
+                      onClick={() => toggleLayer(l.id)}
+                    >
+                      {l.icon} {l.label}
                     </Badge>
-                  )}
-                  {marker.type === 'alert' && (
-                    <Badge variant="destructive" className="text-xs mt-1.5">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      {marker.severity}
-                    </Badge>
-                  )}
-                  {marker.type === 'market' && (
-                    <Badge variant="outline" className="text-xs mt-1.5">
-                      {marker.products} produits
-                    </Badge>
+                  ))}
+                  {layers.filter((l) => l.visible).length === 0 && (
+                    <p className="text-xs text-muted-foreground">Aucune couche active</p>
                   )}
                 </div>
               </div>
-            </button>
-          ))}
+            </div>
+          </ScrollArea>
+          <div className="p-3 border-t border-border">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-xs"
+              onClick={() => { setTypeFilter('all'); setRadiusKm(100); }}
+            >
+              Réinitialiser les filtres
+            </Button>
+          </div>
         </div>
-      </ScrollArea>
+      )}
 
-      <div className="p-4 border-t border-border">
-        <Button variant="outline" className="w-full text-xs" size="sm">
-          Exporter les marqueurs
-        </Button>
-      </div>
+      {/* ── MARKERS TAB ── */}
+      {activeTab === 'markers' && (
+        <div className="flex-1 flex flex-col">
+          <div className="p-3 border-b border-border">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs text-muted-foreground">
+                {filteredMarkers.length} marqueur{filteredMarkers.length !== 1 ? 's' : ''}
+              </p>
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => refetch()}>
+                <RefreshCw className="h-3 w-3" />
+              </Button>
+            </div>
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={markerSearch}
+              onChange={(e) => setMarkerSearch(e.target.value)}
+              className="w-full px-3 py-1.5 text-xs border border-input rounded-md bg-background"
+            />
+          </div>
+
+          <ScrollArea className="flex-1">
+            <div className="p-2 space-y-1">
+              {markersLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                ))
+              ) : filteredMarkers.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-8">
+                  {markerSearch ? 'Aucun résultat' : 'Aucun marqueur disponible'}
+                </p>
+              ) : (
+                filteredMarkers.map((marker) => (
+                  <button
+                    key={marker.id}
+                    onClick={() => onMarkerSelect(selectedMarker === marker.id ? null : marker.id)}
+                    className={cn(
+                      'w-full text-left p-3 rounded-lg border transition-all',
+                      selectedMarker === marker.id
+                        ? 'bg-primary/10 border-primary shadow-sm'
+                        : 'bg-muted/30 border-transparent hover:border-border hover:bg-muted'
+                    )}
+                  >
+                    <div className="flex items-start gap-2">
+                      <div
+                        className="h-3 w-3 rounded-full flex-shrink-0 mt-1"
+                        style={{ backgroundColor: marker.color }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold truncate">{marker.label}</p>
+                        {marker.description && (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{marker.description}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground opacity-60">
+                          {marker.lat.toFixed(4)}, {marker.lng.toFixed(4)}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-xs shrink-0">{marker.type}</Badge>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
     </div>
   );
 }

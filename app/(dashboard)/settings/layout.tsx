@@ -36,7 +36,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
         {/* Sidebar Navigation */}
         <div className="lg:col-span-1">
           <nav 
-            className="space-y-2 sticky top-20" 
+            className="space-y-1 sticky top-20"
             aria-label="Paramètres"
           >
             {tabs.map(({ href, label, icon: Icon, description }) => (
@@ -59,8 +59,8 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             ))}
           </nav>
 
-          {/* Info Card */}
-          <div className="mt-8 p-4 bg-muted rounded-lg border border-border">
+          {/* Info Card — static, never floats or animates */}
+          <div className="mt-6 p-4 bg-muted rounded-lg border border-border" style={{ position: 'static' }}>
             <div className="flex items-start gap-2">
               <Shield className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
               <div>

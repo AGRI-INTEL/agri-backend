@@ -1,121 +1,141 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useUIStore } from '@/stores/ui-store';
 import { useUpdateProfile } from '@/hooks/use-auth';
+import { useUpdatePreferences, useGetPreferences } from '@/hooks/use-settings';
 import { toast } from 'sonner';
 import { 
-  Bell, 
-  Moon, 
-  Monitor, 
-  Sun, 
-  Globe, 
-  Clock, 
-  Eye, 
-  Mail,
-  MessageSquare,
-  AlertCircle,
-  Calendar,
-  Check,
-  RotateCcw
+  Bell, Moon, Monitor, Sun, Globe, Clock, Eye, Mail,
+  MessageSquare, AlertCircle, Calendar, Check, RotateCcw, Wifi,
 } from 'lucide-react';
 
 export function PreferencesForm() {
   const { theme, setTheme } = useUIStore();
   const updateProfile = useUpdateProfile();
-  const [isSaving, setIsSaving] = useState(false);
+  const updatePreferences = useUpdatePreferences();
+  const { data: serverPrefs, isLoading: prefsLoading } = useGetPreferences();
 
-  // États des préférences de notifications
   const [notifPreferences, setNotifPreferences] = useState({
-    emailAlerts: true,
-    pushNotifications: true,
-    weeklyDigest: false,
-    weatherAlerts: true,
-    predictionAlerts: true,
-    communityUpdates: true,
-    marketPriceChanges: false,
-    systemNotifications: true,
-    newsLetter: false,
+    email_alerts: true,
+    push_notifications: true,
+    weekly_digest: false,
+    weather_alerts: true,
+    prediction_alerts: true,
+    community_updates: true,
+    market_price_changes: false,
+    system_notifications: true,
+    newsletter: false,
   });
 
   const [generalPreferences, setGeneralPreferences] = useState({
     language: 'fr',
     timezone: 'Africa/Dakar',
-    dateFormat: 'DD/MM/YYYY',
-    timeFormat: '24h',
-    defaultListView: 'grid',
-    enableShortcuts: true,
+    date_format: 'DD/MM/YYYY',
+    time_format: '24h',
+    default_view: 'grid',
+    enable_shortcuts: true,
   });
 
   const [privacyPreferences, setPrivacyPreferences] = useState({
-    profilePublic: true,
-    showOnlineStatus: true,
-    allowMessages: true,
-    shareActivity: false,
-    showEmail: false,
-    showPhone: false,
+    profile_public: true,
+    show_online_status: true,
+    allow_messages: true,
+    share_activity: false,
+    show_email: false,
+    show_phone: false,
   });
+
+  // Hydrate from server on load
+  useEffect(() => {
+    if (!serverPrefs) return;
+    if (serverPrefs.notifications) {
+      setNotifPreferences((prev) => ({ ...prev, ...(serverPrefs.notifications as any) }));
+    }
+    if (serverPrefs.privacy) {
+      setPrivacyPreferences((prev) => ({ ...prev, ...(serverPrefs.privacy as any) }));
+    }
+    if (serverPrefs.language) {
+      setGeneralPreferences((prev) => ({ ...prev, language: serverPrefs.language! }));
+    }
+    if (serverPrefs.timezone) {
+      setGeneralPreferences((prev) => ({ ...prev, timezone: serverPrefs.timezone! }));
+    }
+    if (serverPrefs.date_format) {
+      setGeneralPreferences((prev) => ({ ...prev, date_format: serverPrefs.date_format! }));
+    }
+    if (serverPrefs.time_format) {
+      setGeneralPreferences((prev) => ({ ...prev, time_format: serverPrefs.time_format! }));
+    }
+  }, [serverPrefs]);
 
   const saveTheme = (t: 'light' | 'dark' | 'system') => {
     setTheme(t);
-    updateProfile.mutate(
-      { theme: t === 'system' ? undefined : t },
-      { onSuccess: () => toast.success('Apparence mise à jour') }
-    );
+    updateProfile.mutate({ theme: t } as any);
   };
 
   const savePreferences = async () => {
-    try {
-      setIsSaving(true);
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulation API
-      
-      updateProfile.mutate(
-        {
-          language: generalPreferences.language,
-          timezone: generalPreferences.timezone,
-          notifications: notifPreferences,
-          privacy: privacyPreferences,
-        } as any,
-        { onSuccess: () => toast.success('Préférences enregistrées') }
-      );
-    } finally {
-      setIsSaving(false);
-    }
+    await updatePreferences.mutateAsync({
+      language: generalPreferences.language,
+      timezone: generalPreferences.timezone,
+      date_format: generalPreferences.date_format,
+      time_format: generalPreferences.time_format,
+      default_view: generalPreferences.default_view,
+      enable_shortcuts: generalPreferences.enable_shortcuts,
+      notifications: notifPreferences,
+      privacy: privacyPreferences,
+    });
+    // Also sync language/timezone to user profile
+    updateProfile.mutate({
+      language: generalPreferences.language,
+      timezone: generalPreferences.timezone,
+    } as any);
   };
 
   const resetToDefaults = () => {
     setNotifPreferences({
-      emailAlerts: true,
-      pushNotifications: true,
-      weeklyDigest: false,
-      weatherAlerts: true,
-      predictionAlerts: true,
-      communityUpdates: true,
-      marketPriceChanges: false,
-      systemNotifications: true,
-      newsLetter: false,
+      email_alerts: true,
+      push_notifications: true,
+      weekly_digest: false,
+      weather_alerts: true,
+      prediction_alerts: true,
+      community_updates: true,
+      market_price_changes: false,
+      system_notifications: true,
+      newsletter: false,
     });
     setGeneralPreferences({
       language: 'fr',
       timezone: 'Africa/Dakar',
-      dateFormat: 'DD/MM/YYYY',
-      timeFormat: '24h',
-      defaultListView: 'grid',
-      enableShortcuts: true,
+      date_format: 'DD/MM/YYYY',
+      time_format: '24h',
+      default_view: 'grid',
+      enable_shortcuts: true,
     });
     setPrivacyPreferences({
-      profilePublic: true,
-      showOnlineStatus: true,
-      allowMessages: true,
-      shareActivity: false,
-      showEmail: false,
-      showPhone: false,
+      profile_public: true,
+      show_online_status: true,
+      allow_messages: true,
+      share_activity: false,
+      show_email: false,
+      show_phone: false,
     });
     toast.success('Préférences réinitialisées par défaut');
   };
+
+  if (prefsLoading) {
+    return (
+      <div className="space-y-4">
+        {[1,2,3,4].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
+      </div>
+    );
+  }
+
+  const isSaving = updatePreferences.isPending || updateProfile.isPending;
 
   return (
     <div className="space-y-8">
@@ -159,9 +179,9 @@ export function PreferencesForm() {
           <div>
             <label className="text-sm font-medium block mb-2">Vue par défaut</label>
             <Select 
-              value={generalPreferences.defaultListView} 
+              value={generalPreferences.default_view} 
               onValueChange={(value) => 
-                setGeneralPreferences({...generalPreferences, defaultListView: value})
+                setGeneralPreferences({...generalPreferences, default_view: value})
               }
             >
               <SelectTrigger>
@@ -220,7 +240,10 @@ export function PreferencesForm() {
               <SelectContent>
                 <SelectItem value="Africa/Dakar">Africa/Dakar (GMT)</SelectItem>
                 <SelectItem value="Africa/Lagos">Africa/Lagos (GMT+1)</SelectItem>
+                <SelectItem value="Africa/Nairobi">Africa/Nairobi (GMT+3)</SelectItem>
                 <SelectItem value="Africa/Johannesburg">Africa/Johannesburg (GMT+2)</SelectItem>
+                <SelectItem value="Africa/Casablanca">Africa/Casablanca (GMT+1)</SelectItem>
+                <SelectItem value="Europe/Paris">Europe/Paris (GMT+1/2)</SelectItem>
                 <SelectItem value="UTC">UTC</SelectItem>
               </SelectContent>
             </Select>
@@ -229,9 +252,9 @@ export function PreferencesForm() {
           <div>
             <label className="text-sm font-medium block mb-2">Format de date</label>
             <Select 
-              value={generalPreferences.dateFormat} 
+              value={generalPreferences.date_format} 
               onValueChange={(fmt) => 
-                setGeneralPreferences({...generalPreferences, dateFormat: fmt})
+                setGeneralPreferences({...generalPreferences, date_format: fmt})
               }
             >
               <SelectTrigger>
@@ -248,9 +271,9 @@ export function PreferencesForm() {
           <div>
             <label className="text-sm font-medium block mb-2">Format d'heure</label>
             <Select 
-              value={generalPreferences.timeFormat} 
+              value={generalPreferences.time_format} 
               onValueChange={(fmt) => 
-                setGeneralPreferences({...generalPreferences, timeFormat: fmt})
+                setGeneralPreferences({...generalPreferences, time_format: fmt})
               }
             >
               <SelectTrigger>
@@ -273,96 +296,30 @@ export function PreferencesForm() {
         </div>
 
         <div className="space-y-3 ml-7">
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Alertes par email</span>
+          {[
+            { key: 'email_alerts', label: 'Alertes par email', icon: Mail },
+            { key: 'push_notifications', label: 'Notifications push', icon: Wifi },
+            { key: 'weather_alerts', label: 'Alertes météo', icon: AlertCircle },
+            { key: 'prediction_alerts', label: 'Alertes de prédiction', icon: Eye },
+            { key: 'community_updates', label: 'Mises à jour communautaires', icon: Globe },
+            { key: 'market_price_changes', label: 'Variations de prix marchés', icon: MessageSquare },
+            { key: 'weekly_digest', label: 'Résumé hebdomadaire', icon: Calendar },
+            { key: 'system_notifications', label: 'Notifications système', icon: Monitor },
+            { key: 'newsletter', label: 'Newsletter', icon: Mail },
+          ].map(({ key, label, icon: Icon }) => (
+            <div key={key} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Icon className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">{label}</span>
+              </div>
+              <Switch
+                checked={(notifPreferences as any)[key]}
+                onCheckedChange={(checked) =>
+                  setNotifPreferences({ ...notifPreferences, [key]: checked })
+                }
+              />
             </div>
-            <Switch 
-              checked={notifPreferences.emailAlerts}
-              onCheckedChange={(checked) => 
-                setNotifPreferences({...notifPreferences, emailAlerts: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Notifications push</span>
-            </div>
-            <Switch 
-              checked={notifPreferences.pushNotifications}
-              onCheckedChange={(checked) => 
-                setNotifPreferences({...notifPreferences, pushNotifications: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Alertes météo</span>
-            </div>
-            <Switch 
-              checked={notifPreferences.weatherAlerts}
-              onCheckedChange={(checked) => 
-                setNotifPreferences({...notifPreferences, weatherAlerts: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Eye className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Alertes de prédiction</span>
-            </div>
-            <Switch 
-              checked={notifPreferences.predictionAlerts}
-              onCheckedChange={(checked) => 
-                setNotifPreferences({...notifPreferences, predictionAlerts: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Résumé hebdomadaire</span>
-            </div>
-            <Switch 
-              checked={notifPreferences.weeklyDigest}
-              onCheckedChange={(checked) => 
-                setNotifPreferences({...notifPreferences, weeklyDigest: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Globe className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Mises à jour communautaires</span>
-            </div>
-            <Switch 
-              checked={notifPreferences.communityUpdates}
-              onCheckedChange={(checked) => 
-                setNotifPreferences({...notifPreferences, communityUpdates: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Newsletter</span>
-            </div>
-            <Switch 
-              checked={notifPreferences.newsLetter}
-              onCheckedChange={(checked) => 
-                setNotifPreferences({...notifPreferences, newsLetter: checked})
-              }
-            />
-          </div>
+          ))}
         </div>
       </div>
 
@@ -374,69 +331,28 @@ export function PreferencesForm() {
         </div>
 
         <div className="space-y-3 ml-7">
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm font-medium">Profil public</span>
-            <Switch 
-              checked={privacyPreferences.profilePublic}
-              onCheckedChange={(checked) => 
-                setPrivacyPreferences({...privacyPreferences, profilePublic: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm font-medium">Afficher le statut en ligne</span>
-            <Switch 
-              checked={privacyPreferences.showOnlineStatus}
-              onCheckedChange={(checked) => 
-                setPrivacyPreferences({...privacyPreferences, showOnlineStatus: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm font-medium">Autoriser les messages</span>
-            <Switch 
-              checked={privacyPreferences.allowMessages}
-              onCheckedChange={(checked) => 
-                setPrivacyPreferences({...privacyPreferences, allowMessages: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm font-medium">Afficher mon email</span>
-            <Switch 
-              checked={privacyPreferences.showEmail}
-              onCheckedChange={(checked) => 
-                setPrivacyPreferences({...privacyPreferences, showEmail: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm font-medium">Afficher mon téléphone</span>
-            <Switch 
-              checked={privacyPreferences.showPhone}
-              onCheckedChange={(checked) => 
-                setPrivacyPreferences({...privacyPreferences, showPhone: checked})
-              }
-            />
-          </div>
-
-          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-            <span className="text-sm font-medium">Partager mon activité</span>
-            <Switch 
-              checked={privacyPreferences.shareActivity}
-              onCheckedChange={(checked) => 
-                setPrivacyPreferences({...privacyPreferences, shareActivity: checked})
-              }
-            />
-          </div>
+          {[
+            { key: 'profile_public', label: 'Profil public' },
+            { key: 'show_online_status', label: 'Afficher le statut en ligne' },
+            { key: 'allow_messages', label: 'Autoriser les messages' },
+            { key: 'show_email', label: 'Afficher mon email' },
+            { key: 'show_phone', label: 'Afficher mon téléphone' },
+            { key: 'share_activity', label: 'Partager mon activité' },
+          ].map(({ key, label }) => (
+            <div key={key} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <span className="text-sm font-medium">{label}</span>
+              <Switch
+                checked={(privacyPreferences as any)[key]}
+                onCheckedChange={(checked) =>
+                  setPrivacyPreferences({ ...privacyPreferences, [key]: checked })
+                }
+              />
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Section Raccourcis Clavier */}
+      {/* Section Accessibilité */}
       <div className="space-y-4 pb-6 border-b border-border">
         <div className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-primary" />
@@ -450,9 +366,9 @@ export function PreferencesForm() {
               <span className="text-xs text-muted-foreground">Activez les raccourcis clavier pour une navigation rapide</span>
             </div>
             <Switch 
-              checked={generalPreferences.enableShortcuts}
+              checked={generalPreferences.enable_shortcuts}
               onCheckedChange={(checked) => 
-                setGeneralPreferences({...generalPreferences, enableShortcuts: checked})
+                setGeneralPreferences({...generalPreferences, enable_shortcuts: checked})
               }
             />
           </div>
@@ -463,11 +379,11 @@ export function PreferencesForm() {
       <div className="flex gap-3">
         <Button
           onClick={savePreferences}
-          loading={isSaving}
+          disabled={isSaving}
           className="flex items-center gap-2"
         >
           <Check className="h-4 w-4" />
-          Enregistrer les préférences
+          {isSaving ? 'Enregistrement...' : 'Enregistrer les préférences'}
         </Button>
         <Button
           type="button"
@@ -482,3 +398,4 @@ export function PreferencesForm() {
     </div>
   );
 }
+

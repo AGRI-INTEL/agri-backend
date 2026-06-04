@@ -6,16 +6,15 @@ import type { Group, Post, Comment, Member } from '@/types/community';
 import type { PaginatedResponse } from '@/types/api';
 import { toast } from 'sonner';
 
-export function useGroups(filters: { type?: string; search?: string } = {}) {
+export function useGroups(filters: { type?: string; search?: string; sort?: string } = {}) {
   return useQuery({
     queryKey: ['groups', filters],
     queryFn: async () => {
       try {
         return await apiClient.get<PaginatedResponse<Group>>('/community/groups', {
-          params: filters as Record<string, string>,
+          params: { ...filters } as Record<string, string>,
         });
       } catch (e: any) {
-        // If unauthorized, return a small mock set so UI remains usable while offline/auth required
         if (e?.status === 401) {
           const mock: PaginatedResponse<Group> = {
             data: [
@@ -23,7 +22,7 @@ export function useGroups(filters: { type?: string; search?: string } = {}) {
                 id: 'public-1',
                 name: 'Groupe Demo: Maïs & Légumes',
                 slug: 'demo-mais-legumes',
-                description: 'Espace d\'échange pour les producteurs de maïs et légumes.',
+                description: "Espace d'échange pour les producteurs de maïs et légumes.",
                 type: 'public',
                 sector: 'vegetal',
                 tags: ['maïs', 'légumes'],
@@ -50,6 +49,21 @@ export function useGroups(filters: { type?: string; search?: string } = {}) {
         throw e;
       }
     },
+  });
+}
+
+export function useCommunityStats() {
+  return useQuery({
+    queryKey: ['community', 'stats'],
+    queryFn: () =>
+      apiClient.get<{
+        active_members: number;
+        total_discussions: number;
+        total_groups: number;
+        growth_percent: number;
+      }>('/community/stats'),
+    staleTime: 60_000,
+    retry: false,
   });
 }
 
@@ -107,8 +121,47 @@ export function useJoinGroup() {
     mutationFn: (groupId: string) => apiClient.post(`/community/groups/${groupId}/join`),
     onSuccess: (_, groupId) => {
       qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      qc.invalidateQueries({ queryKey: ['groups'] });
       toast.success('Demande envoyée !');
     },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useLeaveGroup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (groupId: string) => apiClient.post(`/community/groups/${groupId}/leave`),
+    onSuccess: (_, groupId) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      toast.success('Vous avez quitté le groupe');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useDeleteGroup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (groupId: string) => apiClient.delete(`/community/groups/${groupId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      toast.success('Groupe supprimé');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useTrendingGroups() {
+  return useQuery({
+    queryKey: ['community', 'trending-groups'],
+    queryFn: () =>
+      apiClient.get<Array<{ id: string; name: string; members_count: number; growth_percent: number }>>(
+        '/community/trending'
+      ),
+    staleTime: 120_000,
+    retry: false,
   });
 }
 
