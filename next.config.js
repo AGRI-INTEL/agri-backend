@@ -40,7 +40,11 @@ const nextConfig = {
   turbopack: {},
   images: {
     remotePatterns: [
-      { protocol: 'https', hostname: '**' },
+      { protocol: 'https', hostname: '*.maptiler.com' },
+      { protocol: 'https', hostname: '*.openstreetmap.org' },
+      { protocol: 'https', hostname: '*.unsplash.com' },
+      { protocol: 'https', hostname: '*.githubusercontent.com' },
+      { protocol: 'https', hostname: 'api.agriintel360.com' },
     ],
     formats: ['image/avif', 'image/webp'],
     qualities: [75, 90],
@@ -57,7 +61,7 @@ const nextConfig = {
     return [
       {
         source: '/api/v1/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://api.agriintel360.com'}/api/v1/:path*`,
       },
     ];
   },
