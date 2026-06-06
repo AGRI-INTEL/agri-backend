@@ -1,11 +1,11 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import LinkButton from '@/components/ui/link-button';
 import Image from 'next/image';
 import { motion, useInView, useMotionValue, useSpring, animate } from '@/lib/motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles, Shield, BarChart3, Globe } from 'lucide-react';
 
 function AnimatedCounter({ value }: { value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
@@ -34,10 +34,10 @@ function AnimatedCounter({ value }: { value: string }) {
 }
 
 const STATS = [
-  { value: '50,000+', label: 'Agriculteurs actifs' },
-  { value: '2.5M', label: 'Hectares suivis' },
-  { value: '12', label: 'Pays couverts' },
-  { value: '98%', label: 'Précision IA' },
+  { value: '50,000+', label: 'Agriculteurs actifs', icon: Globe },
+  { value: '2.5M', label: 'Hectares suivis', icon: BarChart3 },
+  { value: '12', label: 'Pays couverts', icon: Shield },
+  { value: '98%', label: 'Précision IA', icon: Sparkles },
 ];
 
 export function HeroSection() {
@@ -46,75 +46,138 @@ export function HeroSection() {
       className="landing-hero relative min-h-[calc(100vh-4rem)] overflow-hidden bg-slate-950 pt-24"
       aria-label="Section héros"
     >
-      <div className="absolute inset-0 z-0">
+      {/* Animated gradient mesh background */}
+      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.3),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(59,130,246,0.15),_transparent_50%),radial-gradient(ellipse_at_bottom_left,_rgba(139,92,246,0.1),_transparent_50%)] animate-gradient" />
+
+      {/* Animated grid overlay */}
+      <div className="absolute inset-0 z-[1] opacity-[0.04]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+          backgroundSize: '60px 60px',
+        }}
+      />
+
+      {/* Floating decorative orbs */}
+      <div className="absolute top-20 left-[15%] w-72 h-72 rounded-full bg-emerald-500/10 blur-[100px] animate-float-slow" />
+      <div className="absolute bottom-40 right-[10%] w-96 h-96 rounded-full bg-blue-500/8 blur-[120px] animate-float-slow animation-delay-2000" />
+      <div className="absolute top-1/3 right-[25%] w-48 h-48 rounded-full bg-violet-500/8 blur-[80px] animate-float-slow animation-delay-4000" />
+
+      {/* Background image overlay */}
+      <div className="absolute inset-0 z-[1]">
         <Image
           src="/fond-landscape.jpg"
-          alt="Paysage agricole avec informations en surimpression"
+          alt=""
           fill
           priority
-          sizes="(max-width: 1024px) 100vw, 55vw"
-          className="object-cover"
+          sizes="100vw"
+          className="object-cover opacity-30"
         />
       </div>
 
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/90 via-emerald-950/70 to-slate-900/90" aria-hidden />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(52,211,153,0.18),_transparent_35%)] opacity-80" aria-hidden />
+      {/* Gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-emerald-950/80 to-slate-950/95 z-[2]" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-[2]" aria-hidden />
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center justify-center px-4 py-24 text-center sm:px-6 lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9 }}>
-          <div className="inline-flex items-center gap-3 rounded-full border border-emerald-300/20 bg-white/10 px-5 py-2.5 text-sm font-bold text-emerald-100 backdrop-blur-md shadow-sm shadow-emerald-950/20">
-            <div className="relative h-6 w-6">
+        {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+        >
+          <div className="inline-flex items-center gap-3 rounded-full border border-emerald-400/25 bg-white/[0.06] px-5 py-2.5 text-sm font-bold text-emerald-100 backdrop-blur-xl shadow-lg shadow-emerald-500/5">
+            <div className="relative h-5 w-5">
               <Image
                 src="/logo.png"
                 alt=""
                 fill
                 className="object-contain"
-                sizes="24px"
+                sizes="20px"
               />
             </div>
-            Plateforme d’intelligence agricole tout-en-un
+            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+            Plateforme d&apos;intelligence agricole tout-en-un
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15 }}>
-          <h1 className="mt-8 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl leading-tight">
-            Gérez vos cultures, vos données et vos alertes en un seul endroit.
+        {/* Main heading with gradient text */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.15, ease: [0.23, 1, 0.32, 1] }}
+        >
+          <h1 className="mt-8 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-200 to-white">
+              Gérez vos cultures, vos données
+            </span>
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-blue-400">
+              et vos alertes en un seul endroit.
+            </span>
           </h1>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.25 }}>
-          <p className="mx-auto mt-6 max-w-2xl text-base text-slate-200 sm:text-lg leading-8">
-            AgriIntel360 combine l’IA, les prévisions météo, le suivi de parcelles et les analyses de marché pour renforcer l’agriculture africaine.
+        {/* Subtitle */}
+        <motion.div
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, delay: 0.25, ease: [0.23, 1, 0.32, 1] }}
+        >
+          <p className="mx-auto mt-6 max-w-2xl text-base text-slate-300 sm:text-lg leading-8">
+            AgriIntel360 combine l&apos;IA, les prévisions météo, le suivi de parcelles et les analyses de marché pour renforcer l&apos;agriculture africaine.
           </p>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.4 }}>
+        {/* CTA Buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4, ease: [0.23, 1, 0.32, 1] }}
+        >
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <LinkButton href="/register" variant="glow" size="xl">
-              Créer un compte gratuit
-              <ArrowRight className="h-4 w-4" />
+            <LinkButton href="/register" variant="glow" size="xl" className="group relative overflow-hidden">
+              <span className="relative z-10 flex items-center gap-2">
+                Créer un compte gratuit
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </span>
+              <span className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-emerald-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             </LinkButton>
-            <LinkButton href="/login" variant="outline" size="xl" className="border-white/30 text-white hover:text-white hover:bg-white/15">
+            <LinkButton href="/login" variant="outline" size="xl" className="border-white/20 text-white hover:text-white hover:bg-white/10 backdrop-blur-sm">
               Se connecter
             </LinkButton>
           </div>
-          <div className="mt-4 text-center">
-            <Link href="#fonctionnalites" className="text-sm font-semibold text-emerald-300 hover:text-emerald-100 transition-colors">
-              Voir les fonctionnalités →
+          <div className="mt-4 flex items-center justify-center gap-2 text-center">
+            <Link href="#fonctionnalites" className="text-sm font-semibold text-emerald-300/80 hover:text-emerald-200 transition-colors">
+              Voir les fonctionnalités
             </Link>
+            <ArrowRight className="h-3 w-3 text-emerald-300/60" />
           </div>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.9, delay: 0.55 }}>
-          <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {STATS.map((stat) => (
-              <div key={stat.label} className="rounded-3xl border border-white/10 bg-white/5 px-6 py-5 text-left shadow-lg shadow-slate-950/10 backdrop-blur-md">
-                <p className="text-3xl font-black text-white">
-                  <AnimatedCounter value={stat.value} />
-                </p>
-                <p className="mt-2 text-sm uppercase tracking-[0.22em] text-slate-300">{stat.label}</p>
-              </div>
-            ))}
+        {/* Stats Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.55, ease: [0.23, 1, 0.32, 1] }}
+          className="mt-16 w-full"
+        >
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {STATS.map((stat) => {
+              const Icon = stat.icon;
+              return (
+                <div
+                  key={stat.label}
+                  className="group relative rounded-2xl border border-white/[0.08] bg-white/[0.04] px-6 py-5 text-left backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.08] hover:border-emerald-400/20 hover:shadow-lg hover:shadow-emerald-500/5"
+                >
+                  <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/3 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <Icon className="h-4 w-4 text-emerald-400/60 mb-3" />
+                  <p className="text-3xl font-black text-white">
+                    <AnimatedCounter value={stat.value} />
+                  </p>
+                  <p className="mt-1.5 text-xs uppercase tracking-[0.2em] text-slate-400 font-semibold">{stat.label}</p>
+                </div>
+              );
+            })}
           </div>
         </motion.div>
       </div>

@@ -30,8 +30,10 @@ export function useNotifications() {
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     const apiPrefix = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
-    const proto = apiUrl.startsWith('https') ? 'wss' : 'ws';
-    const host = apiUrl.replace(/^https?:\/\//, '');
+    // Allow overriding the WebSocket base URL separately (useful for dev tunnels)
+    const wsBase = process.env.NEXT_PUBLIC_WS_URL || apiUrl;
+    const proto = wsBase.startsWith('https') || wsBase.startsWith('wss') ? 'wss' : 'ws';
+    const host = wsBase.replace(/^wss?:\/\//, '').replace(/\/$/, '');
     const userId = currentUser?.id ?? 'anonymous';
     try {
       // Backend websocket endpoint is mounted under the API prefix: /api/v1/ws/{user_id}

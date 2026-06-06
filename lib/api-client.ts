@@ -53,7 +53,9 @@ export type ErrorInterceptor = (error: ApiError) => ApiError | Promise<ApiError>
 // SECTION 2: DEFAULT CONFIGURATION
 // ============================================================================
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
+const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
 
 const DEFAULT_CONFIG: Required<ApiClientConfig> = {
   baseUrl: API_BASE,
@@ -284,7 +286,7 @@ class ApiClient {
 
   private buildUrl(path: string, params?: Record<string, string | number | boolean | undefined | null>): string {
     const url = new URL(
-      path.startsWith('http') ? path : `${this.config.baseUrl}/api/${this.config.apiVersion}${path}`
+      path.startsWith('http') ? path : `${this.config.baseUrl}${API_PREFIX}${path.startsWith('/') ? path : `/${path}`}`
     );
 
     if (params) {

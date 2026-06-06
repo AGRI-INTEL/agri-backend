@@ -1,10 +1,13 @@
 import type { Metadata } from 'next';
+import dynamic from 'next/dynamic';
 import { HeroSection } from '@/components/landing/hero-section';
-import { FeaturesGrid } from '@/components/landing/features-grid';
-import { SectorShowcase } from '@/components/landing/sector-showcase';
-import { TestimonialCarousel } from '@/components/landing/testimonial-carousel';
-import { PricingCards } from '@/components/landing/pricing-cards';
-import { CTABanner } from '@/components/landing/cta-banner';
+import { AnimatedStatsBar } from '@/components/landing/stats-bar';
+
+const FeaturesGrid = dynamic(() => import('@/components/landing/features-grid').then(m => m.FeaturesGrid), { ssr: true });
+const SectorShowcase = dynamic(() => import('@/components/landing/sector-showcase').then(m => m.SectorShowcase), { ssr: true });
+const TestimonialCarousel = dynamic(() => import('@/components/landing/testimonial-carousel').then(m => m.TestimonialCarousel), { ssr: true });
+const PricingCards = dynamic(() => import('@/components/landing/pricing-cards').then(m => m.PricingCards), { ssr: true });
+const CTABanner = dynamic(() => import('@/components/landing/cta-banner').then(m => m.CTABanner), { ssr: true });
 
 export const metadata: Metadata = {
   title: 'AgriIntel360 — Intelligence Agricole pour l\'Afrique',
@@ -37,33 +40,7 @@ export default function LandingPage() {
   return (
     <>
       <HeroSection />
-
-      <section className="py-16 px-4 bg-slate-900 text-white">
-        <div className="max-w-content mx-auto grid gap-8 lg:grid-cols-3 items-center">
-          <div className="lg:col-span-2">
-            <p className="text-sm uppercase tracking-[0.28em] text-emerald-300 mb-4">Confiance & performance</p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight">
-              Des données fiables pour des décisions rapides et efficaces.
-            </h2>
-            <p className="mt-5 max-w-2xl text-slate-200 text-base sm:text-lg leading-8">
-              AgriIntel360 offre des alertes climatiques, des prévisions de rendement et des analyses de marché pour aider vos équipes à agir au bon moment.
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-            {[
-              { label: 'Réduction du risque', value: '82%' },
-              { label: 'Amélioration de rendement', value: '34%' },
-              { label: 'Couverture multi-pays', value: '12+' },
-            ].map((item) => (
-              <div key={item.label} className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-green/5 backdrop-blur-sm">
-                <p className="text-3xl font-bold text-white">{item.value}</p>
-                <p className="mt-2 text-sm text-slate-300">{item.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <AnimatedStatsBar />
 
       <FeaturesGrid />
       <SectorShowcase />

@@ -68,7 +68,6 @@
     font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
     font-size: 0.9375rem;
     line-height: 1.6;
-    background-image: radial-gradient(circle at top left, rgba(74, 222, 128, 0.08), transparent 25%), radial-gradient(circle at top right, rgba(16, 185, 129, 0.06), transparent 18%);
   }
 
   ::selection {
@@ -298,6 +297,54 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+
+  /* ── Futuristic animations ── */
+
+  @keyframes gradient-shift {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(5%, 5%) rotate(2deg); }
+    50% { transform: translate(-3%, 2%) rotate(-1deg); }
+    75% { transform: translate(2%, -4%) rotate(1deg); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-20px) scale(1.02); }
+  }
+
+  @keyframes float-reverse {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(15px) scale(0.98); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+  }
+
+  .animate-gradient {
+    animation: gradient-shift 20s ease-in-out infinite;
+  }
+
+  .animate-float-slow {
+    animation: float 8s ease-in-out infinite;
+  }
+
+  .animate-float-reverse {
+    animation: float-reverse 10s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 4s ease-in-out infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
   }
 
   /* Text truncate */

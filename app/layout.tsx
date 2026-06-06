@@ -1,22 +1,30 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import Script from 'next/script';
 import '@/styles/globals.css';
 import { Providers } from './providers';
 import { cn } from '@/lib/utils';
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: [
+    { path: '../fonts/inter/Inter-400.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/inter/Inter-500.woff2', weight: '500', style: 'normal' },
+    { path: '../fonts/inter/Inter-600.woff2', weight: '600', style: 'normal' },
+    { path: '../fonts/inter/Inter-700.woff2', weight: '700', style: 'normal' },
+    { path: '../fonts/inter/Inter-800.woff2', weight: '800', style: 'normal' },
+    { path: '../fonts/inter/Inter-900.woff2', weight: '900', style: 'normal' },
+  ],
   variable: '--font-inter',
   display: 'swap',
-  preload: false,
 });
 
-const mono = JetBrains_Mono({
-  subsets: ['latin'],
+const mono = localFont({
+  src: [
+    { path: '../fonts/jetbrains-mono/JetBrainsMono-400.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/jetbrains-mono/JetBrainsMono-700.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-jetbrains-mono',
   display: 'swap',
-  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -77,7 +85,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     hook.on = function() {};
                     hook.off = function() {};
                     hook.emit = function() {};
-                    hook.getFiberRoots = function() { return new Map(); };
                     hook.getFiberRoots = function() { return new Map(); };
                     hook.supportsFiber = false;
                   } else {

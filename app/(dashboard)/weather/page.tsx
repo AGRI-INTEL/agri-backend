@@ -72,8 +72,8 @@ export default function WeatherPage() {
   const [city, setCity] = useState('Dakar');
   const [historyDays, setHistoryDays] = useState(7);
 
-  const { data: weather, isLoading: currentLoading, refetch } = useWeather(city);
-  const { data: forecast, isLoading: forecastLoading } = useWeatherForecast(city, 7);
+  const { data: weather, isLoading: currentLoading, isError: currentError, refetch } = useWeather(city);
+  const { data: forecast, isLoading: forecastLoading, isError: forecastError } = useWeatherForecast(city, 7);
   const { data: history, isLoading: historyLoading } = useWeatherHistory(city, historyDays);
   const { data: weatherAlerts } = useWeatherAlerts(city);
 
@@ -164,9 +164,20 @@ export default function WeatherPage() {
               <CardContent className="p-6">
                 <Skeleton className="h-64 w-full" />
               </CardContent>
+            ) : currentError ? (
+              <CardContent className="p-6 flex flex-col items-center justify-center h-48 text-center gap-3">
+                <AlertTriangle className="h-8 w-8 text-amber-500" />
+                <div>
+                  <p className="text-sm font-semibold text-slate-700">Service météo temporairement indisponible</p>
+                  <p className="text-xs text-muted-foreground mt-1">Le serveur de données météo ne répond pas. Veuillez réessayer.</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => refetch()} className="gap-2 rounded-xl">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Réessayer
+                </Button>
+              </CardContent>
             ) : weather ? (
               <CardContent className="p-6 space-y-4">
-                {/* Header */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MapPin className="h-4 w-4" />
@@ -179,7 +190,6 @@ export default function WeatherPage() {
                   </div>
                 </div>
 
-                {/* Main temp */}
                 <div className="flex items-center gap-4">
                   <WeatherIcon
                     className="h-20 w-20 flex-shrink-0"
@@ -196,7 +206,6 @@ export default function WeatherPage() {
                   </div>
                 </div>
 
-                {/* Metrics grid */}
                 <div className="grid grid-cols-2 gap-2">
                   <WeatherMetricCard icon={Droplets} label="Humidité" value={weather.humidity} unit="%" color="text-blue-500" />
                   <WeatherMetricCard icon={Wind} label="Vent" value={weather.wind_speed} unit=" km/h" color="text-green-500" />
@@ -208,7 +217,6 @@ export default function WeatherPage() {
                   )}
                 </div>
 
-                {/* Sunrise/Sunset */}
                 {(weather.sunrise || weather.sunset) && (
                   <div className="flex justify-around pt-2 border-t border-blue-200 dark:border-blue-800">
                     {weather.sunrise && (
@@ -248,6 +256,11 @@ export default function WeatherPage() {
             <CardContent>
               {forecastLoading ? (
                 <Skeleton className="h-48 w-full" />
+              ) : forecastError ? (
+                <div className="h-48 flex flex-col items-center justify-center text-center gap-3">
+                  <AlertTriangle className="h-6 w-6 text-amber-500" />
+                  <p className="text-sm text-muted-foreground">Prévisions indisponibles pour le moment</p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {/* Forecast cards row */}

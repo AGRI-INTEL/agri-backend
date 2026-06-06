@@ -12,7 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAlerts } from '@/hooks/use-alerts';
 import { useMarkAlertRead } from '@/hooks/use-alerts';
 import { cn } from '@/lib/utils';
-import type { AlertSeverity } from '@/types/alert';
+import type { Alert, AlertSeverity } from '@/types/alert';
+import type { PaginatedResponse } from '@/types/api';
 
 const severityBorderColors: Record<AlertSeverity, string> = {
   info: 'border-l-blue-500',
@@ -24,7 +25,8 @@ const severityBorderColors: Record<AlertSeverity, string> = {
 export function AlertsTicker() {
   const { data, isLoading } = useAlerts({ is_read: false });
   const markRead = useMarkAlertRead();
-  const alerts = data?.data?.slice(0, 5) || [];
+  const paginated = data && 'data' in data ? (data as PaginatedResponse<Alert>) : null;
+  const alerts = paginated?.data?.slice(0, 5) ?? (Array.isArray(data) ? (data as Alert[]).slice(0, 5) : []);
 
   if (isLoading) {
     return (
@@ -45,9 +47,9 @@ export function AlertsTicker() {
         <CardTitle className="text-base flex items-center gap-2">
           <Bell className="h-4 w-4 text-primary" />
           Dernières Alertes
-          {data?.total ? (
+          {paginated?.total ? (
             <span className="text-xs bg-destructive text-destructive-foreground rounded-full px-1.5 py-0.5">
-              {data.total}
+              {paginated.total}
             </span>
           ) : null}
         </CardTitle>

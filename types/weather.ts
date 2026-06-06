@@ -48,6 +48,9 @@ export interface WeatherCurrentCompact {
   pressure: number;
   visibility: number;
   uv_index: number;
+  dew_point?: number;
+  sunrise?: string;
+  sunset?: string;
   updated_at: string;
 }
 
