@@ -3,11 +3,5 @@
   "buildCommand": "npm run build",
   "installCommand": "npm ci --legacy-peer-deps",
   "framework": "nextjs",
-  "regions": ["fra1"],
-  "functions": {
-    "api/**/*.py": {
-      "memory": 512,
-      "maxDuration": 30
-    }
-  }
+  "regions": ["fra1"]
 }
