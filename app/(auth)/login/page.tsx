@@ -143,7 +143,7 @@ export default function LoginPage() {
       >
         {/* Email/Username */}
         <div>
-          <label htmlFor="identifier" className="block text-sm font-medium text-slate-700 mb-1.5">
+          <label htmlFor="identifier" className="block text-sm font-semibold text-slate-800 mb-1.5">
             Email ou nom d&apos;utilisateur
           </label>
           <div className="relative group">
@@ -156,13 +156,13 @@ export default function LoginPage() {
               data-testid="identifier-input"
               {...register('identifier')}
               className={cn(
-                'w-full h-11 pl-10 pr-4 text-sm rounded-xl border bg-white',
-                'placeholder:text-slate-400',
+                'w-full h-12 pl-10 pr-4 text-[15px] font-medium text-slate-900 rounded-xl border bg-white',
+                'placeholder:text-slate-400 placeholder:font-normal',
                 'transition-all duration-200',
-                'focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',
+                'focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white',
                 errors.identifier
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-slate-200 hover:border-slate-300'
+                  : 'border-slate-300 hover:border-slate-400'
               )}
             />
           </div>
@@ -180,7 +180,7 @@ export default function LoginPage() {
         {/* Password */}
         <div>
           <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+            <label htmlFor="password" className="block text-sm font-semibold text-slate-800">
               Mot de passe
             </label>
             <Link
@@ -200,13 +200,13 @@ export default function LoginPage() {
               data-testid="password-input"
               {...register('password')}
               className={cn(
-                'w-full h-11 pl-10 pr-11 text-sm rounded-xl border bg-white',
-                'placeholder:text-slate-400',
+                'w-full h-12 pl-10 pr-11 text-[15px] font-medium text-slate-900 rounded-xl border bg-white',
+                'placeholder:text-slate-400 placeholder:font-normal',
                 'transition-all duration-200',
-                'focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20',
+                'focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white',
                 errors.password
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-slate-200 hover:border-slate-300'
+                  : 'border-slate-300 hover:border-slate-400'
               )}
             />
             <button

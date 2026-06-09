@@ -108,7 +108,7 @@ export function AuthShell({ children, showLogo = true }: AuthShellProps) {
             className="flex items-center gap-3"
           >
             <div className="h-9 w-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-              <span className="text-white text-lg">🌿</span>
+              <span className="text-white text-lg font-bold">A</span>
             </div>
             <span className="text-white font-bold text-xl tracking-tight drop-shadow">AgriIntel360</span>
           </motion.div>
@@ -191,7 +191,7 @@ export function AuthShell({ children, showLogo = true }: AuthShellProps) {
           >
             <div className="flex items-center gap-2">
               <div className="h-8 w-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                <span className="text-white text-sm">🌿</span>
+                <span className="text-white text-sm font-bold">A</span>
               </div>
               <span className="text-white font-bold text-base drop-shadow">AgriIntel360</span>
             </div>

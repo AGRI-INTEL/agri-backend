@@ -1,12 +1,9 @@
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV === 'development';
+const isStandalone = process.env.STANDALONE === 'true';
 
 function buildContentSecurityPolicy() {
-  if (isDev) {
-    // Pas de CSP en dev : évite les conflits avec HMR, React Query Devtools et l’overlay Next.js
-    return null;
-  }
-
+  if (isDev) return null;
   return [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
@@ -32,12 +29,12 @@ const securityHeaders = [
 ];
 
 const csp = buildContentSecurityPolicy();
-if (csp) {
-  securityHeaders.push({ key: 'Content-Security-Policy', value: csp });
-}
+if (csp) securityHeaders.push({ key: 'Content-Security-Policy', value: csp });
 
 const nextConfig = {
+  ...(isStandalone ? { output: 'standalone' } : {}),
   turbopack: {},
+  trailingSlash: true,
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: '*.maptiler.com' },
@@ -50,18 +47,13 @@ const nextConfig = {
     qualities: [75, 90],
   },
   async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: securityHeaders,
-      },
-    ];
+    return [{ source: '/(.*)', headers: securityHeaders }];
   },
   async rewrites() {
     return [
       {
         source: '/api/v1/:path*',
-        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://api.agriintel360.com'}/api/v1/:path*`,
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/:path*`,
       },
     ];
   },
