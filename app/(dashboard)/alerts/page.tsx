@@ -43,7 +43,10 @@ const SEVERITY_COLORS = {
 export default function AlertsPage() {
   const [filters, setFilters] = useState<AlertFilters>({ limit: 50 });
   const [activeView, setActiveView] = useState<'all' | 'unread' | 'critical'>('all');
+  const [mounted, setMounted] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+
+  useEffect(() => { setMounted(true); }, []);
 
   const { data, isLoading, refetch, isFetching } = useAlerts(filters);
   const { data: statsData, isLoading: statsLoading } = useAlertStats();
@@ -85,7 +88,7 @@ export default function AlertsPage() {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <span className={cn('h-2 w-2 rounded-full', isFetching ? 'bg-yellow-500 animate-pulse' : 'bg-green-500')} />
-            Mis à jour à {lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            Mis à jour à {mounted ? lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '...'}
           </div>
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
             <RefreshCw className={cn('h-4 w-4 mr-1', isFetching && 'animate-spin')} />
