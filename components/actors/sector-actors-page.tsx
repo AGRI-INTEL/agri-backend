@@ -3,34 +3,44 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
-import { ActorCard } from '@/components/actors/actor-card';
+import { ActorCard, type ActorRow } from '@/components/actors/actor-card';
 import { ActorFiltersBar } from '@/components/actors/actor-filters';
-import { ActorFormDialog } from '@/components/actors/actor-form-dialog';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';
 import { useActors } from '@/hooks/use-actors';
-import type { ActorFilters, Sector } from '@/types/actor';
+import type { SectorKey } from '@/lib/utils';
 
 interface SectorActorsPageProps {
-  sector: Sector;
+  sector: string;
   title: string;
   description: string;
   icon: React.ElementType;
 }
 
 export function SectorActorsPage({ sector, title, description, icon: Icon }: SectorActorsPageProps) {
-  const [filters, setFilters] = useState<ActorFilters>({ page: 1, limit: 24, sector });
-  const [showCreate, setShowCreate] = useState(false);
-  const { data, isLoading } = useActors(filters);
-  const actors = data?.data || [];
+  const [search, setSearch] = useState('');
+  const [role, setRole] = useState('all');
+  const [country, setCountry] = useState('all');
+  const [status, setStatus] = useState('all');
+
+  const { data, isLoading } = useActors({
+    search: search || undefined,
+    sector,
+    role: role !== 'all' ? role : undefined,
+    country: country !== 'all' ? country : undefined,
+    status: status !== 'all' ? status : undefined,
+    per_page: 100,
+  });
+
+  const actors = (data?.data ?? []) as unknown as ActorRow[];
 
   return (
     <PageWrapper
       title={title}
       description={description}
       actions={
-        <Button className="gap-2" onClick={() => setShowCreate(true)}>
+        <Button className="gap-2">
           <Plus className="h-4 w-4" />
           Ajouter
         </Button>
@@ -41,21 +51,31 @@ export function SectorActorsPage({ sector, title, description, icon: Icon }: Sec
         <span className="text-sm font-medium">{data?.total ?? 0} acteurs</span>
       </div>
 
-      <ActorFiltersBar filters={filters} onChange={(f) => setFilters({ ...f, sector })} />
+      <ActorFiltersBar
+        search={search}
+        onSearchChange={setSearch}
+        sector={sector}
+        onSectorChange={() => {}}
+        role={role}
+        onRoleChange={setRole}
+        country={country}
+        onCountryChange={setCountry}
+        status={status}
+        onStatusChange={setStatus}
+        onReset={() => { setSearch(''); setRole('all'); setCountry('all'); setStatus('all'); }}
+      />
 
       <div className="mt-6">
         {isLoading ? (
           <LoadingSkeleton variant="card" count={8} />
         ) : actors.length === 0 ? (
-          <EmptyState icon="🌾" title="Aucun acteur" description="Ajoutez le premier acteur de ce secteur." />
+          <EmptyState icon="🌾" title="Aucun acteur" description="Aucun acteur trouvé dans ce secteur." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {actors.map((a) => <ActorCard key={a.id} actor={a} />)}
+            {actors.map((a) => <ActorCard key={a.id} row={a} />)}
           </div>
         )}
       </div>
-
-      <ActorFormDialog open={showCreate} onOpenChange={setShowCreate} defaultSector={sector} />
     </PageWrapper>
   );
 }

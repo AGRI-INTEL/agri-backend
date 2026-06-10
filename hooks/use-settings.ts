@@ -149,15 +149,16 @@ export function useRevokeAllOtherSessions() {
 // ============================================================================
 
 export function useLoginActivity(params: { page?: number; limit?: number } = {}) {
+  const { page, limit } = params;
   return useQuery({
-    queryKey: ['auth', 'activity', params],
+    queryKey: ['auth', 'activity', page ?? 1, limit ?? 10],
     queryFn: () =>
       apiClient.get<{
         data: LoginActivity[];
         total: number;
         page: number;
         limit: number;
-      }>('/auth/activity', { params }),
+      }>('/auth/activity', { params: { page, limit } }),
     staleTime: 30_000,
   });
 }

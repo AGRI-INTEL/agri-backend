@@ -137,10 +137,37 @@ export function useAuth() {
     onError: (error: { message: string }) => toast.error(error.message),
   });
 
+  const resendVerificationMutation = useMutation({
+    mutationFn: () => apiClient.post('/auth/resend-verification'),
+    onSuccess: () => {
+      toast.success('Email de vérification renvoyé !');
+    },
+    onError: (error: { message: string }) => {
+      toast.error(error.message || "Erreur lors de l'envoi");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    },
+  });
+
+  const verifyEmailMutation = useMutation({
+    mutationFn: (token: string) => apiClient.post('/auth/verify-email', { token }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      toast.success('Email vérifié avec succès !');
+    },
+    onError: (error: { message: string }) => {
+      toast.error(error.message || 'Échec de la vérification');
+    },
+  });
+
+  const emailVerified = user?.email_verified ?? false;
+
   return {
     user,
     isAuthenticated,
     isLoading: isLoading || isFetching,
+    emailVerified,
     login: loginMutation.mutate,
     loginAsync: loginMutation.mutateAsync,
     isLoginLoading: loginMutation.isPending,
@@ -151,7 +178,43 @@ export function useAuth() {
     isForgotLoading: forgotPasswordMutation.isPending,
     resetPassword: resetPasswordMutation.mutate,
     isResetLoading: resetPasswordMutation.isPending,
+    resendVerification: resendVerificationMutation.mutate,
+    isResending: resendVerificationMutation.isPending,
+    verifyEmail: verifyEmailMutation.mutate,
+    isVerifying: verifyEmailMutation.isPending,
   };
+}
+
+export function useResendVerification() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => apiClient.post('/auth/resend-verification'),
+    onSuccess: () => {
+      toast.success('Email de vérification renvoyé !');
+    },
+    onError: (error: { message: string }) => {
+      toast.error(error.message || "Erreur lors de l'envoi");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+    },
+  });
+}
+
+export function useVerifyEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) => apiClient.post('/auth/verify-email', { token }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      toast.success('Email vérifié avec succès !');
+    },
+    onError: (error: { message: string }) => {
+      toast.error(error.message || 'Échec de la vérification');
+    },
+  });
 }
 
 export function useUpdateProfile() {

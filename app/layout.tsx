@@ -16,6 +16,7 @@ const inter = localFont({
   ],
   variable: '--font-inter',
   display: 'swap',
+  preload: false,
 });
 
 const mono = localFont({
@@ -25,6 +26,7 @@ const mono = localFont({
   ],
   variable: '--font-jetbrains-mono',
   display: 'swap',
+  preload: false,
 });
 
 export const metadata: Metadata = {

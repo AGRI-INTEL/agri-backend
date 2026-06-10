@@ -1,41 +1,53 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
-import { Eye, EyeOff, Mail, Lock, AlertCircle, ArrowRight, Sprout } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
 import { motion, AnimatePresence } from '@/lib/motion';
 import { useAuth } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormData } from '@/lib/validators';
-import { SocialLoginButton, AuthDivider } from '@/components/auth/auth-ui';
-import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/api-client';
+import type { LoginCredentials } from '@/types/auth';
+import {
+  SocialLoginButton,
+  AuthDivider,
+  AuthFooterLink,
+} from '@/components/auth/auth-ui';
 
-const stagger = {
-  hidden: { opacity: 0 },
+const cardVariants = {
+  hidden: { opacity: 0, y: 24, scale: 0.98 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] },
   },
 };
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } },
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.92 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+const itemVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, delay: 0.08 * i, ease: 'easeOut' },
+  }),
 };
 
 export default function LoginPage() {
   const { loginAsync, isLoginLoading } = useAuth();
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'microsoft' | null>(null);
+  const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
 
   const {
     register,
@@ -49,82 +61,73 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setApiError(null);
     try {
-      await loginAsync(data as any);
+      await loginAsync(data as LoginCredentials);
     } catch (e) {
       const error = e as { message?: string };
       setApiError(error?.message ?? 'Email ou mot de passe incorrect.');
     }
   };
 
-  const handleOAuth = useCallback(async (provider: 'google' | 'microsoft') => {
-    setOauthLoading(provider);
-    try {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-      const prefix = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
-      window.location.href = `${backendUrl}${prefix}/auth/oauth/${provider}`;
-    } catch {
-      setOauthLoading(null);
-    }
+  const handleOAuth = useCallback(
+    async (provider: 'google' | 'microsoft') => {
+      setOauthLoading(provider);
+      try {
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const prefix = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
+        window.location.href = `${backendUrl}${prefix}/auth/oauth/${provider}`;
+      } catch {
+        setOauthLoading(null);
+      }
+    },
+    []
+  );
+
+  const createRipple = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = Date.now() + Math.random();
+    setRipples((prev) => [...prev, { x, y, id }]);
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 600);
   }, []);
 
   return (
     <motion.div
-      variants={stagger}
+      variants={cardVariants}
       initial="hidden"
       animate="visible"
-      className="w-full max-w-sm mx-auto"
+      className="w-full"
     >
-      {/* Animated decorative blob */}
-      <motion.div
-        variants={fadeUp}
-        className="flex justify-center mb-6"
-      >
-        <motion.div
-          className="relative"
-          animate={{ rotate: [0, 5, -5, 0] }}
-          transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
-        >
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-            <Sprout className="h-8 w-8 text-white" />
-          </div>
-          <motion.div
-            className="absolute -inset-2 rounded-2xl bg-emerald-400/20 blur-xl -z-10"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
-            transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* Header */}
-      <motion.div variants={fadeUp} className="mb-7 text-center">
-        <h1 className="text-2xl font-bold text-slate-900 mb-1.5">
+      {/* Title */}
+      <motion.div custom={0} variants={itemVariants} className="text-center mb-8">
+        <h1 className="text-[22px] font-bold text-[#111827] mb-1.5">
           Content de vous revoir
         </h1>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-[#6b7280]">
           Connectez-vous à votre espace AgriIntel
         </p>
       </motion.div>
 
-      {/* Error Alert */}
+      {/* API Error */}
       <AnimatePresence mode="wait">
         {apiError && (
           <motion.div
-            key="error"
-            initial={{ opacity: 0, y: -12, height: 0 }}
+            key="api-error"
+            initial={{ opacity: 0, y: -10, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -12, height: 0 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            transition={{ duration: 0.25 }}
             className="mb-5 overflow-hidden"
           >
-            <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-3.5">
-              <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0 text-red-500" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-red-800">{apiError}</p>
-              </div>
+            <div className="flex items-start gap-2.5 rounded-[10px] border border-red-200 bg-red-50 p-3">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-500" />
+              <p className="text-sm text-red-700 flex-1">{apiError}</p>
               <button
                 type="button"
                 onClick={() => setApiError(null)}
-                className="flex-shrink-0 text-red-400 hover:text-red-600 transition-colors p-0.5"
+                className="text-red-400 hover:text-red-600 transition-colors leading-none p-0.5"
                 aria-label="Fermer"
               >
                 ✕
@@ -136,147 +139,185 @@ export default function LoginPage() {
 
       {/* Form */}
       <motion.form
-        variants={fadeUp}
+        custom={1}
+        variants={itemVariants}
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4"
         noValidate
       >
-        {/* Email/Username */}
-        <div>
-          <label htmlFor="identifier" className="block text-sm font-semibold text-slate-800 mb-1.5">
-            Email ou nom d&apos;utilisateur
-          </label>
-          <div className="relative group">
-            <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors duration-200" strokeWidth={1.5} />
-            <input
-              id="identifier"
-              type="text"
-              placeholder="exemple@email.com"
-              autoComplete="username"
-              data-testid="identifier-input"
-              {...register('identifier')}
-              className={cn(
-                'w-full h-12 pl-10 pr-4 text-[15px] font-medium text-slate-900 rounded-xl border bg-white',
-                'placeholder:text-slate-400 placeholder:font-normal',
-                'transition-all duration-200',
-                'focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white',
-                errors.identifier
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-slate-300 hover:border-slate-400'
-              )}
-            />
-          </div>
-          {errors.identifier && (
-            <motion.p
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-1 text-xs text-red-600 flex items-center gap-1"
+        <div className="space-y-4">
+          {/* Email */}
+          <div>
+            <label
+              htmlFor="email"
+              className="block text-sm font-semibold text-[#111827] mb-1.5"
             >
-              <span>⚠</span> {errors.identifier.message}
-            </motion.p>
-          )}
-        </div>
-
-        {/* Password */}
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label htmlFor="password" className="block text-sm font-semibold text-slate-800">
-              Mot de passe
+              Email
             </label>
-            <Link
-              href="/forgot-password"
-              className="text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors"
-            >
-              Mot de passe oublié&nbsp;?
-            </Link>
+            <div className="group relative transition-transform duration-200 focus-within:scale-[1.01]">
+              <Mail
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af] transition-colors duration-200 group-focus-within:text-[#059669]"
+                strokeWidth={1.5}
+              />
+              <input
+                id="email"
+                type="email"
+                placeholder="exemple@email.com"
+                autoComplete="email"
+                data-testid="email-input"
+                aria-invalid={!!errors.identifier}
+                aria-describedby={errors.identifier ? 'email-error' : undefined}
+                {...register('identifier')}
+                style={{ borderWidth: '1.5px' }}
+                className={cn(
+                  'w-full h-[48px] pl-10 pr-4 text-[15px] text-[#111827] rounded-[10px] bg-white',
+                  'border-[#e5e7eb]',
+                  'placeholder:text-[#9ca3af]',
+                  'transition-all duration-200 outline-none',
+                  'focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15',
+                  errors.identifier && '!border-[#dc2626] !focus:border-[#dc2626] !focus:ring-[#dc2626]/15'
+                )}
+              />
+            </div>
+            {errors.identifier && (
+              <motion.p
+                id="email-error"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                role="alert"
+                className="mt-1 text-xs text-[#dc2626]"
+              >
+                {errors.identifier.message}
+              </motion.p>
+            )}
           </div>
-          <div className="relative group">
-            <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors duration-200" strokeWidth={1.5} />
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Entrez votre mot de passe"
-              autoComplete="current-password"
-              data-testid="password-input"
-              {...register('password')}
-              className={cn(
-                'w-full h-12 pl-10 pr-11 text-[15px] font-medium text-slate-900 rounded-xl border bg-white',
-                'placeholder:text-slate-400 placeholder:font-normal',
-                'transition-all duration-200',
-                'focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:bg-white',
-                errors.password
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
-                  : 'border-slate-300 hover:border-slate-400'
-              )}
-            />
+
+          {/* Password */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-[#111827]"
+              >
+                Mot de passe
+              </label>
+              <Link
+                href="/forgot-password"
+                className="text-xs font-medium text-[#059669] hover:text-[#047857] transition-colors"
+              >
+                Mot de passe oublié ?
+              </Link>
+            </div>
+            <div className="group relative transition-transform duration-200 focus-within:scale-[1.01]">
+              <Lock
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af] transition-colors duration-200 group-focus-within:text-[#059669]"
+                strokeWidth={1.5}
+              />
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Entrez votre mot de passe"
+                autoComplete="current-password"
+                data-testid="password-input"
+                aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'password-error' : undefined}
+                {...register('password')}
+                style={{ borderWidth: '1.5px' }}
+                className={cn(
+                  'w-full h-[48px] pl-10 pr-11 text-[15px] text-[#111827] rounded-[10px] bg-white',
+                  'border-[#e5e7eb]',
+                  'placeholder:text-[#9ca3af]',
+                  'transition-all duration-200 outline-none',
+                  'focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15',
+                  errors.password && '!border-[#dc2626] !focus:border-[#dc2626] !focus:ring-[#dc2626]/15'
+                )}
+              />
+              <button
+                type="button"
+                data-testid="toggle-password"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#6b7280] transition-colors p-0.5"
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            {errors.password && (
+              <motion.p
+                id="password-error"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                role="alert"
+                className="mt-1 text-xs text-[#dc2626]"
+              >
+                {errors.password.message}
+              </motion.p>
+            )}
+          </div>
+
+          {/* Remember me */}
+          <div className="flex items-center">
+            <label className="flex cursor-pointer items-center gap-2.5 select-none">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-[#d1d5db] text-[#059669] focus:ring-[#059669]/30 accent-[#059669]"
+                {...register('remember_me')}
+              />
+              <span className="text-sm text-[#6b7280]">Se souvenir de moi</span>
+            </label>
+          </div>
+
+          {/* Submit */}
+          <div className="pt-1">
             <button
-              type="button"
-              data-testid="toggle-password"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-0.5"
-              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              type="submit"
+              disabled={isLoginLoading}
+              onClick={createRipple}
+              className={cn(
+                'relative w-full h-[48px] rounded-[10px] overflow-hidden',
+                'bg-[#059669] text-white font-semibold text-[15px]',
+                'transition-all duration-200',
+                'hover:bg-[#047857] hover:-translate-y-[1px] hover:shadow-lg hover:shadow-[#059669]/25',
+                'active:translate-y-0 active:shadow-md',
+                'disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none',
+                'flex items-center justify-center gap-2.5'
+              )}
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {/* Ripple container */}
+              {ripples.map((r) => (
+                <span
+                  key={r.id}
+                  className="absolute rounded-full bg-white/40 pointer-events-none animate-ripple"
+                  style={{
+                    left: r.x - 3,
+                    top: r.y - 3,
+                    width: 6,
+                    height: 6,
+                  }}
+                />
+              ))}
+
+              {isLoginLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Connexion en cours...</span>
+                </>
+              ) : (
+                <>
+                  <span>Se connecter</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </button>
           </div>
-          {errors.password && (
-            <motion.p
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-1 text-xs text-red-600 flex items-center gap-1"
-            >
-              <span>⚠</span> {errors.password.message}
-            </motion.p>
-          )}
         </div>
-
-        {/* Remember Me */}
-        <div className="flex items-center justify-between">
-          <label className="flex cursor-pointer items-center gap-2">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/30 accent-emerald-600"
-              {...register('remember_me')}
-            />
-            <span className="text-sm text-slate-600">Se souvenir de moi</span>
-          </label>
-        </div>
-
-        {/* Submit */}
-        <motion.div whileTap={{ scale: 0.98 }}>
-          <button
-            type="submit"
-            disabled={isLoginLoading}
-            className={cn(
-              'w-full h-11 rounded-xl font-semibold text-sm tracking-wide',
-              'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white',
-              'transition-all duration-200',
-              'hover:from-emerald-700 hover:to-emerald-600 hover:shadow-lg hover:shadow-emerald-500/25',
-              'active:scale-[0.98]',
-              'disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:shadow-none',
-              'flex items-center justify-center gap-2'
-            )}
-          >
-            {isLoginLoading ? (
-              <>
-                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Connexion en cours...
-              </>
-            ) : (
-              <>
-                Se connecter
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </button>
-        </motion.div>
       </motion.form>
 
-      {/* Social Login */}
-      <motion.div variants={fadeUp}>
+      {/* Divider + SSO */}
+      <motion.div custom={2} variants={itemVariants}>
         <AuthDivider />
         <div className="flex flex-col gap-2.5">
           <SocialLoginButton
@@ -293,29 +334,32 @@ export default function LoginPage() {
       </motion.div>
 
       {/* Register link */}
-      <motion.div variants={fadeUp} className="mt-6 text-center">
-        <p className="text-sm text-slate-500">
-          Pas encore de compte&nbsp;?{' '}
-          <Link
-            href="/register"
-            className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-          >
-            Créer un compte
-          </Link>
-        </p>
+      <motion.div custom={3} variants={itemVariants}>
+        <AuthFooterLink
+          text="Pas encore de compte ?"
+          linkText="Créer un compte"
+          href="/register"
+        />
       </motion.div>
 
       {/* Footer */}
       <motion.p
-        variants={fadeUp}
-        className="mt-8 text-center text-xs text-slate-400"
+        custom={4}
+        variants={itemVariants}
+        className="mt-7 text-center text-[11px] text-[#9ca3af]"
       >
         En continuant, vous acceptez nos{' '}
-        <Link href="/terms" className="underline hover:text-slate-600 transition-colors">
+        <Link
+          href="/terms"
+          className="underline hover:text-[#6b7280] transition-colors"
+        >
           conditions d&apos;utilisation
-        </Link>
-        {' '}et notre{' '}
-        <Link href="/privacy" className="underline hover:text-slate-600 transition-colors">
+        </Link>{' '}
+        et notre{' '}
+        <Link
+          href="/privacy"
+          className="underline hover:text-[#6b7280] transition-colors"
+        >
           politique de confidentialité
         </Link>
       </motion.p>

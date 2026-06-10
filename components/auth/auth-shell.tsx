@@ -82,7 +82,7 @@ export function AuthShell({ children, showLogo = true }: AuthShellProps) {
   return (
     <div className="flex min-h-screen w-full">
       {/* ── Gauche : hero visuel ── */}
-      <div className="relative hidden lg:flex lg:w-[55%] shrink-0 overflow-hidden">
+      <div className="relative hidden lg:flex lg:w-[45%] shrink-0 overflow-hidden">
         <Image
           src="/fond-landscape.jpg"
           alt=""
@@ -90,15 +90,10 @@ export function AuthShell({ children, showLogo = true }: AuthShellProps) {
           fill
           className="object-cover"
           priority
-          sizes="(max-width: 1024px) 100vw, 55vw"
+          sizes="(max-width: 1024px) 100vw, 45vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-green-900/65 via-green-800/45 to-amber-800/55" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/85 via-emerald-700/85 to-emerald-900/85" />
         <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage:'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.9\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")'}} />
-
-        {/* Animated floating shapes */}
-        <FloatingShape className="w-72 h-72 bg-emerald-300/30 -top-20 -left-20 blur-3xl" delay={0} />
-        <FloatingShape className="w-96 h-96 bg-amber-300/20 bottom-20 -right-32 blur-3xl" delay={2} />
-        <FloatingShape className="w-48 h-48 bg-green-200/25 top-1/3 right-10 blur-3xl" delay={4} />
 
         <div className="relative z-10 flex flex-col justify-between p-10 w-full">
           <motion.div
@@ -125,41 +120,15 @@ export function AuthShell({ children, showLogo = true }: AuthShellProps) {
             <p className="text-white/65 text-sm leading-relaxed">
               La plateforme de référence pour l&apos;intelligence agricole en Afrique de l&apos;Ouest — données en temps réel, IA prédictive et communauté.
             </p>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-              className="mt-8 flex gap-8"
-            >
-              {[
-                { value: '50K+', label: 'Agriculteurs' },
-                { value: '12', label: 'Pays' },
-                { value: '98%', label: 'Satisfaction' },
-              ].map((s, i) => (
-                <motion.div
-                  key={s.label}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 + i * 0.15, duration: 0.4 }}
-                >
-                  <p className="text-white font-black text-2xl">{s.value}</p>
-                  <p className="text-white/60 text-xs mt-0.5">{s.label}</p>
-                </motion.div>
-              ))}
-            </motion.div>
           </motion.div>
         </div>
       </div>
 
       {/* ── Droite : formulaire ── */}
-      <div
-        className="relative flex flex-1 flex-col items-center justify-center min-h-screen overflow-y-auto"
-        style={{ background: 'linear-gradient(150deg,#064e3b 0%,#065f46 30%,#047857 60%,#b45309 100%)' }}
-      >
+      <div className="relative flex flex-1 flex-col items-center justify-center min-h-screen overflow-y-auto lg:w-[55%] bg-[#f3f4f6]">
         {/* Animated background shapes */}
-        <FloatingShape className="w-64 h-64 bg-emerald-200/10 top-10 -left-20 blur-3xl" delay={1} />
-        <FloatingShape className="w-80 h-80 bg-amber-200/10 bottom-20 -right-20 blur-3xl" delay={3} />
+        <FloatingShape className="w-64 h-64 bg-emerald-200/20 top-10 -left-20 blur-3xl" delay={1} />
+        <FloatingShape className="w-80 h-80 bg-amber-200/20 bottom-20 -right-20 blur-3xl" delay={3} />
 
         {/* Lang toggle top-right */}
         <motion.div
@@ -207,7 +176,7 @@ export function AuthShell({ children, showLogo = true }: AuthShellProps) {
         >
           <div
             className={cn(
-              'w-full bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl shadow-black/10',
+              'w-full bg-white rounded-[16px] shadow-xl shadow-black/8',
               wide
                 ? 'max-w-[440px] max-h-[calc(100dvh-4rem)] overflow-y-auto px-8 py-8 sm:px-10'
                 : 'max-w-[420px] px-8 py-10 sm:px-10'

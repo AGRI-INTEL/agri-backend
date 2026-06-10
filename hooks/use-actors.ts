@@ -1,62 +1,60 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import type { Actor, ActorFilters } from '@/types/actor';
-import type { PaginatedResponse } from '@/types/api';
 import { toast } from 'sonner';
 
-function actorFiltersToParams(
-  filters: ActorFilters,
-  defaults: { page: number; limit: number }
-): Record<string, string | number | boolean | undefined | null> {
-  const params: Record<string, string | number | boolean | undefined | null> = {
-    page: filters.page ?? defaults.page,
-    limit: filters.limit ?? defaults.limit,
-  };
-
-  for (const [key, value] of Object.entries(filters)) {
-    if (value === undefined || value === null || key === 'page' || key === 'limit') continue;
-    params[key] = Array.isArray(value) ? value.join(',') : (value as string | number | boolean);
-  }
-
-  return params;
+export interface ActorOverview {
+  total_actors: number;
+  active_actors: number;
+  verified_actors: number;
+  featured_actors: number;
+  by_sector: { sector: string; count: number; color: string }[];
+  by_role: { role: string; count: number }[];
+  by_country: { country: string; count: number }[];
+  by_status: { status: string; count: number; color: string }[];
 }
 
-export function useActors(filters: ActorFilters = {}) {
+export interface ActorListResponse {
+  data: Record<string, unknown>[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+  has_next: boolean;
+  has_prev: boolean;
+}
+
+export function useActorsOverview() {
   return useQuery({
-    queryKey: ['actors', filters],
-    queryFn: () =>
-      apiClient.get<PaginatedResponse<Actor>>('/actors', {
-        params: actorFiltersToParams(filters, { page: 1, limit: 25 }),
-      }),
+    queryKey: ['actors', 'overview'],
+    queryFn: () => apiClient.get<ActorOverview>('/actors/overview'),
+  });
+}
+
+export function useActors(filters: Record<string, string | number | boolean | undefined | null> = {}) {
+  const params: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(filters)) {
+    if (v !== undefined && v !== null && v !== '' && v !== 'all') params[k] = v;
+  }
+  return useQuery({
+    queryKey: ['actors', 'list', filters],
+    queryFn: () => apiClient.get<ActorListResponse>('/actors/', { params }),
   });
 }
 
 export function useActor(id: string) {
   return useQuery({
     queryKey: ['actors', id],
-    queryFn: () => apiClient.get<Actor>(`/actors/${id}`),
+    queryFn: () => apiClient.get<Record<string, unknown>>(`/actors/${id}`),
     enabled: !!id,
-  });
-}
-
-export function useInfiniteActors(filters: Omit<ActorFilters, 'page'> = {}) {
-  return useInfiniteQuery({
-    queryKey: ['actors', 'infinite', filters],
-    queryFn: ({ pageParam = 1 }) =>
-      apiClient.get<PaginatedResponse<Actor>>('/actors', {
-        params: actorFiltersToParams(filters, { page: pageParam as number, limit: 20 }),
-      }),
-    initialPageParam: 1,
-    getNextPageParam: (last) => last.has_next ? last.page + 1 : undefined,
   });
 }
 
 export function useCreateActor() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Actor>) => apiClient.post<Actor>('/actors', data),
+    mutationFn: (data: Record<string, unknown>) => apiClient.post<Record<string, unknown>>('/actors/', data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['actors'] });
       toast.success('Acteur créé avec succès');
@@ -65,26 +63,14 @@ export function useCreateActor() {
   });
 }
 
-export function useUpdateActor(id: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (data: Partial<Actor>) => apiClient.patch<Actor>(`/actors/${id}`, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['actors'] });
-      toast.success('Acteur mis à jour');
-    },
-    onError: (e: { message: string }) => toast.error(e.message),
-  });
-}
-
-export function useDeleteActor() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => apiClient.delete(`/actors/${id}`),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['actors'] });
-      toast.success('Acteur supprimé');
-    },
-    onError: (e: { message: string }) => toast.error(e.message),
-  });
+export async function uploadActorImage(file: File, qc: ReturnType<typeof useQueryClient>) {
+  const formData = new FormData();
+  formData.append('file', file);
+  try {
+    await apiClient.upload('/actors/upload-image', formData);
+    toast.success('Image envoyée pour analyse');
+    qc.invalidateQueries({ queryKey: ['actors'] });
+  } catch {
+    toast.error('Ce modèle ne supporte pas les images. Utilisez l\'assistant IA.', { duration: 6000 });
+  }
 }

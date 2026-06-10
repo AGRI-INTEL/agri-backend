@@ -6,14 +6,62 @@ import type { Group, Post, Comment, Member } from '@/types/community';
 import type { PaginatedResponse } from '@/types/api';
 import { toast } from 'sonner';
 
+function mapBackendGroup(g: any): Group {
+  return {
+    id: g.id,
+    name: g.name,
+    slug: g.name?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '') || `group-${g.id}`,
+    description: g.description || '',
+    type: g.type || 'public',
+    sector: g.sector || 'general',
+    avatar: g.avatar_url || g.avatar,
+    banner: g.banner_url || g.banner,
+    tags: g.tags || [],
+    members_count: g.members_count ?? g.member_count ?? 0,
+    posts_count: g.posts_count ?? g.post_count ?? 0,
+    is_member: g.is_member ?? false,
+    membership_status: g.membership_status || (g.is_member ? 'member' : 'none'),
+    requires_approval: g.requires_approval ?? false,
+    moderated: g.moderated ?? false,
+    created_at: g.created_at,
+    created_by: g.created_by,
+    updated_at: g.updated_at,
+    rules: g.rules,
+    country: g.country,
+    region: g.region,
+    city: g.city,
+  } as Group;
+}
+
+function mapBackendGroupList(raw: any): PaginatedResponse<Group> {
+  const items = (raw.groups || raw.data || []).map(mapBackendGroup);
+  const page = raw.page || 1;
+  const limit = raw.per_page || raw.limit || 20;
+  const total = raw.total || 0;
+  const total_pages = raw.pages || raw.total_pages || 1;
+  const has_next = raw.has_next ?? page < total_pages;
+  const has_prev = raw.has_prev ?? page > 1;
+  return {
+    data: items,
+    meta: { page, limit, total, total_pages, has_next, has_prev },
+    page,
+    limit,
+    total,
+    total_pages,
+    has_next,
+    has_prev,
+  };
+}
+
 export function useGroups(filters: { type?: string; search?: string; sort?: string } = {}) {
   return useQuery({
     queryKey: ['groups', filters],
     queryFn: async () => {
       try {
-        return await apiClient.get<PaginatedResponse<Group>>('/community/groups', {
+        const raw = await apiClient.get<any>('/community/groups', {
           params: { ...filters } as Record<string, string>,
         });
+        return mapBackendGroupList(raw);
       } catch (e: any) {
         if (e?.status === 401) {
           const mock: PaginatedResponse<Group> = {
@@ -67,10 +115,36 @@ export function useCommunityStats() {
   });
 }
 
+function mapBackendPostList(raw: any): PaginatedResponse<Post> {
+  const items = (raw.posts || raw.data || []).map((p: any) => ({
+    ...p,
+    author: p.author || { id: p.author_id, name: p.author_name, avatar: p.author_avatar },
+  }));
+  const page = raw.page || 1;
+  const limit = raw.per_page || raw.limit || 10;
+  const total = raw.total || 0;
+  const total_pages = raw.pages || raw.total_pages || 1;
+  const has_next = raw.has_next ?? page < total_pages;
+  const has_prev = raw.has_prev ?? page > 1;
+  return {
+    data: items,
+    meta: { page, limit, total, total_pages, has_next, has_prev },
+    page,
+    limit,
+    total,
+    total_pages,
+    has_next,
+    has_prev,
+  };
+}
+
 export function useGroup(id: string) {
   return useQuery({
     queryKey: ['groups', id],
-    queryFn: () => apiClient.get<Group>(`/community/groups/${id}`),
+    queryFn: async () => {
+      const raw = await apiClient.get<any>(`/community/groups/${id}`);
+      return mapBackendGroup(raw);
+    },
     enabled: !!id,
   });
 }
@@ -78,13 +152,12 @@ export function useGroup(id: string) {
 export function useGroupPosts(groupId: string) {
   return useInfiniteQuery({
     queryKey: ['groups', groupId, 'posts'],
-    queryFn: ({ pageParam = 1 }) =>
-      apiClient.get<PaginatedResponse<Post>>(`/community/groups/${groupId}/posts`, {
-        params: {
-          page: pageParam as number,
-          limit: 10,
-        },
-      }),
+    queryFn: async ({ pageParam = 1 }) => {
+      const raw = await apiClient.get<any>(`/community/groups/${groupId}/posts`, {
+        params: { page: pageParam as number, limit: 10 },
+      });
+      return mapBackendPostList(raw);
+    },
     initialPageParam: 1,
     getNextPageParam: (last) => last.has_next ? last.page + 1 : undefined,
     enabled: !!groupId,
@@ -203,17 +276,11 @@ export function useAddComment() {
 export function useCreateGroup() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: FormData | Record<string, unknown>) => {
-      // If FormData, use upload helper to handle files
-      if (data instanceof FormData) {
-        return apiClient.upload('/community/groups', data);
-      }
-      return apiClient.post('/community/groups', data);
-    },
+    mutationFn: (data: Record<string, unknown>) =>
+      apiClient.post('/community/groups', data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['groups'] });
-      // also invalidate listings
-      qc.invalidateQueries({ queryKey: ['groups', {}] });
+      qc.invalidateQueries({ queryKey: ['community', 'stats'] });
     },
     onError: (e: any, _vars, _ctx) => {
       // If unauthorized, add a local optimistic group so the UI shows the created group

@@ -6,12 +6,14 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUpdateProfile } from '@/hooks/use-auth';
 import { CountrySelector } from '@/components/shared/country-selector';
 import { apiClient } from '@/lib/api-client';
-import { Camera, Upload, Check } from 'lucide-react';
+import { Camera, Upload, Check, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface ProfileFormValues {
   full_name: string;
@@ -221,7 +223,22 @@ export function ProfileForm() {
           </div>
           <div>
             <label className="text-sm font-medium block mb-1.5">Email</label>
-            <Input value={user?.email || ''} disabled className="bg-muted" />
+            <div className="relative">
+              <Input value={user?.email || ''} disabled className="bg-muted pr-20" />
+              <Badge
+                variant="outline"
+                className={cn(
+                  'absolute right-2 top-1/2 -translate-y-1/2 text-[10px] py-0 px-1.5 pointer-events-none',
+                  user?.email_verified
+                    ? 'border-green-500 text-green-600 bg-green-50 dark:bg-green-950/20'
+                    : 'border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20'
+                )}
+              >
+                {user?.email_verified
+                  ? <><CheckCircle className="h-2.5 w-2.5 mr-0.5" />Vérifié</>
+                  : <><AlertCircle className="h-2.5 w-2.5 mr-0.5" />Non vérifié</>}
+              </Badge>
+            </div>
           </div>
         </div>
 

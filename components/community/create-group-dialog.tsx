@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateGroup } from '@/hooks/use-community';
+import { apiClient } from '@/lib/api-client';
 import type { GroupType, GroupSector } from '@/types/community';
 import { toast } from 'sonner';
 
@@ -15,6 +17,7 @@ interface CreateGroupDialogProps {
 }
 
 export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps) {
+  const router = useRouter();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<GroupType>('public');
@@ -22,6 +25,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
   const [tags, setTags] = useState('');
   const [avatar, setAvatar] = useState<File | null>(null);
   const [banner, setBanner] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const create = useCreateGroup();
 
@@ -29,24 +33,64 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
     e?.preventDefault();
     if (!name.trim()) return toast.error('Le nom du groupe est requis');
 
-    const fd = new FormData();
-    fd.append('name', name);
-    fd.append('description', description);
-    fd.append('type', type);
-    fd.append('sector', sector);
-    if (tags.trim()) fd.append('tags', JSON.stringify(tags.split(',').map((t) => t.trim()).filter(Boolean)));
-    if (avatar) fd.append('avatar', avatar);
-    if (banner) fd.append('banner', banner);
+    setUploading(true);
+    try {
+      let avatar_url: string | undefined;
+      let banner_url: string | undefined;
 
-    create.mutate(fd, {
-      onSuccess: () => {
-        toast.success('Groupe créé');
-        onOpenChange(false);
-      },
-      onError: (err: any) => {
-        toast.error(err?.message || 'Erreur lors de la création');
-      },
-    });
+      if (avatar) {
+        const fd = new FormData();
+        fd.append('file', avatar);
+        const result = await apiClient.upload<{ url: string }>('/files/upload', fd);
+        avatar_url = result.url;
+      }
+
+      if (banner) {
+        const fd = new FormData();
+        fd.append('file', banner);
+        const result = await apiClient.upload<{ url: string }>('/files/upload', fd);
+        banner_url = result.url;
+      }
+
+      create.mutate(
+        {
+          name,
+          description,
+          type,
+          sector,
+          tags: tags.trim() ? tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+          avatar_url,
+          banner_url,
+        },
+        {
+          onSuccess: (data: any) => {
+            setName('');
+            setDescription('');
+            setType('public');
+            setSector('general');
+            setTags('');
+            setAvatar(null);
+            setBanner(null);
+            onOpenChange(false);
+            const groupId = data?.id || data?.groupId;
+            if (groupId) {
+              toast.success('Groupe créé avec succès');
+              router.push(`/community/groups/${groupId}`);
+            } else {
+              toast.success('Groupe créé');
+              router.push('/community');
+            }
+          },
+          onError: (err: any) => {
+            toast.error(err?.message || 'Erreur lors de la création');
+          },
+        }
+      );
+    } catch (err: any) {
+      toast.error(err?.message || "Erreur lors de l'upload des fichiers");
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -114,7 +158,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Annuler</Button>
-            <Button type="submit" disabled={create.isPending}>{create.isPending ? 'Création...' : 'Créer'}</Button>
+            <Button type="submit" disabled={create.isPending || uploading}>{uploading ? 'Upload...' : create.isPending ? 'Création...' : 'Créer'}</Button>
           </div>
         </form>
       </DialogContent>

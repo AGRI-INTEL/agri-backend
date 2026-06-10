@@ -6,18 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateActor } from '@/hooks/use-actors';
-import type { Sector, ActorRole } from '@/types/actor';
 
 interface ActorFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultSector?: Sector;
+  defaultSector?: string;
 }
 
 interface ActorFormValues {
   name: string;
-  role: ActorRole;
-  sector: Sector;
+  role: string;
+  sector: string;
   country: string;
   region: string;
   city: string;
@@ -32,7 +31,7 @@ export function ActorFormDialog({ open, onOpenChange, defaultSector = 'vegetal' 
   });
 
   const onSubmit = (data: ActorFormValues) => {
-    createActor.mutate(data, {
+    createActor.mutate(data as unknown as Record<string, unknown>, {
       onSuccess: () => onOpenChange(false),
     });
   };
@@ -45,7 +44,7 @@ export function ActorFormDialog({ open, onOpenChange, defaultSector = 'vegetal' 
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
           <Input placeholder="Nom" {...register('name', { required: true })} />
-          <Select value={watch('sector')} onValueChange={(v) => setValue('sector', v as Sector)}>
+          <Select value={watch('sector')} onValueChange={(v) => setValue('sector', v)}>
             <SelectTrigger><SelectValue placeholder="Secteur" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="vegetal">Végétal</SelectItem>

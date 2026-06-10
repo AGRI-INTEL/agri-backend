@@ -6,10 +6,12 @@ import { ActorDetailView } from '@/components/actors/actor-detail-view';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { useActor } from '@/hooks/use-actors';
+import type { ActorRow } from '@/components/actors/actor-card';
 
 export default function ActorDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: actor, isLoading } = useActor(id);
+  const { data: rawActor, isLoading } = useActor(id);
+  const actor = rawActor ? (rawActor as unknown as ActorRow) : undefined;
 
   if (isLoading) {
     return (

@@ -21,8 +21,10 @@ import {
   Lock, Shield, AlertCircle, Check, Clock, LogOut,
   Smartphone, Globe, Monitor, AlertTriangle, KeyRound,
   Trash2, RefreshCw, Eye, EyeOff, CheckCircle, XCircle,
+  Mail, Send,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
+import { useResendVerification } from '@/hooks/use-auth';
 import {
   useChangePassword,
   useGet2FAStatus,
@@ -181,6 +183,76 @@ function PasswordSection() {
             </Button>
           </div>
         </form>
+      )}
+    </div>
+  );
+}
+
+// ── Email Verification ──────────────────────────────────────────────────────
+
+function EmailVerificationSection() {
+  const { user } = useAuthStore();
+  const resend = useResendVerification();
+  const [countdown, setCountdown] = useState(0);
+
+  const handleResend = () => {
+    resend.mutate();
+    setCountdown(60);
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-6 space-y-4">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-2">
+          <Mail className="h-5 w-5 text-primary" />
+          <div>
+            <h3 className="text-base font-semibold">Vérification email</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {user?.email || 'Aucun email'}
+            </p>
+          </div>
+        </div>
+        <Badge variant="outline" className={cn(
+          user?.email_verified
+            ? 'border-green-500 text-green-600 bg-green-50 dark:bg-green-950/20'
+            : 'border-amber-400 text-amber-600 bg-amber-50 dark:bg-amber-950/20'
+        )}>
+          {user?.email_verified
+            ? <><CheckCircle className="h-3 w-3 mr-1" />Vérifié</>
+            : <><AlertCircle className="h-3 w-3 mr-1" />Non vérifié</>}
+        </Badge>
+      </div>
+
+      {!user?.email_verified && (
+        <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+          <p className="text-xs text-muted-foreground">
+            Vous devez vérifier votre email pour accéder à toutes les fonctionnalités.
+            Un email de vérification vous a été envoyé à <strong>{user?.email}</strong>.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResend}
+            disabled={resend.isPending || countdown > 0}
+            className="flex items-center gap-2"
+          >
+            <Send className="h-4 w-4" />
+            {resend.isPending
+              ? 'Envoi...'
+              : countdown > 0
+                ? `Renvoyer (${countdown}s)`
+                : "Renvoyer l'email de vérification"}
+          </Button>
+        </div>
       )}
     </div>
   );
@@ -641,6 +713,7 @@ export default function SettingsSecurityPage() {
       </div>
 
       <PasswordSection />
+      <EmailVerificationSection />
       <TwoFactorSection />
       <SessionsSection />
       <LoginActivitySection />
