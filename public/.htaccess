@@ -1,0 +1,72 @@
+# ============================================================
+# AgriIntel360 — .htaccess pour LWS Apache + Next.js Static
+# ============================================================
+
+# Activer le moteur de réécriture
+Options -MultiViews
+RewriteEngine On
+
+# -------------------------------------------------------
+# 1. Servir les assets _next/static/ directement
+#    Ces fichiers sont copiés à la racine lors du déploiement
+# -------------------------------------------------------
+RewriteCond %{REQUEST_URI} ^/_next/static/
+RewriteRule ^_next/static/(.*)$ /_next/static/$1 [L]
+
+# -------------------------------------------------------
+# 2. Servir les fichiers qui existent physiquement
+# -------------------------------------------------------
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# -------------------------------------------------------
+# 3. Toutes les autres requêtes → index.html (SPA fallback)
+# -------------------------------------------------------
+RewriteRule ^ /index.html [L]
+
+# -------------------------------------------------------
+# 4. Types MIME pour les assets Next.js
+# -------------------------------------------------------
+<IfModule mod_mime.c>
+  AddType application/javascript .js .mjs
+  AddType text/css .css
+  AddType application/json .json
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
+  AddType font/woff .woff
+</IfModule>
+
+# -------------------------------------------------------
+# 5. Cache des assets statiques (chunks Next.js sont immutables)
+# -------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+# -------------------------------------------------------
+# 6. Compression Gzip
+# -------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>
+
+# -------------------------------------------------------
+# 7. Headers de sécurité supplémentaires (Apache level)
+# -------------------------------------------------------
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Cache immutable pour les chunks _next/static/
+  <FilesMatch "\.(js|css|woff2|woff)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+</IfModule>

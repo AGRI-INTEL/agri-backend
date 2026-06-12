@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'fr_FR',
-    url: 'https://agriintel360.com',
+    url: 'https://agriintel360.lsgrouptogo.com',
     title: 'AgriIntel360 — Intelligence Agricole pour l\'Afrique',
     description: 'Plateforme intelligente de décision agricole pour l\'Afrique',
     siteName: 'AgriIntel360',
@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     description: 'Intelligence agricole pour l\'Afrique',
   },
   manifest: '/manifest.json',
-  metadataBase: new URL('https://agriintel360.com'),
+  metadataBase: new URL('https://agriintel360.lsgrouptogo.com'),
   icons: {
     icon: [{ url: '/favicon.ico', sizes: 'any' }],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
@@ -77,34 +77,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="font-sans antialiased">
         {process.env.NODE_ENV === 'production' && (
+          // Désactive React DevTools en production.
+          // IMPORTANT : On utilise uniquement la mutation directe des propriétés
+          // (pas Object.defineProperty) pour éviter l'erreur XRay Wrapper de Firefox
+          // qui bloque les defineProperty cross-origin dans les extensions de navigateur.
           <Script id="disable-react-devtools-hook" strategy="beforeInteractive">
             {`(function(){
-                if (typeof window === 'undefined') return;
                 try {
-                  const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-                  if (hook && typeof hook === 'object') {
-                    hook.inject = function() {};
-                    hook.on = function() {};
-                    hook.off = function() {};
-                    hook.emit = function() {};
-                    hook.getFiberRoots = function() { return new Map(); };
+                  if (typeof window !== 'undefined' && window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+                    var hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
                     hook.supportsFiber = false;
-                  } else {
-                    Object.defineProperty(window, '__REACT_DEVTOOLS_GLOBAL_HOOK__', {
-                      value: {
-                        supportsFiber: false,
-                        inject() {},
-                        on() {},
-                        off() {},
-                        emit() {},
-                        getFiberRoots() { return new Map(); },
-                      },
-                      configurable: true,
-                    });
+                    hook.inject = function(){};
+                    hook.on = function(){};
+                    hook.off = function(){};
+                    hook.emit = function(){};
+                    hook.getFiberRoots = function(){ return new Map(); };
                   }
-                } catch (error) {
-                  console.warn('Unable to disable React DevTools hook.', error);
-                }
+                } catch(e) {}
               })();`}
           </Script>
         )}

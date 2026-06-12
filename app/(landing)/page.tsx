@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     'Plateforme intelligente de décision agricole pour l\'Afrique. IA prédictive, données temps réel, alertes et communauté pour les 4 sous-secteurs agricoles.',
   openGraph: {
     type: 'website',
-    url: 'https://agriintel360.com',
+    url: 'https://agriintel360.lsgrouptogo.com',
     title: 'AgriIntel360 — Intelligence Agricole pour l\'Afrique',
     description: 'Plateforme intelligente de décision agricole pour l\'Afrique.',
     siteName: 'AgriIntel360',

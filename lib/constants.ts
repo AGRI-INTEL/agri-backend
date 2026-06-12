@@ -6,9 +6,9 @@ export const APP_NAME = 'AgriIntel360';
 export const APP_TAGLINE = "Intelligence agricole pour l'Afrique";
 export const APP_DESCRIPTION = "Plateforme d'intelligence agricole couvrant l'ensemble du continent africain avec des outils de prédiction, cartographie interactive et analyse de marchés.";
 export const APP_VERSION = '2.0.0';
-export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://agriintel360.com';
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-export const APP_CONTACT_EMAIL = 'contact@agriintel360.com';
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://agriintel360.lsgrouptogo.com';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
+export const APP_CONTACT_EMAIL = 'contact@agriintel360.lsgrouptogo.com';
 export const APP_SUPPORT_PHONE = '+221 33 000 00 00';
 
 // ============================================================================

@@ -53,12 +53,11 @@ export type ErrorInterceptor = (error: ApiError) => ApiError | Promise<ApiError>
 // SECTION 2: DEFAULT CONFIGURATION
 // ============================================================================
 
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:8000';
+const API_BASE = '';
 const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
 
 const DEFAULT_CONFIG: Required<ApiClientConfig> = {
-  baseUrl: API_BASE,
+  baseUrl: process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || API_BASE,
   apiVersion: 'v1',
   timeout: 30000,
   retries: 3,
@@ -285,9 +284,38 @@ class ApiClient {
   // ───────────────────────────────────────────────────────────────────────────
 
   private buildUrl(path: string, params?: Record<string, string | number | boolean | undefined | null>): string {
-    const url = new URL(
-      path.startsWith('http') ? path : `${this.config.baseUrl}${API_PREFIX}${path.startsWith('/') ? path : `/${path}`}`
-    );
+    const baseUrl = this.config.baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+    const prefix = API_PREFIX;
+    const cleanPath = path.startsWith('/') ? path : `/${path}`;
+    
+    // If path is already an absolute URL, use it
+    if (path.startsWith('http')) {
+      const url = new URL(path);
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            url.searchParams.set(key, String(value));
+          }
+        });
+      }
+      return url.toString();
+    }
+
+    // Build the full URL
+    let url: URL;
+    try {
+      if (baseUrl.startsWith('http')) {
+        url = new URL(`${baseUrl}${prefix}${cleanPath}`);
+      } else if (typeof window !== 'undefined') {
+        url = new URL(`${prefix}${cleanPath}`, window.location.origin);
+      } else {
+        // Fallback for SSR if no baseUrl is provided
+        url = new URL(`${prefix}${cleanPath}`, 'https://agriintel360.lsgrouptogo.com');
+      }
+    } catch (e) {
+      console.error('Failed to build URL:', e);
+      return `${prefix}${cleanPath}`;
+    }
 
     if (params) {
       Object.entries(params).forEach(([key, value]) => {

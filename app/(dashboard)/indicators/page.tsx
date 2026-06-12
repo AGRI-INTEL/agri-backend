@@ -242,7 +242,7 @@ export default function IndicatorsPage() {
     if (!items.length) { toast.error('Aucune donnée à exporter'); return; }
     const headers = ['name', 'sector', 'category', 'country', 'value', 'unit', 'year', 'health_status', 'trend'];
     const rows = items.map((r: IndicatorDataRow) => [
-      r.name, r.sector, r.category, r.country_name || r.country, r.value, r.unit, r.year, r.health_status, r.trend,
+      r.name, r.sector, r.category, r.country, r.value, r.unit, r.year, r.health_status, r.trend,
     ].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
     const csv = [headers.join(','), ...rows].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
