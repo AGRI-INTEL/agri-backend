@@ -40,6 +40,7 @@ const csp = buildContentSecurityPolicy();
 if (csp) securityHeaders.push({ key: 'Content-Security-Policy', value: csp });
 
 const nextConfig = {
+  outputFileTracingRoot: __dirname,
   ...(isStandalone ? { output: 'standalone' } : {}),
 
   images: {
