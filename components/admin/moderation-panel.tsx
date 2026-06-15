@@ -1,19 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   MessageSquare,
   Trash2,
   Eye,
-  ThumbsUp,
   MessageCircle,
   Image,
   Flag,
   Clock,
-  User,
   MoreHorizontal,
   Check,
   X,
@@ -81,6 +79,7 @@ export function AdminModerationPanel() {
     const icons: Record<string, React.ReactNode> = {
       post: <MessageSquare className="h-4 w-4" />,
       comment: <MessageCircle className="h-4 w-4" />,
+      // eslint-disable-next-line jsx-a11y/alt-text
       image: <Image className="h-4 w-4" />,
     };
     return icons[type] || <MessageSquare className="h-4 w-4" />;
@@ -107,7 +106,7 @@ export function AdminModerationPanel() {
         {filters.map((filter) => (
           <button
             key={filter.id}
-            onClick={() => setActiveFilter(filter.id as any)}
+            onClick={() => setActiveFilter(filter.id as 'all' | 'flagged' | 'pending' | 'resolved')}
             className={`flex items-center gap-2 px-4 py-3 border-b-2 font-medium text-sm transition-colors ${
               activeFilter === filter.id
                 ? 'border-primary text-primary'

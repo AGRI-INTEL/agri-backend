@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
+import Image from 'next/image';
 import {
   Users, UserCheck, Shield, Activity, Clock,
   Search, Download, Lock, Unlock, Trash2, Eye,
@@ -45,7 +46,16 @@ import { AdminSystemAlerts, AdminSystemMetrics } from '@/components/admin/system
 import { AdminReportsSection } from '@/components/admin/reports-section';
 import { AdminModerationPanel } from '@/components/admin/moderation-panel';
 import { exportUsersToPDF } from '@/lib/export-pdf';
-import type { User } from '@/types/auth';
+import type { User, UserRole } from '@/types/auth';
+
+interface RecentActivity {
+  avatar?: string;
+  name?: string;
+  email?: string;
+  id?: string;
+  role?: string;
+  created_at?: string;
+}
 
 const ROLES_FILTER = [
   { value: '', label: 'Tous les rôles' },
@@ -267,7 +277,7 @@ export function AdminDashboard() {
                               <span className="text-lg w-6 flex-shrink-0">{ROLE_ICONS[role as keyof typeof ROLE_ICONS] || '👤'}</span>
                               <div className="flex-1">
                                 <div className="flex items-center justify-between mb-1">
-                                  <p className="text-xs font-medium">{getRoleLabel(role as any)}</p>
+                                  <p className="text-xs font-medium">{getRoleLabel(role as UserRole)}</p>
                                   <p className="text-xs text-muted-foreground">{count as number}</p>
                                 </div>
                                 <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
@@ -423,9 +433,9 @@ export function AdminDashboard() {
                         >
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+                              <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden relative">
                                 {user.avatar ? (
-                                  <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                                  <Image src={user.avatar} alt={user.name} fill className="object-cover" sizes="36px" />
                                 ) : (
                                   <span>{user.name?.charAt(0)?.toUpperCase()}</span>
                                 )}
@@ -617,7 +627,7 @@ export function AdminDashboard() {
                           className="text-base"
                           style={{ color: ROLE_COLORS[role as keyof typeof ROLE_COLORS] }}
                         >
-                          {getRoleLabel(role as any)}
+                          {getRoleLabel(role as UserRole)}
                         </CardTitle>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {count} utilisateur{count !== 1 ? 's' : ''}
@@ -676,15 +686,15 @@ export function AdminDashboard() {
                 {(u?.recent || []).length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-8">Aucune activité récente</p>
                 )}
-                {(u?.recent || []).map((item: any, i: number) => (
+                {(u?.recent || []).map((item: RecentActivity, i: number) => (
                   <div
                     key={i}
                     className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-sm flex-shrink-0">
+                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-sm flex-shrink-0 overflow-hidden relative">
                         {item.avatar ? (
-                          <img src={item.avatar} alt="" className="w-full h-full object-cover rounded-full" />
+                          <Image src={item.avatar} alt="" fill className="object-cover rounded-full" sizes="36px" />
                         ) : (
                           <span>{String(item.name || item.email || '?').charAt(0).toUpperCase()}</span>
                         )}

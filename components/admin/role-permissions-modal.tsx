@@ -16,22 +16,6 @@ import {
 import { useAdminUpdateUser, useAdminUpdateUserPermissions } from '@/hooks/use-admin';
 import type { User } from '@/types/auth';
 
-const ALL_PERMISSIONS: Permission[] = [
-  'users:read', 'users:write', 'users:delete',
-  'actors:read', 'actors:write', 'actors:delete', 'actors:verify',
-  'predictions:read', 'predictions:write', 'predictions:admin',
-  'alerts:read', 'alerts:write', 'alerts:admin',
-  'markets:read', 'markets:write',
-  'maps:read', 'maps:write',
-  'files:read', 'files:write', 'files:delete',
-  'posts:read', 'posts:write', 'posts:moderate',
-  'comments:read', 'comments:write', 'comments:moderate',
-  'analytics:read', 'analytics:admin',
-  'settings:read', 'settings:write',
-  'billing:read', 'billing:write',
-  'api:read', 'api:write', 'api:admin',
-];
-
 const PERMISSION_GROUPS: Record<string, Permission[]> = {
   'Utilisateurs': ['users:read', 'users:write', 'users:delete'],
   'Acteurs': ['actors:read', 'actors:write', 'actors:delete', 'actors:verify'],
@@ -151,7 +135,6 @@ export function RolePermissionsModal({ user, isOpen, onClose }: RolePermissionsM
             <div className="space-y-4">
               {Object.entries(PERMISSION_GROUPS).map(([group, perms]) => {
                 const allChecked = perms.every((p) => customPermissions.includes(p));
-                const someChecked = perms.some((p) => customPermissions.includes(p));
 
                 return (
                   <div key={group} className="border border-border rounded-lg p-3">

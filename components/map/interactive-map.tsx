@@ -7,6 +7,7 @@ import { useMapStore, selectStyleUrl, selectVisibleLayers, selectSelectedMarker 
 import { useMapMarkers, type MapMarker } from '@/hooks/use-geolocation';
 import { MAP_DEFAULT_CENTER, MAP_DEFAULT_ZOOM } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import type * as maplibregl from 'maplibre-gl';
 
 const STATIC_WEATHER_STATIONS: MapMarker[] = [
   {
@@ -40,8 +41,8 @@ const STATIC_WEATHER_STATIONS: MapMarker[] = [
 
 export function InteractiveMap({ className }: { className?: string }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerRefs = useRef<any[]>([]);
+  const mapInstanceRef = useRef<maplibregl.Map | null>(null);
+  const markerRefs = useRef<maplibregl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
 
@@ -71,7 +72,7 @@ export function InteractiveMap({ className }: { className?: string }) {
     ].filter((marker) => activeTypes.has(marker.type));
   }, [apiMarkers, weatherMarkers, visibleLayerIds]);
 
-  const clearMarkers = (markers: any[]) => {
+  const clearMarkers = (markers: maplibregl.Marker[]) => {
     markers.forEach((marker) => marker?.remove?.());
     markers.length = 0;
   };
@@ -95,6 +96,7 @@ export function InteractiveMap({ className }: { className?: string }) {
     return el;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderMarkers = (map: any) => {
     clearMarkers(markerRefs.current);
 
@@ -121,6 +123,7 @@ export function InteractiveMap({ className }: { className?: string }) {
     if (!mapRef.current || mapInstanceRef.current) return;
 
     import('maplibre-gl').then((mod) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const maplibregl: any = (mod as any).default ?? mod;
       const map = new maplibregl.Map({
         container: mapRef.current as HTMLElement,
@@ -155,6 +158,7 @@ export function InteractiveMap({ className }: { className?: string }) {
         mapInstanceRef.current = null;
       }
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [styleUrl]);
 
   useEffect(() => {
@@ -167,6 +171,7 @@ export function InteractiveMap({ className }: { className?: string }) {
     } else {
       renderMarkers(map);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredMarkers, mapLoaded, styleUrl, selectedMarkerId]);
 
   useEffect(() => {

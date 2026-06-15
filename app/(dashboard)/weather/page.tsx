@@ -18,7 +18,7 @@ import {
 } from 'recharts';
 import { useWeather, useWeatherForecast, useWeatherHistory, useWeatherAlerts } from '@/hooks/use-weather';
 import { cn } from '@/lib/utils';
-import type { LocalWeatherCondition } from '@/types/weather';
+
 
 const CITIES = [
   'Dakar', 'Abidjan', 'Accra', 'Lagos', 'Bamako', 'Niamey',
@@ -86,7 +86,7 @@ export default function WeatherPage() {
     : '#F59E0B';
 
   // Format forecast for recharts
-  const forecastChartData = (forecast?.forecast || []).map((day: any) => ({
+  const forecastChartData = (forecast?.forecast || []).map((day) => ({
     name: new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }),
     max: day.temperature_max,
     min: day.temperature_min,
@@ -95,7 +95,7 @@ export default function WeatherPage() {
   }));
 
   // Format history for recharts
-  const historyChartData = (history?.data || []).map((d: any) => ({
+  const historyChartData = (history?.data || []).map((d) => ({
     name: new Date(d.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }),
     max: d.temperature_max,
     min: d.temperature_min,
@@ -265,7 +265,7 @@ export default function WeatherPage() {
                 <div className="space-y-4">
                   {/* Forecast cards row */}
                   <div className="grid grid-cols-7 gap-1">
-                    {(forecast?.forecast || []).slice(0, 7).map((day: any) => {
+                    {(forecast?.forecast || []).slice(0, 7).map((day) => {
                       const DayIcon = WEATHER_ICONS[day.condition as string] || Cloud;
                       const dayColor = WEATHER_COLORS[day.condition as string] || '#6B7280';
                       const date = new Date(day.date);

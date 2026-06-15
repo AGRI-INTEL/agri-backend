@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,9 +35,9 @@ export function UserProfileModal({ user, isOpen, onClose }: UserProfileModalProp
         <div className="space-y-6">
           {/* Header */}
           <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-primary/10 to-transparent rounded-xl border border-primary/20">
-            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-white font-bold text-3xl flex-shrink-0 overflow-hidden">
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-white font-bold text-3xl flex-shrink-0 overflow-hidden relative">
               {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                <Image src={user.avatar} alt={user.name} fill className="object-cover" sizes="80px" />
               ) : (
                 <span>{user.name?.charAt(0)?.toUpperCase()}</span>
               )}

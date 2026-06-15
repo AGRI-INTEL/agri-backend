@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  FileText, BarChart3, Download, Calendar, Users, TrendingUp,
+  FileText, BarChart3, Download, Users, TrendingUp,
   MessageSquare, FolderOpen, AlertCircle, RefreshCw, Clock,
-  CheckCircle, XCircle, Loader2, Plus, Eye, Trash2,
-  Settings, Bell, Globe,
+  CheckCircle, XCircle, Loader2, Plus, Trash2,
+  Globe,
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { apiClient } from '@/lib/api-client';
 import { useAdminStats } from '@/hooks/use-admin';
-import { exportUsersToPDF, exportAdminReportToPDF } from '@/lib/export-pdf';
+import { exportAdminReportToPDF } from '@/lib/export-pdf';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 

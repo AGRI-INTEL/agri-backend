@@ -22,7 +22,7 @@ export default function GroupDetailPage() {
 
   const { data: group, isLoading: groupLoading } = useGroup(groupId);
   const { data: postsData, isLoading: postsLoading, fetchNextPage, hasNextPage } = useGroupPosts(groupId);
-  const { data: members, isLoading: membersLoading } = useGroupMembers(groupId);
+  const { data: members } = useGroupMembers(groupId);
   const join = useJoinGroup();
   const leave = useLeaveGroup();
 

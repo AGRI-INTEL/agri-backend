@@ -8,6 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Send, RefreshCw } from 'lucide-react';
 import { formatRelativeDate } from '@/lib/utils';
+import Image from 'next/image';
+
+interface Message {
+  id: string;
+  author_id?: string;
+  user_id?: string;
+  author?: { name?: string; avatar?: string };
+  user?: { name?: string; avatar?: string };
+  author_name?: string;
+  created_at?: string;
+  content?: string;
+  message?: string;
+}
 
 interface GroupThreadProps {
   groupId: string;
@@ -22,7 +35,7 @@ export function GroupThread({ groupId }: GroupThreadProps) {
   const [text, setText] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const messages: any[] = Array.isArray(data) ? data : [];
+  const messages: Message[] = Array.isArray(data) ? data : [];
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -77,7 +90,7 @@ export function GroupThread({ groupId }: GroupThreadProps) {
                 {!isMe && (
                   <div className="h-7 w-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
                     {authorAvatar
-                      ? <img src={authorAvatar} alt={authorName} className="h-full w-full object-cover rounded-full" />
+                      ? <Image src={authorAvatar} alt={authorName} width={28} height={28} className="h-full w-full object-cover rounded-full" />
                       : authorName.charAt(0).toUpperCase()
                     }
                   </div>
@@ -113,7 +126,7 @@ export function GroupThread({ groupId }: GroupThreadProps) {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSend(e as any);
+                handleSend(e as unknown as React.FormEvent<HTMLFormElement>);
               }
             }}
           />

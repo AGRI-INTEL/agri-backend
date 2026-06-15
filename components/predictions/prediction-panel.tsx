@@ -20,6 +20,7 @@ import { Switch } from '@/components/ui/switch';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { ErrorState } from '@/components/shared/error-state';
 import { EmptyState } from '@/components/shared/empty-state';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import {
   usePredictYield,
@@ -35,7 +36,6 @@ import { formatNumber, formatRelativeDate, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type {
   PredictionResult,
-  PredictionSummary,
   YieldPredictionInput,
   PricePredictionInput,
   WeatherPredictionInput,
@@ -43,7 +43,7 @@ import type {
 } from '@/types/prediction';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, Area, AreaChart, BarChart, Bar, Legend,
+  CartesianGrid, Area, AreaChart,
 } from 'recharts';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -228,15 +228,6 @@ function PredictionChart({ result }: { result: PredictionResult }) {
   );
 }
 
-function DetailRow({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="flex justify-between border-b border-border/30 py-1.5 text-sm last:border-0">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
-    </div>
-  );
-}
-
 function ResultCard({ result, onClear }: { result: PredictionResult; onClear?: () => void }) {
   const value = result.value ?? 0;
   const unit = result.unit ?? '';
@@ -333,8 +324,6 @@ function DiseaseResultCard({
   const risk = result.risk_level ?? 'low';
   const riskColor = risk === 'high' ? 'text-red-600' : risk === 'medium' ? 'text-yellow-600' : 'text-green-600';
   const riskBg = risk === 'high' ? 'bg-red-50 border-red-200' : risk === 'medium' ? 'bg-yellow-50 border-yellow-200' : 'bg-green-50 border-green-200';
-  const riskIcon = risk === 'high' ? AlertTriangle : risk === 'medium' ? Info : CheckCircle2;
-
   return (
     <motion.div {...fadeSlideUp}>
       <Card className="border-primary/20 shadow-sm">
@@ -687,7 +676,7 @@ function WeatherTab() {
         {result && (
           <motion.div {...fadeSlideUp}>
             <ResultCard result={result} onClear={() => setResult(null)} />
-            <WeatherForecastCard forecast={result.forecast as any} />
+            <WeatherForecastCard forecast={result.forecast as unknown as Array<{ date: string; temperature_min: number; temperature_max: number; precipitation_mm: number; humidity_percent: number; condition: string; confidence: number }>} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -796,7 +785,7 @@ function DiseaseTab() {
   const [temperature, setTemperature] = useState(28);
   const [humidity, setHumidity] = useState(75);
   const [rainfall, setRainfall] = useState(50);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const imageFileRef = useRef<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [result, setResult] = useState<(PredictionResult & { risk_level?: string; recommendations?: string[] }) | null>(null);
@@ -814,7 +803,7 @@ function DiseaseTab() {
       return;
     }
 
-    setImageFile(file);
+    imageFileRef.current = file;
     setImagePreview(URL.createObjectURL(file));
     setShowImagePreview(true);
 
@@ -827,7 +816,7 @@ function DiseaseTab() {
         },
         onError: () => {
           // Error is handled by the hook's handleError which shows the cannot-read-image message
-          setImageFile(null);
+          imageFileRef.current = null;
           setImagePreview(null);
           setShowImagePreview(false);
         },
@@ -879,13 +868,13 @@ function DiseaseTab() {
 
             {imagePreview && showImagePreview && (
               <div className="relative rounded-lg overflow-hidden border border-border">
-                <img src={imagePreview} alt="Preview" className="max-h-48 w-full object-contain" />
+                <Image src={imagePreview} alt="Preview" width={400} height={200} className="max-h-48 w-full object-contain" />
                 <Button
                   variant="ghost"
                   size="icon-sm"
                   className="absolute top-1 right-1 bg-background/80 backdrop-blur-sm"
                   onClick={() => {
-                    setImageFile(null);
+                    imageFileRef.current = null;
                     setImagePreview(null);
                     setShowImagePreview(false);
                   }}

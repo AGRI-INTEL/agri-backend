@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import {
   Bell, CheckCheck, AlertTriangle, AlertCircle, Info,
-  Clock, MapPin, RefreshCw, Filter, Zap, Shield,
-  TrendingUp, Eye, CheckCircle,
+  RefreshCw, Zap,
+  Eye, CheckCircle,
 } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { AlertCard } from '@/components/alerts/alert-card';

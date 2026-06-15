@@ -9,7 +9,6 @@ import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';
 import { useActors } from '@/hooks/use-actors';
-import type { SectorKey } from '@/lib/utils';
 
 interface SectorActorsPageProps {
   sector: string;

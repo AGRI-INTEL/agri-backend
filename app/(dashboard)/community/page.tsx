@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, TrendingUp, Users, MapPin, Trophy, MessageSquare, Flame, Search } from 'lucide-react';
+import { Plus, TrendingUp, Users, MessageSquare, Flame, Search } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { GroupCard } from '@/components/community/group-card';
 import { CreateGroupDialog } from '@/components/community/create-group-dialog';
-import { SearchBar } from '@/components/shared/search-bar';
+
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';

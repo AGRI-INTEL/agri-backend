@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,8 +17,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import {
-  Mail, Phone, MapPin, Calendar, Shield, Lock, Unlock,
-  Trash2, RotateCcw, CheckCircle, XCircle, Eye, KeyRound,
+  Mail, Phone, MapPin, Calendar, Shield,
+  Trash2, CheckCircle, XCircle, Eye, KeyRound,
   UserCheck, UserX,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -92,9 +92,9 @@ export function UserManagementModal({
         <div className="space-y-5">
           {/* User Header */}
           <div className="flex items-center gap-4 p-4 bg-muted rounded-lg">
-            <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden">
+            <div className="h-14 w-14 rounded-full bg-gradient-to-br from-primary to-primary/50 flex items-center justify-center text-white font-bold text-xl flex-shrink-0 overflow-hidden relative">
               {user.avatar ? (
-                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover rounded-full" />
+                <Image src={user.avatar} alt={user.name} fill className="object-cover rounded-full" sizes="56px" />
               ) : (
                 <span>{user.name?.charAt(0)?.toUpperCase()}</span>
               )}

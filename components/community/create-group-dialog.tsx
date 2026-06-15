@@ -63,7 +63,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
           banner_url,
         },
         {
-          onSuccess: (data: any) => {
+          onSuccess: (data: Record<string, unknown>) => {
             setName('');
             setDescription('');
             setType('public');
@@ -81,13 +81,13 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
               router.push('/community');
             }
           },
-          onError: (err: any) => {
+          onError: (err: Error) => {
             toast.error(err?.message || 'Erreur lors de la création');
           },
         }
       );
-    } catch (err: any) {
-      toast.error(err?.message || "Erreur lors de l'upload des fichiers");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erreur lors de l'upload des fichiers");
     } finally {
       setUploading(false);
     }

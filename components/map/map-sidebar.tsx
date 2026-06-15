@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Layers, Filter, MapPin, AlertCircle, Users, RefreshCw, TrendingUp } from 'lucide-react';
+import { Layers, Filter, MapPin, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useMapStore, selectLayers, selectVisibleLayers } from '@/stores/map-store';
+import { useMapStore, selectLayers } from '@/stores/map-store';
 import { useMapMarkers } from '@/hooks/use-geolocation';
 import { cn } from '@/lib/utils';
 

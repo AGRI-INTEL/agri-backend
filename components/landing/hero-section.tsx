@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 import Link from 'next/link';
 import LinkButton from '@/components/ui/link-button';
 import Image from 'next/image';

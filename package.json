@@ -100,5 +100,8 @@
     "mochawesome-report-generator": "6.0.0",
     "postcss": "8.5.10",
     "tailwindcss-animate": "^1.0.7"
+  },
+  "optionalDependencies": {
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.3.1"
   }
 }

@@ -2,15 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import {
-  Menu, X, Download, Share2, RotateCcw, Maximize2, ZoomIn, ZoomOut,
-  Navigation, ChevronLeft, ChevronRight, Search, Copy, Check,
+  Menu, X, Share2, RotateCcw, Maximize2, ZoomIn, ZoomOut,
+  Navigation, ChevronLeft, ChevronRight, Search, Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useMapStore } from '@/stores/map-store';
 import { useMapMarkers } from '@/hooks/use-geolocation';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface MapToolbarProps {
   sidebarOpen: boolean;

@@ -18,7 +18,7 @@ import { useAuthStore } from '@/stores/auth-store';
 
 type NavItem = {
   href?: string;
-  icon?: any;
+  icon?: React.ElementType;
   label?: string;
   exact?: boolean;
   badgeKey?: string | null;

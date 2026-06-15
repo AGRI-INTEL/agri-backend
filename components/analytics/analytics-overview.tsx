@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, TrendingUp, CloudSun, Globe, Upload,
@@ -609,7 +610,7 @@ function ImageUploadSection() {
 
         {preview && (
           <div className="relative rounded-lg overflow-hidden border border-border">
-            <img src={preview} alt="Aperçu" className="max-h-48 w-full object-contain bg-muted/20" />
+            <Image src={preview} alt="Aperçu" width={400} height={192} className="max-h-48 w-full object-contain bg-muted/20" />
             <Button
               variant="ghost" size="icon-sm"
               className="absolute top-1 right-1 bg-background/80 backdrop-blur-sm"

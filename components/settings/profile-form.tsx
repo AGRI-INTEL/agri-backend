@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { useQueryClient } from '@tanstack/react-query';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,6 +11,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useUpdateProfile } from '@/hooks/use-auth';
 import { CountrySelector } from '@/components/shared/country-selector';
 import { apiClient } from '@/lib/api-client';
+import Image from 'next/image';
 import { Camera, Upload, Check, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -36,7 +37,7 @@ export function ProfileForm() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
-  const { register, handleSubmit, watch, setValue } = useForm<ProfileFormValues>({
+  const { register, handleSubmit, setValue } = useForm<ProfileFormValues>({
     defaultValues: {
       full_name: user?.name || '',
       phone_number: user?.phone || '',
@@ -123,6 +124,7 @@ export function ProfileForm() {
       job_title: data.job_title,
       department: data.department,
       gender: data.gender,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } as any);
   };
 
@@ -133,9 +135,11 @@ export function ProfileForm() {
         <h3 className="text-sm font-semibold text-foreground">Photo de couverture</h3>
         <div className="relative h-40 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg overflow-hidden group cursor-pointer">
           {(coverPreview || user?.cover_image) && (
-            <img
-              src={coverPreview || user?.cover_image}
+            <Image
+              src={coverPreview ?? user?.cover_image ?? ''}
               alt="Couverture"
+              width={1200}
+              height={400}
               className="w-full h-full object-cover"
             />
           )}
@@ -166,9 +170,11 @@ export function ProfileForm() {
           <div className="relative h-32 w-32 flex-shrink-0">
             <div className="h-full w-full rounded-full overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center border-4 border-background">
               {(avatarPreview || user?.avatar) ? (
-                <img
-                  src={avatarPreview || user?.avatar}
+                <Image
+                  src={avatarPreview ?? user?.avatar ?? ''}
                   alt="Profil"
+                  width={128}
+                  height={128}
                   className="w-full h-full object-cover"
                 />
               ) : (

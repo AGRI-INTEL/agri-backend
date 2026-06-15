@@ -54,10 +54,10 @@ export function PreferencesForm() {
   useEffect(() => {
     if (!serverPrefs) return;
     if (serverPrefs.notifications) {
-      setNotifPreferences((prev) => ({ ...prev, ...(serverPrefs.notifications as any) }));
+      setNotifPreferences((prev) => ({ ...prev, ...(serverPrefs.notifications as Record<string, unknown>) }));
     }
     if (serverPrefs.privacy) {
-      setPrivacyPreferences((prev) => ({ ...prev, ...(serverPrefs.privacy as any) }));
+      setPrivacyPreferences((prev) => ({ ...prev, ...(serverPrefs.privacy as Record<string, unknown>) }));
     }
     if (serverPrefs.language) {
       setGeneralPreferences((prev) => ({ ...prev, language: serverPrefs.language! }));
@@ -75,7 +75,7 @@ export function PreferencesForm() {
 
   const saveTheme = (t: 'light' | 'dark' | 'system') => {
     setTheme(t);
-    updateProfile.mutate({ theme: t } as any);
+    updateProfile.mutate({ theme: t } as { theme: 'light' | 'dark' | 'system' });
   };
 
   const savePreferences = async () => {
@@ -93,7 +93,7 @@ export function PreferencesForm() {
     updateProfile.mutate({
       language: generalPreferences.language,
       timezone: generalPreferences.timezone,
-    } as any);
+    } as Record<string, string>);
   };
 
   const resetToDefaults = () => {
@@ -313,7 +313,7 @@ export function PreferencesForm() {
                 <span className="text-sm font-medium">{label}</span>
               </div>
               <Switch
-                checked={(notifPreferences as any)[key]}
+                checked={notifPreferences[key as keyof typeof notifPreferences]}
                 onCheckedChange={(checked) =>
                   setNotifPreferences({ ...notifPreferences, [key]: checked })
                 }
@@ -342,7 +342,7 @@ export function PreferencesForm() {
             <div key={key} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
               <span className="text-sm font-medium">{label}</span>
               <Switch
-                checked={(privacyPreferences as any)[key]}
+                checked={privacyPreferences[key as keyof typeof privacyPreferences]}
                 onCheckedChange={(checked) =>
                   setPrivacyPreferences({ ...privacyPreferences, [key]: checked })
                 }

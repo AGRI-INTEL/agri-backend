@@ -6,9 +6,7 @@ import { Users, Lock, Globe, Briefcase, TrendingUp, MessageSquare, Heart } from 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { UserAvatar } from '@/components/ui/avatar';
 import { useJoinGroup } from '@/hooks/use-community';
-import { cn } from '@/lib/utils';
 import type { Group } from '@/types/community';
 
 const typeIcons = { public: Globe, prive: Lock, professionnel: Briefcase, institutionnel: Briefcase };

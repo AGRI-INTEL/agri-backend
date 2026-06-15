@@ -9,12 +9,14 @@ function cookieMaxAge(seconds: number): string {
 export function persistAuthSession(accessToken: string, refreshToken?: string, expiresIn = 3600) {
   if (typeof window === 'undefined') return;
 
-  localStorage.setItem(AUTH_TOKEN_KEY, accessToken);
+  // Avoid persisting tokens in localStorage to reduce XSS impact.
+  localStorage.removeItem(AUTH_TOKEN_KEY);
   if (refreshToken) {
-    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
   }
 
-  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(accessToken)}${cookieMaxAge(expiresIn)}`;
+  // Note: HttpOnly cannot be set from client-side JS; the server must set it.
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(accessToken)}${cookieMaxAge(expiresIn)}; Secure; SameSite=Lax`;
 }
 
 export function clearAuthSession() {
@@ -28,7 +30,7 @@ export function clearAuthSession() {
     if ('caches' in window) {
       caches.keys().then((keys) => Promise.all(keys.map((k) => caches.delete(k))));
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 
@@ -36,12 +38,14 @@ export function clearAuthSession() {
     if (navigator && 'serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
     }
-  } catch (e) {
+  } catch {
     // ignore
   }
 }
 
 export function getStoredAccessToken(): string | null {
+  // Tokens are now stored in cookies only (server should set HttpOnly/Secure).
+  // Keep this API for compatibility.
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem(AUTH_TOKEN_KEY);
+  return null;
 }

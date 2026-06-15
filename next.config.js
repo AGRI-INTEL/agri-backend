@@ -6,25 +6,8 @@ const isStandalone = process.env.STANDALONE === 'true';
 // des chunks _next/static/ sur l'hébergement LWS (shared hosting, Passenger).
 // Une CSP trop stricte bloque les scripts Next.js en production.
 function buildContentSecurityPolicy() {
-  if (isDev) return null;
-  return [
-    // Autoriser tous les scripts du même domaine + inline (requis par Next.js)
-    "default-src 'self'",
-    // 'strict-dynamic' + nonce serait idéal mais non compatible avec static export
-    // On garde 'unsafe-inline' + 'unsafe-eval' car Next.js en a besoin sur shared hosting
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://agriintel360.lsgrouptogo.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' data: https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https:",
-    "media-src 'self' blob:",
-    "connect-src 'self' https: wss: https://agriintel360.lsgrouptogo.com",
-    "worker-src 'self' blob:",
-    "frame-src 'self'",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self' https://agriintel360.lsgrouptogo.com",
-    "upgrade-insecure-requests",
-  ].join('; ');
+  // Désactivé temporairement pour débugger les erreurs 503/CSP sur LWS
+  return null;
 }
 
 const securityHeaders = [
@@ -81,7 +64,7 @@ const nextConfig = {
       {
         source: '/api/v1/:path*',
         // Backend FastAPI via Passenger sur LWS (socket ou port local)
-        destination: 'http://127.0.0.1:8000/api/v1/:path*',
+        destination: 'http://127.0.0.1:8001/api/v1/:path*',
       },
     ];
   },
