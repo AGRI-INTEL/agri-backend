@@ -284,7 +284,10 @@ class ApiClient {
   // ───────────────────────────────────────────────────────────────────────────
 
   private buildUrl(path: string, params?: Record<string, string | number | boolean | undefined | null>): string {
-    const baseUrl = this.config.baseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+    // Production: use relative URLs (Apache proxy handles /api/v1/* routing)
+    // Dev: use NEXT_PUBLIC_API_URL for local development server
+    const isProduction = typeof window !== 'undefined' && window.location.origin.startsWith('https://');
+    const baseUrl = (isProduction ? '' : this.config.baseUrl) || '';
     const prefix = API_PREFIX;
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
     
@@ -304,12 +307,13 @@ class ApiClient {
     // Build the full URL
     let url: URL;
     try {
-      if (baseUrl.startsWith('http')) {
+      if (baseUrl && baseUrl.startsWith('http')) {
         url = new URL(`${baseUrl}${prefix}${cleanPath}`);
       } else if (typeof window !== 'undefined') {
+        // Relative URL for production (Apache proxy) or dev
         url = new URL(`${prefix}${cleanPath}`, window.location.origin);
       } else {
-        // Fallback for SSR if no baseUrl is provided
+        // Fallback for SSR
         url = new URL(`${prefix}${cleanPath}`, 'https://agriintel360.lsgrouptogo.com');
       }
     } catch (e) {

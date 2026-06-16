@@ -18,15 +18,38 @@ export function useNotifications() {
 
   const { data: notifications, isLoading } = useQuery({
     queryKey: ['notifications'],
-    queryFn: () => apiClient.get<{ data: Notification[]; unread: number }>('/notifications'),
+    queryFn: async () => {
+      try {
+        const raw = await apiClient.get<any>('/notifications');
+        // Backend returns array directly; normalize to expected format
+        const data = Array.isArray(raw) ? raw : (raw?.data || []);
+        const unread = Array.isArray(raw) 
+          ? data.filter((n: any) => !n.is_read && !n.read).length 
+          : (raw?.unread ?? data.filter((n: any) => !n.is_read && !n.read).length);
+        return { data, unread };
+      } catch (error: any) {
+        // Return empty data on auth errors to avoid breaking the UI
+        if (error?.status === 401 || error?.status === 403) {
+          return { data: [], unread: 0 };
+        }
+        throw error;
+      }
+    },
     enabled: isAuthenticated,
     refetchInterval: 60_000,
   });
 
   // Setup WebSocket (native) to backend `/ws/{user_id}`
+  // WebSocket n'est pas supporté par le proxy Apache en production
+  // Le hook utilise le polling via refetchInterval à la place
   const currentUser = useAuthStore((s) => s.user);
   useEffect(() => {
     if (!isAuthenticated) return;
+
+    // Désactivé en production - le polling est suffisant
+    if (process.env.NEXT_PUBLIC_API_URL?.startsWith('https://')) {
+      return;
+    }
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
     const apiPrefix = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
@@ -37,7 +60,9 @@ export function useNotifications() {
     const userId = currentUser?.id ?? 'anonymous';
     try {
       // Backend websocket endpoint is mounted under the API prefix: /api/v1/ws/{user_id}
-      socket = new WebSocket(`${proto}://${host}${apiPrefix}/ws/${userId}`);
+      // Ensure we use the correct host (strip port 8001 if present, use 8000 or the configured host)
+      const finalHost = host.includes(':8001') ? host.replace(':8001', ':8000') : host;
+      socket = new WebSocket(`${proto}://${finalHost}${apiPrefix}/ws/${userId}`);
 
       socket.onopen = () => {
         // Optionally subscribe to topics

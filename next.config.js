@@ -60,11 +60,18 @@ const nextConfig = {
   },
 
   async rewrites() {
+    // En production LWS, les requêtes /api/v1/* sont proxyées par Apache vers le backend
+    // Le rewrite Next.js n'est pas utilisé en production (Apache gère le proxy)
+    // En développement, proxy vers localhost
+    const isDev = process.env.NODE_ENV === 'development';
+    if (!isDev) {
+      return []; // Pas de rewrite en production - Apache gère le proxy
+    }
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://127.0.0.1:8000';
     return [
       {
         source: '/api/v1/:path*',
-        // Backend FastAPI via Passenger sur LWS (socket ou port local)
-        destination: 'http://127.0.0.1:8001/api/v1/:path*',
+        destination: `${backendUrl}/api/v1/:path*`,
       },
     ];
   },

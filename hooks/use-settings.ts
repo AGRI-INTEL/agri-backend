@@ -69,6 +69,7 @@ export function useGet2FAStatus() {
     queryKey: ['auth', '2fa', 'status'],
     queryFn: () => apiClient.get<{ enabled: boolean; method?: string }>('/auth/2fa/status'),
     retry: false,
+    throwOnError: false,
   });
 }
 
@@ -116,6 +117,7 @@ export function useActiveSessions() {
     queryKey: ['auth', 'sessions'],
     queryFn: () => apiClient.get<ActiveSession[]>('/auth/sessions'),
     staleTime: 30_000,
+    throwOnError: false,
   });
 }
 
@@ -152,13 +154,22 @@ export function useLoginActivity(params: { page?: number; limit?: number } = {})
   const { page, limit } = params;
   return useQuery({
     queryKey: ['auth', 'activity', page ?? 1, limit ?? 10],
-    queryFn: () =>
-      apiClient.get<{
-        data: LoginActivity[];
-        total: number;
-        page: number;
-        limit: number;
-      }>('/auth/activity', { params: { page, limit } }),
+    queryFn: async () => {
+      try {
+        return await apiClient.get<{
+          data: LoginActivity[];
+          total: number;
+          page: number;
+          limit: number;
+        }>('/auth/activity', { params: { page, limit } });
+      } catch (e: any) {
+        // Return empty data on auth errors to avoid breaking UI
+        if (e?.status === 401 || e?.status === 403) {
+          return { data: [], total: 0, page: page ?? 1, limit: limit ?? 10 };
+        }
+        throw e;
+      }
+    },
     staleTime: 30_000,
   });
 }

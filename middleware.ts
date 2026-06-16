@@ -28,7 +28,8 @@ export function middleware(request: NextRequest) {
   // Without server-side signature verification, treating a client-controlled cookie
   // as an authenticated session is unsafe.
   const token = request.cookies.get('access_token')?.value;
-  const isAuthenticated = Boolean(token && token.trim().length > 0);
+  const authToken = request.cookies.get('auth_token')?.value;
+  const isAuthenticated = Boolean((token || authToken) && (token?.trim().length ?? 0) > 0 || (authToken?.trim().length ?? 0) > 0);
 
   if (isAuthRoute(pathname) && isAuthenticated) {
     return NextResponse.redirect(new URL('/', request.url));
