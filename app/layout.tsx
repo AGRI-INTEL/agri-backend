@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
-import Script from 'next/script';
 import '@/styles/globals.css';
 import { Providers } from './providers';
 import { cn } from '@/lib/utils';
@@ -75,14 +74,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       data-scroll-behavior="smooth"
       className={cn(inter.variable, mono.variable)}
     >
-      <body className="font-sans antialiased">
+      <head>
         {process.env.NODE_ENV === 'production' && (
-          // Désactive React DevTools en production.
-          // IMPORTANT : On utilise uniquement la mutation directe des propriétés
-          // (pas Object.defineProperty) pour éviter l'erreur XRay Wrapper de Firefox
-          // qui bloque les defineProperty cross-origin dans les extensions de navigateur.
-          <Script id="disable-react-devtools-hook" strategy="beforeInteractive">
-            {`(function(){
+          <script
+            id="disable-react-devtools-hook"
+            dangerouslySetInnerHTML={{
+              __html: `(function(){
                 try {
                   if (typeof window !== 'undefined' && window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
                     var hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -94,9 +91,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                     hook.getFiberRoots = function(){ return new Map(); };
                   }
                 } catch(e) {}
-              })();`}
-          </Script>
+              })();`,
+            }}
+          />
         )}
+      </head>
+      <body className="font-sans antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>
