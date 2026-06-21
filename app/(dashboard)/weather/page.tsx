@@ -111,8 +111,6 @@ export default function WeatherPage() {
     return () => clearInterval(id);
   }, []);
 
-  const WeatherIcon = weather?.condition ? (WEATHER_ICONS[weather.condition as string] || Sun) : Sun;
-  const iconColor = weather?.condition ? (WEATHER_COLORS[weather.condition as string] || '#F59E0B') : '#F59E0B';
   const hero = weather?.condition ? (CONDITION_HERO[weather.condition as string] || DEFAULT_HERO) : DEFAULT_HERO;
 
   const forecastChartData = (forecast?.forecast || []).map((day) => ({

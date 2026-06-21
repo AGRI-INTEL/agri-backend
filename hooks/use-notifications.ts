@@ -46,8 +46,8 @@ export function useNotifications() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Désactivé en production - le polling est suffisant
-    if (process.env.NEXT_PUBLIC_API_URL?.startsWith('https://')) {
+    // Désactivé en production - LWS shared hosting ne supporte pas les WebSockets
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
       return;
     }
 

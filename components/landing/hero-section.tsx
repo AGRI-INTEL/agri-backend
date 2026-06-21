@@ -69,13 +69,6 @@ function WavyUnderline() {
 /* ─────────────────────────────────────────────
    Stats data
 ───────────────────────────────────────────── */
-const STATS = [
-  { target: 50000, suffix: '+', label: 'producteurs' },
-  { target: 2500000, suffix: '', label: 'hectares' },
-  { target: 12, suffix: '', label: 'pays' },
-  { target: 98, suffix: '%', label: 'précision IA' },
-] as const;
-
 const STAT_DISPLAY = [
   { display: '50k+', label: 'producteurs', target: 50, suffix: 'k+' },
   { display: '2,5M', label: 'hectares', target: 2, suffix: ',5M' },

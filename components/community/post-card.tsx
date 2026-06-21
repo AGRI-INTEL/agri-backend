@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { MessageCircle, Share2, Bookmark, MoreHorizontal, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { UserAvatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { MediaGrid } from '@/components/media/media-grid';
@@ -145,7 +145,7 @@ export function PostCard({ post, onComment }: PostCardProps) {
           className="mx-4 mb-3 flex items-start gap-3 p-3 rounded-xl border border-border bg-muted/30 hover:bg-muted/60 transition-colors"
         >
           {post.link_preview.image && (
-            <img src={post.link_preview.image} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0" />
+            <Image src={post.link_preview.image} alt="" width={64} height={48} className="rounded-lg object-cover flex-shrink-0" unoptimized />
           )}
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold line-clamp-1">{post.link_preview.title}</p>

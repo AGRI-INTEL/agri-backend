@@ -45,8 +45,8 @@ export function GroupThread({ groupId }: GroupThreadProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const messages: Message[] = Array.isArray(data) ? data : [];
-  const grouped = useMemo(() => groupByDate(messages), [messages.length]);
+  const messages = useMemo<Message[]>(() => (Array.isArray(data) ? data : []), [data]);
+  const grouped = useMemo(() => groupByDate(messages), [messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

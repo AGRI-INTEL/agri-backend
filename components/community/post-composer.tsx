@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { ImageIcon, Film, Mic, FileText, Send, BarChart2, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -170,7 +171,7 @@ export function PostComposer({ groupId, className }: PostComposerProps) {
               <div className="grid grid-cols-3 gap-2">
                 {mediaPreviews.map(m => (
                   <div key={m.id} className="relative group aspect-square rounded-xl overflow-hidden bg-muted">
-                    {m.type === 'image' && <img src={m.url} alt={m.filename ?? ''} className="w-full h-full object-cover" />}
+                    {m.type === 'image' && <Image src={m.url} alt={m.filename ?? ''} fill className="object-cover" unoptimized />}
                     {m.type !== 'image' && (
                       <div className="w-full h-full flex items-center justify-center bg-muted">
                         <FileText className="h-6 w-6 text-muted-foreground" />

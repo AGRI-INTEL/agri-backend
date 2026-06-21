@@ -1,5 +1,6 @@
 'use client';
 
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Layers, Target, Satellite, Map as MapIcon, AlertCircle, Users, TrendingUp, TreePine, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -49,16 +50,18 @@ export function InteractiveMap({ className }: { className?: string }) {
     [visibleLayerIds]
   );
   const marketMarkers = useMemo(
-    () => (visibleLayerIds.includes('markets') ? STATIC_MARKET_MARKERS : []),
+    () => (visibleLayerIds.includes('market') ? STATIC_MARKET_MARKERS : []),
     [visibleLayerIds]
   );
 
   const filteredMarkers = useMemo(() => {
     const activeTypes = new Set<string>();
-    if (visibleLayerIds.includes('actors'))  activeTypes.add('actor');
+    // Sector layers in map-store: vegetal, animal, halieutique, forestier, minier, industriel
+    const SECTOR_LAYER_IDS = ['vegetal', 'animal', 'halieutique', 'forestier', 'minier', 'industriel'];
+    if (SECTOR_LAYER_IDS.some((id) => visibleLayerIds.includes(id))) activeTypes.add('actor');
     if (visibleLayerIds.includes('alerts'))  activeTypes.add('alert');
     if (visibleLayerIds.includes('weather')) activeTypes.add('weather');
-    if (visibleLayerIds.includes('markets')) activeTypes.add('market');
+    if (visibleLayerIds.includes('market'))  activeTypes.add('market');
 
     return [
       ...(apiMarkers ?? []),
@@ -195,11 +198,12 @@ export function InteractiveMap({ className }: { className?: string }) {
   };
 
   const ALL_LAYER_DEFS = [
-    { id: 'weather',     label: '🌤️ Météo',       color: '#3b82f6' },
-    { id: 'predictions', label: '📈 Prédictions',  color: '#a855f7' },
-    { id: 'alerts',      label: '⚠️ Alertes',      color: '#ef4444' },
-    { id: 'actors',      label: '👥 Acteurs',      color: '#22c55e' },
-    { id: 'markets',     label: '🏪 Marchés',      color: '#f59e0b' },
+    { id: 'weather',    label: '🌤️ Météo',      color: '#3b82f6' },
+    { id: 'alerts',     label: '⚠️ Alertes',     color: '#ef4444' },
+    { id: 'vegetal',    label: '🌱 Producteurs', color: '#22c55e' },
+    { id: 'animal',     label: '🐄 Éleveurs',    color: '#d97706' },
+    { id: 'halieutique',label: '🎣 Pêcheurs',    color: '#0891b2' },
+    { id: 'market',     label: '🏪 Marchés',     color: '#f59e0b' },
   ];
 
   const LEGEND = [

@@ -1,14 +1,27 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { MobileNav } from '@/components/layout/mobile-nav';
 import { NotificationsProvider } from '@/components/dashboard/notifications-provider';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/stores/ui-store';
+import { useAuthStore } from '@/stores/auth-store';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { sidebarCollapsed } = useUIStore();
+  const { isAuthenticated, isLoading } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading || !isAuthenticated) return null;
 
   return (
     <NotificationsProvider>

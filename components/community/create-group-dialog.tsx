@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateGroup } from '@/hooks/use-community';
 import { apiClient } from '@/lib/api-client';
 import type { GroupType, GroupSector } from '@/types/community';
@@ -310,7 +310,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                   onClick={() => bannerRef.current?.click()}
                 >
                   {bannerPreview
-                    ? <img src={bannerPreview} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    ? <Image src={bannerPreview} alt="" fill className="object-cover" unoptimized />
                     : (
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
                         <Upload className="h-6 w-6 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -342,7 +342,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                     onClick={() => avatarRef.current?.click()}
                   >
                     {avatarPreview
-                      ? <img src={avatarPreview} alt="" className="w-full h-full object-cover" />
+                      ? <Image src={avatarPreview} alt="" fill className="object-cover" unoptimized />
                       : <Users className="h-8 w-8 text-muted-foreground" />
                     }
                   </div>

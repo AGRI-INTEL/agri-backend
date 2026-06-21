@@ -9,10 +9,7 @@
  */
 
 import { motion } from '@/lib/motion';
-import { TESTIMONIALS, SECTOR_CONFIG } from '@/lib/constants';
-
-/* Only the three requested testimonials by name, in order */
-const FEATURED_IDS = ['1', '3', '5'] as const;
+import { SECTOR_CONFIG } from '@/lib/constants';
 
 // Country flag emojis keyed by country_code
 const FLAG: Record<string, string> = {

@@ -18,7 +18,6 @@ import {
   Loader2,
   ChevronLeft,
   Building2,
-  Globe,
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CountrySelector } from '@/components/shared/country-selector';
@@ -249,7 +248,6 @@ function Stepper({ current }: { current: number }) {
       {STEPS.map((s, idx) => {
         const done = current > s.id;
         const active = current === s.id;
-        const inactive = current < s.id;
 
         return (
           <div key={s.id} className="flex flex-col items-center relative" style={{ flex: 1 }}>

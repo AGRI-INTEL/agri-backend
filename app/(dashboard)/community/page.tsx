@@ -12,7 +12,6 @@ import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { useGroups, useCommunityStats, useTrendingGroups } from '@/hooks/use-community';
 import { useDebounce } from '@/hooks/use-debounce';
 import { cn } from '@/lib/utils';
