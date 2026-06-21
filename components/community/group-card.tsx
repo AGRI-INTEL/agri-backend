@@ -2,15 +2,34 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Users, Lock, Globe, Briefcase, TrendingUp, MessageSquare, Heart } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Users, Lock, Globe, Briefcase, Building2, MessageSquare, TrendingUp, Heart, Sprout, Beef, Fish, TreePine, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useJoinGroup } from '@/hooks/use-community';
+import { cn } from '@/lib/utils';
 import type { Group } from '@/types/community';
 
-const typeIcons = { public: Globe, prive: Lock, professionnel: Briefcase, institutionnel: Briefcase };
-const typeLabels = { public: 'Public', prive: 'Privé', professionnel: 'Pro', institutionnel: 'Institution' };
+const TYPE_CONFIG = {
+  public:         { icon: Globe,      label: 'Public',         ring: 'ring-blue-400',   text: 'text-blue-600' },
+  prive:          { icon: Lock,       label: 'Privé',          ring: 'ring-slate-400',  text: 'text-slate-600' },
+  professionnel:  { icon: Briefcase,  label: 'Pro',            ring: 'ring-violet-400', text: 'text-violet-600' },
+  institutionnel: { icon: Building2,  label: 'Institution',    ring: 'ring-emerald-400',text: 'text-emerald-700' },
+} as const;
+
+const SECTOR_GRADIENT = {
+  general:     'from-indigo-600/80 to-indigo-900/90',
+  vegetal:     'from-green-600/80 to-green-900/90',
+  animal:      'from-amber-600/80 to-amber-900/90',
+  halieutique: 'from-blue-600/80 to-blue-900/90',
+  forestier:   'from-[#064E3B]/80 to-[#021f18]/95',
+} as const;
+
+const SECTOR_ICON = {
+  general:     LayoutGrid,
+  vegetal:     Sprout,
+  animal:      Beef,
+  halieutique: Fish,
+  forestier:   TreePine,
+} as const;
 
 interface GroupCardProps {
   group: Group;
@@ -19,184 +38,140 @@ interface GroupCardProps {
 
 export function GroupCard({ group, variant = 'grid' }: GroupCardProps) {
   const join = useJoinGroup();
-  const Icon = typeIcons[group.type] || Globe;
+  const typeKey = (group.type as keyof typeof TYPE_CONFIG) in TYPE_CONFIG ? group.type as keyof typeof TYPE_CONFIG : 'public';
+  const typeCfg = TYPE_CONFIG[typeKey];
+  const TypeIcon = typeCfg.icon;
+  const sectorKey = (group.sector as keyof typeof SECTOR_GRADIENT) in SECTOR_GRADIENT ? group.sector as keyof typeof SECTOR_GRADIENT : 'general';
+  const SectorIcon = SECTOR_ICON[sectorKey];
+  const gradientClass = SECTOR_GRADIENT[sectorKey];
+
+  const isMember = group.membership_status === 'member' || group.membership_status === 'admin' || group.membership_status === 'owner';
 
   if (variant === 'list') {
     return (
-      <div className="bg-card border border-border rounded-lg p-4 hover:border-primary/50 transition-colors">
-        <div className="flex items-center gap-4">
-          {/* Avatar */}
-          <div className="h-16 w-16 rounded-lg border-2 border-border bg-primary/10 flex items-center justify-center flex-shrink-0 overflow-hidden relative">
-            {group.avatar ? (
-              <Image
-                src={group.avatar}
-                alt={group.name}
-                fill
-                sizes="64px"
-                className="object-cover"
-              />
-            ) : (
-              <Users className="h-8 w-8 text-primary" />
-            )}
-          </div>
+      <div className="group bg-card border border-border rounded-xl p-4 hover:border-primary/40 hover:shadow-md transition-all duration-200 flex items-center gap-4">
+        {/* Avatar */}
+        <div className={cn('h-14 w-14 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden relative ring-2', typeCfg.ring)}>
+          {group.avatar
+            ? <Image src={group.avatar} alt={group.name} fill sizes="56px" className="object-cover" />
+            : (
+              <div className={cn('absolute inset-0 flex items-center justify-center bg-gradient-to-br', gradientClass)}>
+                <SectorIcon className="h-6 w-6 text-white/90" />
+              </div>
+            )
+          }
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <h3 className="font-semibold text-sm">{group.name}</h3>
-              <Badge variant="outline" className="text-xs">
-                <Icon className="h-3 w-3 mr-1" />
-                {typeLabels[group.type]}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground line-clamp-1 mb-2">{group.description}</p>
-            
-            {/* Stats */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                <span>{group.members_count} membres</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <MessageSquare className="h-3 w-3" />
-                <span>245 posts</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-green-500" />
-                <span>+12% cette semaine</span>
-              </div>
-            </div>
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h3 className="font-semibold text-sm truncate">{group.name}</h3>
+            <span className={cn('inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide bg-muted', typeCfg.text)}>
+              <TypeIcon className="h-3 w-3" />
+              {typeCfg.label}
+            </span>
           </div>
+          <p className="text-xs text-muted-foreground line-clamp-1 mb-1.5">{group.description}</p>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><Users className="h-3 w-3" />{group.members_count.toLocaleString('fr-FR')}</span>
+            <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{group.posts_count ?? '—'}</span>
+          </div>
+        </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-red-500">
-              <Heart className="h-4 w-4" />
+        {/* CTA */}
+        <div className="flex-shrink-0">
+          {!isMember && group.membership_status !== 'pending' && (
+            <Button size="sm" className="bg-[#064E3B] hover:bg-[#065f46]" onClick={() => join.mutate(group.id)} disabled={join.isPending}>
+              Rejoindre
             </Button>
-            {group.membership_status === 'none' && (
-              <Button
-                size="sm"
-                onClick={() => join.mutate(group.id)}
-                loading={join.isPending}
-              >
-                Rejoindre
-              </Button>
-            )}
-            {group.membership_status === 'pending' && (
-              <Badge variant="warning" className="text-xs">En attente</Badge>
-            )}
-            {(group.membership_status === 'member' || group.membership_status === 'admin') && (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/community/groups/${group.id}`}>Visiter</Link>
-              </Button>
-            )}
-          </div>
+          )}
+          {group.membership_status === 'pending' && (
+            <span className="text-xs font-semibold text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-1.5 rounded-full">En attente</span>
+          )}
+          {isMember && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/community/groups/${group.id}`}>Visiter</Link>
+            </Button>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <Card className="card-hover overflow-hidden h-full flex flex-col">
+    <div className="group bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:border-primary/20 transition-all duration-300 flex flex-col">
       {/* Banner */}
-      <div className="h-24 bg-gradient-to-br from-primary/20 to-secondary/20 relative">
+      <div className={cn('h-24 relative overflow-hidden bg-gradient-to-br', gradientClass)}>
         {group.banner && (
-          <Image
-            src={group.banner}
-            alt=""
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover"
-          />
+          <Image src={group.banner} alt="" fill sizes="(max-width:768px) 100vw, 50vw" className="object-cover opacity-70" />
         )}
-        <div className="absolute bottom-0 left-4 translate-y-1/2">
-          <div className="h-14 w-14 rounded-xl border-3 border-card bg-primary/10 flex items-center justify-center overflow-hidden relative">
-            {group.avatar ? (
-              <Image
-                src={group.avatar}
-                alt={group.name}
-                fill
-                sizes="56px"
-                className="object-cover"
-              />
-            ) : (
-              <Users className="h-7 w-7 text-primary" />
-            )}
+        {/* Sector watermark */}
+        <div className="absolute bottom-2 right-3 opacity-20">
+          <SectorIcon className="h-10 w-10 text-white" />
+        </div>
+        {/* Type badge */}
+        <div className="absolute top-2 left-3">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded-full bg-black/30 text-white backdrop-blur-sm">
+            <TypeIcon className="h-3 w-3" />
+            {typeCfg.label}
+          </span>
+        </div>
+        {/* Bookmark */}
+        <button className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/25 hover:bg-black/50 flex items-center justify-center transition-colors">
+          <Heart className="h-3.5 w-3.5 text-white" />
+        </button>
+        {/* Avatar */}
+        <div className="absolute -bottom-6 left-4">
+          <div className={cn('h-12 w-12 rounded-xl border-2 border-card overflow-hidden relative ring-2 shadow-lg flex items-center justify-center', typeCfg.ring)}>
+            {group.avatar
+              ? <Image src={group.avatar} alt={group.name} fill sizes="48px" className="object-cover" />
+              : <div className={cn('absolute inset-0 bg-gradient-to-br flex items-center justify-center', gradientClass)}><SectorIcon className="h-5 w-5 text-white" /></div>
+            }
           </div>
         </div>
-        
-        {/* Like button */}
-        <button className="absolute top-3 right-3 p-2 bg-card/80 backdrop-blur rounded-lg hover:bg-card transition-colors">
-          <Heart className="h-4 w-4 text-muted-foreground hover:text-red-500" />
-        </button>
       </div>
 
-      <CardContent className="pt-9 pb-4 flex-1 flex flex-col">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-sm truncate">{group.name}</h3>
-            <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-              <Icon className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-              <span className="text-xs text-muted-foreground">{typeLabels[group.type]}</span>
-              <span className="text-xs text-muted-foreground">·</span>
-              <Users className="h-3 w-3 text-muted-foreground flex-shrink-0" />
-              <span className="text-xs text-muted-foreground">{group.members_count}</span>
-            </div>
-          </div>
-        </div>
-
+      {/* Content */}
+      <div className="pt-8 px-4 pb-4 flex-1 flex flex-col">
+        <h3 className="font-bold text-sm leading-tight mb-1">{group.name}</h3>
         <p className="text-xs text-muted-foreground line-clamp-2 mb-3 flex-1">{group.description}</p>
 
         {/* Tags */}
-        {group.tags.length > 0 && (
+        {group.tags?.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {group.tags.slice(0, 3).map((t) => (
-              <Badge key={t} variant="outline" className="text-xs px-1.5 py-0.5">{t}</Badge>
+            {group.tags.slice(0, 3).map(t => (
+              <span key={t} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/50">{t}</span>
             ))}
           </div>
         )}
 
         {/* Stats */}
-        <div className="text-xs text-muted-foreground space-y-1 mb-3 py-2 border-t border-border pt-3">
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1">
-              <MessageSquare className="h-3 w-3" />
-              Discussions
-            </span>
-            <span className="font-semibold">245</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="flex items-center gap-1">
-              <TrendingUp className="h-3 w-3 text-green-500" />
-              Croissance
-            </span>
-            <span className="font-semibold text-green-600">+12%</span>
-          </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground pb-3 mb-3 border-b border-border">
+          <span className="flex items-center gap-1"><Users className="h-3 w-3" />{group.members_count.toLocaleString('fr-FR')} membres</span>
+          <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{group.posts_count ?? '—'} posts</span>
+          {group.members_count > 100 && (
+            <span className="ml-auto flex items-center gap-1 text-green-600 font-medium"><TrendingUp className="h-3 w-3" />Actif</span>
+          )}
         </div>
 
-        {/* Actions */}
+        {/* CTA */}
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1 text-xs" asChild>
+          <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" asChild>
             <Link href={`/community/groups/${group.id}`}>Voir</Link>
           </Button>
-          {group.membership_status === 'none' && (
-            <Button
-              size="sm"
-              className="flex-1 text-xs"
-              onClick={() => join.mutate(group.id)}
-              loading={join.isPending}
-            >
+          {!isMember && group.membership_status !== 'pending' && (
+            <Button size="sm" className="flex-1 h-8 text-xs bg-[#064E3B] hover:bg-[#065f46]" onClick={() => join.mutate(group.id)} disabled={join.isPending}>
               Rejoindre
             </Button>
           )}
           {group.membership_status === 'pending' && (
-            <Badge variant="warning" className="flex-1 justify-center text-xs">En attente</Badge>
+            <span className="flex-1 flex items-center justify-center text-xs font-semibold text-amber-600 bg-amber-50 dark:bg-amber-950/30 rounded-lg">En attente</span>
           )}
-          {(group.membership_status === 'member' || group.membership_status === 'admin') && (
-            <Badge variant="success" className="flex-1 justify-center text-xs">Membre</Badge>
+          {isMember && (
+            <span className="flex-1 flex items-center justify-center text-xs font-semibold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg">✓ Membre</span>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

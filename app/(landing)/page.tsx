@@ -1,13 +1,11 @@
 import type { Metadata } from 'next';
-import dynamic from 'next/dynamic';
 import { HeroSection } from '@/components/landing/hero-section';
 import { AnimatedStatsBar } from '@/components/landing/stats-bar';
-
-const FeaturesGrid = dynamic(() => import('@/components/landing/features-grid').then(m => m.FeaturesGrid), { ssr: true });
-const SectorShowcase = dynamic(() => import('@/components/landing/sector-showcase').then(m => m.SectorShowcase), { ssr: true });
-const TestimonialCarousel = dynamic(() => import('@/components/landing/testimonial-carousel').then(m => m.TestimonialCarousel), { ssr: true });
-const PricingCards = dynamic(() => import('@/components/landing/pricing-cards').then(m => m.PricingCards), { ssr: true });
-const CTABanner = dynamic(() => import('@/components/landing/cta-banner').then(m => m.CTABanner), { ssr: true });
+import { FeaturesGrid } from '@/components/landing/features-grid';
+import { SectorShowcase } from '@/components/landing/sector-showcase';
+import { TestimonialCarousel } from '@/components/landing/testimonial-carousel';
+import { PricingCards } from '@/components/landing/pricing-cards';
+import { CTABanner } from '@/components/landing/cta-banner';
 
 export const metadata: Metadata = {
   title: 'AgriIntel360 — Intelligence Agricole pour l\'Afrique',

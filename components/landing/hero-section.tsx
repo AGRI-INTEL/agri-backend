@@ -2,183 +2,391 @@
 
 import { useRef, useEffect } from 'react';
 import Link from 'next/link';
-import LinkButton from '@/components/ui/link-button';
 import Image from 'next/image';
 import { motion, useInView, useMotionValue, useSpring, animate } from '@/lib/motion';
-import { ArrowRight, Sparkles, Shield, BarChart3, Globe } from 'lucide-react';
+import { ArrowRight, Play } from 'lucide-react';
 
-function AnimatedCounter({ value }: { value: string }) {
+/* ─────────────────────────────────────────────
+   AnimatedCounter
+───────────────────────────────────────────── */
+function AnimatedCounter({ target, suffix }: { target: number; suffix: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref as React.RefObject<Element>, { once: true });
-  const numericValue = parseInt(value.replace(/[^0-9]/g, ''), 10);
   const motionValue = useMotionValue(0);
   const springValue = useSpring(motionValue, { duration: 2000 });
 
   useEffect(() => {
-    if (inView && !isNaN(numericValue)) {
-      animate(motionValue, numericValue, { duration: 2 });
+    if (inView) {
+      animate(motionValue, target, { duration: 2 });
     }
-  }, [inView, motionValue, numericValue]);
+  }, [inView, motionValue, target]);
 
   useEffect(() => {
     return springValue.on('change', (latest) => {
       if (ref.current) {
-        const prefix = value.match(/^[^0-9]*/)?.[0] || '';
-        const postfix = value.match(/[^0-9]*$/)?.[0] || '';
-        ref.current.textContent = `${prefix}${Math.round(latest).toLocaleString('fr-FR')}${postfix}`;
+        ref.current.textContent = `${Math.round(latest).toLocaleString('fr-FR')}${suffix}`;
       }
     });
-  }, [springValue, value]);
+  }, [springValue, suffix]);
 
-  return <span ref={ref}>{value}</span>;
+  return (
+    <span ref={ref}>
+      {target.toLocaleString('fr-FR')}{suffix}
+    </span>
+  );
 }
 
+/* ─────────────────────────────────────────────
+   WavyUnderline SVG
+───────────────────────────────────────────── */
+function WavyUnderline() {
+  return (
+    <svg
+      aria-hidden
+      style={{
+        position: 'absolute',
+        bottom: '-4px',
+        left: 0,
+        width: '100%',
+        overflow: 'visible',
+      }}
+      height="8"
+      preserveAspectRatio="none"
+    >
+      <path
+        d="M0,4 Q25%,0 50%,4 T100%,4"
+        stroke="#C4923A"
+        strokeWidth="2.5"
+        fill="none"
+        strokeDasharray="200"
+        strokeDashoffset="200"
+        style={{ animation: 'drawLine 1.2s 0.8s ease forwards' }}
+      />
+    </svg>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Stats data
+───────────────────────────────────────────── */
 const STATS = [
-  { value: '50,000+', label: 'Agriculteurs actifs', icon: Globe },
-  { value: '2.5M', label: 'Hectares suivis', icon: BarChart3 },
-  { value: '12', label: 'Pays couverts', icon: Shield },
-  { value: '98%', label: 'Précision IA', icon: Sparkles },
+  { target: 50000, suffix: '+', label: 'producteurs' },
+  { target: 2500000, suffix: '', label: 'hectares' },
+  { target: 12, suffix: '', label: 'pays' },
+  { target: 98, suffix: '%', label: 'précision IA' },
+] as const;
+
+const STAT_DISPLAY = [
+  { display: '50k+', label: 'producteurs', target: 50, suffix: 'k+' },
+  { display: '2,5M', label: 'hectares', target: 2, suffix: ',5M' },
+  { display: '12', label: 'pays', target: 12, suffix: '' },
+  { display: '98%', label: 'précision IA', target: 98, suffix: '%' },
 ];
 
+/* ─────────────────────────────────────────────
+   Headline words split for stagger animation
+───────────────────────────────────────────── */
+const HEADLINE_WORDS = [
+  { text: "L'intelligence", highlight: false },
+  { text: 'agricole', highlight: false },
+  { text: 'au', highlight: true, underline: false },
+  { text: 'service', highlight: true, underline: true },
+  { text: "de", highlight: false },
+  { text: "l'Afrique", highlight: false },
+];
+
+/* ─────────────────────────────────────────────
+   HeroSection
+───────────────────────────────────────────── */
 export function HeroSection() {
   return (
     <section
-      className="landing-hero relative min-h-[calc(100vh-4rem)] overflow-hidden bg-slate-950 pt-24"
+      className="relative flex flex-col justify-center overflow-hidden"
       aria-label="Section héros"
+      style={{
+        minHeight: '100vh',
+        background: '#07100A',
+      }}
     >
-      {/* Animated gradient mesh background */}
-      <div className="absolute inset-0 z-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.3),_transparent_50%),radial-gradient(ellipse_at_bottom_right,_rgba(59,130,246,0.15),_transparent_50%),radial-gradient(ellipse_at_bottom_left,_rgba(139,92,246,0.1),_transparent_50%)] animate-gradient" />
+      {/* ── keyframes injected inline ── */}
+      <style>{`
+        @keyframes drawLine {
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes fadeDown {
+          from { opacity: 0; transform: translateY(-14px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+      `}</style>
 
-      {/* Animated grid overlay */}
-      <div className="absolute inset-0 z-[1] opacity-[0.04]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '60px 60px',
-        }}
-      />
-
-      {/* Floating decorative orbs */}
-      <div className="absolute top-20 left-[15%] w-72 h-72 rounded-full bg-emerald-500/10 blur-[100px] animate-float-slow" />
-      <div className="absolute bottom-40 right-[10%] w-96 h-96 rounded-full bg-blue-500/8 blur-[120px] animate-float-slow animation-delay-2000" />
-      <div className="absolute top-1/3 right-[25%] w-48 h-48 rounded-full bg-violet-500/8 blur-[80px] animate-float-slow animation-delay-4000" />
-
-      {/* Background image overlay */}
-      <div className="absolute inset-0 z-[1]">
+      {/* ── Background image ── */}
+      <div className="absolute inset-0" style={{ zIndex: 0 }}>
         <Image
           src="/fond-landscape.jpg"
           alt=""
           fill
           priority
           sizes="100vw"
-          className="object-cover opacity-30"
+          className="object-cover"
+          style={{ opacity: 0.45, objectPosition: 'center 35%' }}
         />
       </div>
 
-      {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950/95 via-emerald-950/80 to-slate-950/95 z-[2]" aria-hidden />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-[2]" aria-hidden />
+      {/* ── Directional overlay ── */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 1,
+          background:
+            'linear-gradient(180deg, #07100A 0%, transparent 45%, rgba(20,12,3,0.80) 65%, #07100A 100%)',
+        }}
+        aria-hidden
+      />
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col items-center justify-center px-4 py-24 text-center sm:px-6 lg:px-8">
+      {/* ── Gold radial glow ── */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          zIndex: 2,
+          background:
+            'radial-gradient(ellipse 60% 50% at 50% 55%, rgba(196,146,58,0.18) 0%, transparent 70%)',
+        }}
+        aria-hidden
+      />
+
+      {/* ── Content ── */}
+      <div
+        className="relative mx-auto w-full px-6 lg:px-8 py-28 flex flex-col items-center text-center"
+        style={{ zIndex: 10, maxWidth: '720px' }}
+      >
         {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+        <div
+          style={{
+            animation: 'fadeDown 0.55s 0s ease both',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            borderRadius: '9999px',
+            padding: '8px 20px',
+            background: 'rgba(196,146,58,0.10)',
+            border: '1px solid rgba(196,146,58,0.28)',
+            color: '#DDA85A',
+            fontSize: '0.8125rem',
+            fontWeight: 600,
+            letterSpacing: '0.01em',
+            marginBottom: '2.25rem',
+          }}
         >
-          <div className="inline-flex items-center gap-3 rounded-full border border-emerald-400/25 bg-white/[0.06] px-5 py-2.5 text-sm font-bold text-emerald-100 backdrop-blur-xl shadow-lg shadow-emerald-500/5">
-            <div className="relative h-5 w-5">
-              <Image
-                src="/logo.png"
-                alt=""
-                fill
-                className="object-contain"
-                sizes="20px"
-              />
-            </div>
-            <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-            Plateforme d&apos;intelligence agricole tout-en-un
-          </div>
-        </motion.div>
+          <span
+            aria-hidden
+            style={{
+              width: '6px',
+              height: '6px',
+              borderRadius: '50%',
+              background: '#C4923A',
+              flexShrink: 0,
+              display: 'inline-block',
+            }}
+          />
+          🌾 Plateforme agricole n°1 en Afrique de l&apos;Ouest
+        </div>
 
-        {/* Main heading with gradient text */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.15, ease: [0.23, 1, 0.32, 1] }}
+        {/* Headline */}
+        <h1
+          className="font-display font-bold italic"
+          style={{
+            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+            lineHeight: 1.1,
+            letterSpacing: '-0.02em',
+            color: '#E4DBC8',
+            marginBottom: '1.5rem',
+            maxWidth: '720px',
+          }}
         >
-          <h1 className="mt-8 text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-200 to-white">
-              Gérez vos cultures, vos données
-            </span>
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-blue-400">
-              et vos alertes en un seul endroit.
-            </span>
-          </h1>
-        </motion.div>
+          {HEADLINE_WORDS.map((word, i) => {
+            const isUnderlined = word.underline;
+            return (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.5,
+                  delay: i * 0.05,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+                style={{
+                  display: 'inline-block',
+                  marginRight: i < HEADLINE_WORDS.length - 1 ? '0.28em' : 0,
+                  color: word.highlight ? '#C4923A' : '#E4DBC8',
+                  position: isUnderlined ? 'relative' : undefined,
+                }}
+              >
+                {word.text}
+                {isUnderlined && <WavyUnderline />}
+              </motion.span>
+            );
+          })}
+        </h1>
 
         {/* Subtitle */}
-        <motion.div
-          initial={{ opacity: 0, y: 25 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25, ease: [0.23, 1, 0.32, 1] }}
-        >
-          <p className="mx-auto mt-6 max-w-2xl text-base text-slate-300 sm:text-lg leading-8">
-            AgriIntel360 combine l&apos;IA, les prévisions météo, le suivi de parcelles et les analyses de marché pour renforcer l&apos;agriculture africaine.
-          </p>
-        </motion.div>
-
-        {/* CTA Buttons */}
-        <motion.div
+        <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4, ease: [0.23, 1, 0.32, 1] }}
+          transition={{ duration: 0.55, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+          style={{
+            fontSize: '1.125rem',
+            lineHeight: 1.75,
+            color: '#5E7A68',
+            maxWidth: '560px',
+            marginBottom: '2.5rem',
+          }}
         >
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <LinkButton href="/register" variant="glow" size="xl" className="group relative overflow-hidden">
-              <span className="relative z-10 flex items-center gap-2">
-                Créer un compte gratuit
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </span>
-              <span className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-emerald-400 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            </LinkButton>
-            <LinkButton href="/login" variant="outline" size="xl" className="border-white/20 text-white hover:text-white hover:bg-white/10 backdrop-blur-sm">
-              Se connecter
-            </LinkButton>
-          </div>
-          <div className="mt-4 flex items-center justify-center gap-2 text-center">
-            <Link href="#fonctionnalites" className="text-sm font-semibold text-emerald-300/80 hover:text-emerald-200 transition-colors">
-              Voir les fonctionnalités
-            </Link>
-            <ArrowRight className="h-3 w-3 text-emerald-300/60" />
-          </div>
+          Données en temps réel, IA prédictive, alertes et communauté — tout ce dont les
+          professionnels agricoles ont besoin pour décider mieux.
+        </motion.p>
+
+        {/* CTAs */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '12px',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            marginBottom: '3rem',
+          }}
+        >
+          <Link
+            href="/register"
+            className="group inline-flex items-center justify-center gap-2"
+            style={{
+              background: 'linear-gradient(135deg, #C4923A 0%, #b07928 100%)',
+              color: '#07100A',
+              fontWeight: 700,
+              fontSize: '0.9375rem',
+              padding: '13px 28px',
+              borderRadius: '9999px',
+              boxShadow: '0 4px 20px rgba(196,146,58,0.28)',
+              transition: 'filter 0.2s ease, transform 0.2s ease',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.filter = 'brightness(1.1)';
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.filter = 'brightness(1)';
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
+            }}
+          >
+            Commencer gratuitement
+            <ArrowRight
+              size={16}
+              style={{ transition: 'transform 0.2s ease' }}
+              className="group-hover:translate-x-1"
+            />
+          </Link>
+
+          <Link
+            href="#demo"
+            className="inline-flex items-center justify-center gap-2"
+            style={{
+              background: 'transparent',
+              color: '#E4DBC8',
+              fontWeight: 600,
+              fontSize: '0.9375rem',
+              padding: '13px 28px',
+              borderRadius: '9999px',
+              border: '1px solid rgba(196,146,58,0.40)',
+              transition: 'border-color 0.2s ease, background 0.2s ease',
+              textDecoration: 'none',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.borderColor = '#C4923A';
+              (e.currentTarget as HTMLElement).style.background = 'rgba(196,146,58,0.08)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.40)';
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+            }}
+          >
+            <Play size={14} style={{ color: '#C4923A' }} />
+            Voir la démo
+          </Link>
         </motion.div>
 
-        {/* Stats Cards */}
+        {/* Stats inline row */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.55, ease: [0.23, 1, 0.32, 1] }}
-          className="mt-16 w-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0',
+            rowGap: '10px',
+          }}
+          role="list"
+          aria-label="Chiffres clés"
         >
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {STATS.map((stat) => {
-              const Icon = stat.icon;
-              return (
-                <div
-                  key={stat.label}
-                  className="group relative rounded-2xl border border-white/[0.08] bg-white/[0.04] px-6 py-5 text-left backdrop-blur-xl transition-all duration-500 hover:bg-white/[0.08] hover:border-emerald-400/20 hover:shadow-lg hover:shadow-emerald-500/5"
+          {STAT_DISPLAY.map((stat, i) => (
+            <span
+              key={stat.label}
+              role="listitem"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: i < STAT_DISPLAY.length - 1 ? '0' : '0',
+              }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px' }}>
+                <span
+                  style={{
+                    fontFamily: 'monospace',
+                    fontWeight: 700,
+                    fontSize: '1rem',
+                    color: '#E4DBC8',
+                  }}
                 >
-                  <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/3 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  <Icon className="h-4 w-4 text-emerald-400/60 mb-3" />
-                  <p className="text-3xl font-black text-white">
-                    <AnimatedCounter value={stat.value} />
-                  </p>
-                  <p className="mt-1.5 text-xs uppercase tracking-[0.2em] text-slate-400 font-semibold">{stat.label}</p>
-                </div>
-              );
-            })}
-          </div>
+                  <AnimatedCounter target={stat.target} suffix={stat.suffix} />
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.75rem',
+                    color: '#5E7A68',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  {stat.label}
+                </span>
+              </span>
+
+              {/* Gold dot separator */}
+              {i < STAT_DISPLAY.length - 1 && (
+                <span
+                  aria-hidden
+                  style={{
+                    display: 'inline-block',
+                    width: '4px',
+                    height: '4px',
+                    borderRadius: '50%',
+                    background: '#C4923A',
+                    margin: '0 14px',
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+            </span>
+          ))}
         </motion.div>
       </div>
     </section>

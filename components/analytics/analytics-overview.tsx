@@ -443,7 +443,7 @@ function CompareSection() {
     ),
   });
 
-  const selectedCountries = countries.split(',');
+  const selectedCountries = (countries || '').split(',').filter(Boolean);
   const chartData: Array<{ year: string } & Record<string, number>> = [];
   if (data?.comparison) {
     const years = new Set<string>();

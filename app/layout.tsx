@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
+import { Playfair_Display } from 'next/font/google';
 import '@/styles/globals.css';
 import { Providers } from './providers';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,15 @@ const inter = localFont({
   ],
   variable: '--font-inter',
   display: 'swap',
+  preload: false,
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+  weight: ['400', '700'],
+  style: ['normal', 'italic'],
   preload: false,
 });
 
@@ -72,7 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="fr"
       suppressHydrationWarning
       data-scroll-behavior="smooth"
-      className={cn(inter.variable, mono.variable)}
+      className={cn(inter.variable, mono.variable, playfair.variable)}
     >
       <head>
         {process.env.NODE_ENV === 'production' && (

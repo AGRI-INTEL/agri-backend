@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
+
+function cn(...classes: (string | boolean | undefined | null)[]): string {
+  return classes.filter(Boolean).join(' ');
+}
 
 export function GoogleIcon({ size = 18 }: { size?: number }) {
   return (
@@ -28,7 +31,10 @@ export function MicrosoftIcon({ size = 18 }: { size?: number }) {
 
 export function AuthCardHeader({ title }: { title: string }) {
   return (
-    <h1 className="mb-7 text-center text-[1.4rem] font-bold text-slate-800 tracking-tight">
+    <h1
+      className="font-display mb-7 text-center text-[1.35rem] font-bold italic tracking-tight"
+      style={{ color: '#E8E0CC' }}
+    >
       {title}
     </h1>
   );
@@ -45,14 +51,15 @@ export function AuthPrimaryButton({
       type="submit"
       disabled={loading || props.disabled}
       className={cn(
-        'mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-2xl',
-        'bg-gradient-to-r from-emerald-600 to-emerald-500',
-        'text-[15px] font-semibold text-white tracking-wide',
-        'transition-all duration-200 hover:from-emerald-700 hover:to-emerald-600',
-        'hover:shadow-lg hover:shadow-emerald-500/30 active:scale-[0.98]',
+        'mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl',
+        'text-[15px] font-bold transition-all duration-200',
+        'hover:-translate-y-[1px] hover:shadow-lg active:translate-y-0 active:shadow-md',
         'disabled:pointer-events-none disabled:opacity-60 cursor-pointer',
         className
       )}
+      style={{ background: '#C4923A', color: '#1A1000', boxShadow: '0 4px 18px rgba(196,146,58,0.28)' }}
+      onMouseEnter={e => { if (!props.disabled && !loading) (e.currentTarget as HTMLElement).style.background = '#DDA85A'; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#C4923A'; }}
       {...props}
     >
       {loading ? (
@@ -84,37 +91,48 @@ export function SocialLoginButton({
       type="button"
       onClick={onClick}
       disabled={disabled || loading}
-      className={cn(
-        'flex h-11 w-full items-center justify-center gap-3 rounded-xl',
-        'border text-sm font-medium',
-        'transition-all duration-200',
-        'active:scale-[0.97]',
-        isGoogle
-          ? 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm'
-          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-300 hover:shadow-sm',
-        (disabled || loading) && 'opacity-50 cursor-not-allowed'
-      )}
+      className="flex h-11 w-full items-center justify-center gap-3 rounded-xl text-sm font-medium transition-all duration-200 active:scale-[0.97]"
+      style={{
+        border: '1px solid rgba(196,146,58,0.22)',
+        background: 'rgba(196,146,58,0.05)',
+        color: '#E8E0CC',
+        opacity: disabled || loading ? 0.5 : 1,
+        cursor: disabled || loading ? 'not-allowed' : 'pointer',
+      }}
+      onMouseEnter={e => {
+        if (!disabled && !loading) {
+          (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.38)';
+          (e.currentTarget as HTMLElement).style.background = 'rgba(196,146,58,0.10)';
+        }
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.22)';
+        (e.currentTarget as HTMLElement).style.background = 'rgba(196,146,58,0.05)';
+      }}
     >
       {loading ? (
-        <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
+        <Loader2 className="h-4 w-4 animate-spin" style={{ color: '#C4923A' }} />
       ) : isGoogle ? (
         <GoogleIcon size={18} />
       ) : (
         <MicrosoftIcon size={18} />
       )}
-      <span>{isGoogle ? 'Google' : 'Microsoft'}</span>
+      <span>{isGoogle ? 'Continuer avec Google' : 'Continuer avec Microsoft'}</span>
     </button>
   );
 }
 
-export function AuthDivider({ text = "ou continuer avec" }: { text?: string }) {
+export function AuthDivider({ text = 'ou continuer avec' }: { text?: string }) {
   return (
     <div className="relative my-6">
       <div className="absolute inset-0 flex items-center">
-        <div className="w-full border-t border-slate-200" />
+        <div className="w-full" style={{ borderTop: '1px solid rgba(196,146,58,0.14)' }} />
       </div>
       <div className="relative flex justify-center">
-        <span className="bg-white px-4 text-xs font-medium text-slate-400 uppercase tracking-widest">
+        <span
+          className="px-4 text-xs font-semibold uppercase tracking-widest"
+          style={{ background: '#152219', color: '#4A6050' }}
+        >
           {text}
         </span>
       </div>
@@ -132,9 +150,15 @@ export function AuthFooterLink({
   href: string;
 }) {
   return (
-    <p className="mt-6 text-center text-sm text-slate-500">
+    <p className="mt-6 text-center text-sm" style={{ color: '#7D9486' }}>
       {text}{' '}
-      <Link href={href} className="font-semibold text-emerald-600 hover:text-emerald-700 hover:underline transition-colors">
+      <Link
+        href={href}
+        className="font-semibold transition-colors"
+        style={{ color: '#C4923A' }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#DDA85A'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#C4923A'; }}
+      >
         {linkText}
       </Link>
     </p>
@@ -147,13 +171,14 @@ export function AuthCheckbox({
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   return (
-    <label className={cn("flex cursor-pointer items-center gap-2.5", className)}>
+    <label className={cn('flex cursor-pointer items-center gap-2.5', className)}>
       <input
         type="checkbox"
-        className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500/30 accent-emerald-600"
+        className="h-4 w-4 rounded accent-[#C4923A] cursor-pointer"
+        style={{ borderColor: 'rgba(196,146,58,0.30)' }}
         {...props}
       />
-      <span className="text-sm text-slate-600">{label}</span>
+      <span className="text-sm" style={{ color: '#7D9486' }}>{label}</span>
     </label>
   );
 }

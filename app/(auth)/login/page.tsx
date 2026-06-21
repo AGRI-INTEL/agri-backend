@@ -17,14 +17,11 @@ import { motion, AnimatePresence } from '@/lib/motion';
 import { useAuth } from '@/hooks/use-auth';
 import { loginSchema, type LoginFormData } from '@/lib/validators';
 import type { LoginCredentials } from '@/types/auth';
-import {
-  SocialLoginButton,
-  AuthDivider,
-  AuthFooterLink,
-} from '@/components/auth/auth-ui';
+
+// ─── Animation variants ────────────────────────────────────────────────────────
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 24, scale: 0.98 },
+  hidden: { opacity: 0, y: 24, scale: 0.97 },
   visible: {
     opacity: 1,
     y: 0,
@@ -34,20 +31,174 @@ const cardVariants = {
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 12 },
+  hidden: { opacity: 0, y: 16 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, delay: 0.08 * i, ease: 'easeOut' },
+    transition: {
+      duration: 0.45,
+      delay: i * 0.08,
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
   }),
 };
+
+// ─── FloatInput component ──────────────────────────────────────────────────────
+
+interface FloatInputProps {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  type?: string;
+  autoComplete?: string;
+  error?: string;
+  disabled?: boolean;
+  rightSlot?: React.ReactNode;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  registerProps: any;
+}
+
+function FloatInput({
+  id,
+  label,
+  icon: Icon,
+  type = 'text',
+  autoComplete,
+  error,
+  disabled,
+  rightSlot,
+  registerProps,
+}: FloatInputProps) {
+  const [focused, setFocused] = useState(false);
+  const [hasValue, setHasValue] = useState(false);
+  const floated = focused || hasValue;
+
+  const handleFocus = () => setFocused(true);
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setFocused(false);
+    setHasValue(e.currentTarget.value.length > 0);
+  };
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setHasValue(e.currentTarget.value.length > 0);
+    registerProps.onChange?.(e);
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* Floating label */}
+      <label
+        htmlFor={id}
+        style={{
+          position: 'absolute',
+          left: '2.75rem',
+          top: floated ? '0.45rem' : '50%',
+          transform: floated ? 'translateY(0) scale(0.8)' : 'translateY(-50%) scale(1)',
+          transformOrigin: 'left center',
+          color: error
+            ? '#f87171'
+            : floated
+            ? '#C4923A'
+            : '#5E7A68',
+          fontSize: '0.9375rem',
+          fontWeight: 500,
+          pointerEvents: 'none',
+          transition: 'top 0.18s ease, transform 0.18s ease, color 0.18s ease',
+          lineHeight: 1,
+          zIndex: 1,
+        }}
+      >
+        {label}
+      </label>
+
+      {/* Left icon */}
+      <Icon
+        style={{
+          position: 'absolute',
+          left: '0.875rem',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          width: '1rem',
+          height: '1rem',
+          color: error ? 'rgba(248,113,113,0.65)' : focused ? '#C4923A' : 'rgba(196,146,58,0.45)',
+          pointerEvents: 'none',
+          transition: 'color 0.18s ease',
+          flexShrink: 0,
+        }}
+        strokeWidth={1.5}
+      />
+
+      {/* Input */}
+      <input
+        id={id}
+        type={type}
+        autoComplete={autoComplete}
+        disabled={disabled}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${id}-error` : undefined}
+        onFocus={handleFocus}
+        onBlur={(e) => {
+          handleBlur(e);
+          registerProps.onBlur?.(e);
+        }}
+        onChange={handleChange}
+        ref={registerProps.ref}
+        name={registerProps.name}
+        style={{
+          display: 'block',
+          width: '100%',
+          height: '3.5rem',
+          paddingTop: floated ? '1.125rem' : '0',
+          paddingLeft: '2.75rem',
+          paddingRight: rightSlot ? '3rem' : '1rem',
+          paddingBottom: '0',
+          background: 'rgba(255,255,255,0.04)',
+          border: 'none',
+          borderBottom: `1px solid ${
+            error
+              ? 'rgba(248,113,113,0.55)'
+              : focused
+              ? '#C4923A'
+              : 'rgba(196,146,58,0.25)'
+          }`,
+          borderRadius: '0.5rem 0.5rem 0 0',
+          color: '#E4DBC8',
+          fontSize: '0.9375rem',
+          outline: 'none',
+          boxShadow: focused
+            ? error
+              ? 'none'
+              : 'inset 0 -1px 0 0 rgba(196,146,58,0.12)'
+            : 'none',
+          transition:
+            'border-color 0.18s ease, box-shadow 0.18s ease, padding-top 0.18s ease',
+          opacity: disabled ? 0.5 : 1,
+          cursor: disabled ? 'not-allowed' : 'text',
+        }}
+      />
+
+      {/* Right slot (password toggle etc.) */}
+      {rightSlot && (
+        <div
+          style={{
+            position: 'absolute',
+            right: '0.875rem',
+            top: '50%',
+            transform: 'translateY(-50%)',
+          }}
+        >
+          {rightSlot}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── LoginPage ─────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const { loginAsync, isLoginLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [oauthLoading, setOauthLoading] = useState<'google' | 'microsoft' | null>(null);
-  const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
 
   const {
     register,
@@ -61,74 +212,124 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setApiError(null);
     try {
-      await loginAsync(data as LoginCredentials);
+      await loginAsync(data as unknown as LoginCredentials);
     } catch (e) {
-      const error = e as { message?: string };
-      setApiError(error?.message ?? 'Email ou mot de passe incorrect.');
+      const err = e as { message?: string };
+      setApiError(err?.message ?? 'Email ou mot de passe incorrect.');
     }
   };
 
-  const handleOAuth = useCallback(
-    async (provider: 'google' | 'microsoft') => {
-      setOauthLoading(provider);
-      try {
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        const prefix = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
-        window.location.href = `${backendUrl}${prefix}/auth/oauth/${provider}`;
-      } catch {
-        setOauthLoading(null);
-      }
-    },
-    []
-  );
+  const togglePassword = useCallback(() => setShowPassword((v) => !v), []);
 
-  const createRipple = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const id = Date.now() + Math.random();
-    setRipples((prev) => [...prev, { x, y, id }]);
-    setTimeout(() => {
-      setRipples((prev) => prev.filter((r) => r.id !== id));
-    }, 600);
-  }, []);
+  const handleGoogleLogin = () => {
+    const prefix = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
+    window.location.href = `${prefix}/auth/oauth/google`;
+  };
+
+  const handleMicrosoftLogin = () => {
+    const prefix = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
+    window.location.href = `${prefix}/auth/oauth/microsoft`;
+  };
 
   return (
     <motion.div
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      className="w-full"
+      style={{ width: '100%' }}
     >
-      {/* Title */}
-      <motion.div custom={0} variants={itemVariants} className="text-center mb-8">
-        <h1 className="text-[22px] font-bold text-[#111827] mb-1.5">
-          Content de vous revoir
+      {/* ── Heading ── */}
+      <motion.div
+        custom={0}
+        variants={itemVariants}
+        style={{ textAlign: 'center', marginBottom: '1.75rem' }}
+      >
+        <h1
+          style={{
+            fontFamily: '"Playfair Display", Georgia, serif',
+            fontWeight: 700,
+            fontStyle: 'italic',
+            fontSize: '1.5rem',
+            color: '#E4DBC8',
+            marginBottom: '0.375rem',
+            lineHeight: 1.2,
+          }}
+        >
+          Bon retour
         </h1>
-        <p className="text-sm text-[#6b7280]">
-          Connectez-vous à votre espace AgriIntel
+        <p
+          style={{
+            fontSize: '0.875rem',
+            color: '#5E7A68',
+            lineHeight: 1.5,
+          }}
+        >
+          Connectez-vous à votre espace AgriIntel360
         </p>
       </motion.div>
 
-      {/* API Error */}
+      {/* ── Global API error ── */}
       <AnimatePresence mode="wait">
         {apiError && (
           <motion.div
             key="api-error"
-            initial={{ opacity: 0, y: -10, height: 0 }}
+            initial={{ opacity: 0, y: -8, height: 0 }}
             animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            transition={{ duration: 0.25 }}
-            className="mb-5 overflow-hidden"
+            exit={{ opacity: 0, y: -8, height: 0 }}
+            transition={{ duration: 0.22 }}
+            style={{ marginBottom: '1.25rem', overflow: 'hidden' }}
           >
-            <div className="flex items-start gap-2.5 rounded-[10px] border border-red-200 bg-red-50 p-3">
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-red-500" />
-              <p className="text-sm text-red-700 flex-1">{apiError}</p>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.625rem',
+                borderRadius: '0.625rem',
+                padding: '0.75rem',
+                background: 'rgba(248,113,113,0.08)',
+                border: '1px solid rgba(248,113,113,0.25)',
+              }}
+            >
+              <AlertCircle
+                style={{
+                  width: '1rem',
+                  height: '1rem',
+                  color: '#f87171',
+                  flexShrink: 0,
+                  marginTop: '0.125rem',
+                }}
+              />
+              <p
+                style={{
+                  fontSize: '0.875rem',
+                  color: '#fca5a5',
+                  flex: 1,
+                  lineHeight: 1.45,
+                }}
+              >
+                {apiError}
+              </p>
               <button
                 type="button"
                 onClick={() => setApiError(null)}
-                className="text-red-400 hover:text-red-600 transition-colors leading-none p-0.5"
                 aria-label="Fermer"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'rgba(248,113,113,0.55)',
+                  cursor: 'pointer',
+                  padding: '0.125rem',
+                  lineHeight: 1,
+                  fontSize: '0.75rem',
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color = '#f87171';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color =
+                    'rgba(248,113,113,0.55)';
+                }}
               >
                 ✕
               </button>
@@ -137,236 +338,381 @@ export default function LoginPage() {
         )}
       </AnimatePresence>
 
-      {/* Form */}
-      <motion.form
-        custom={1}
-        variants={itemVariants}
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-      >
-        <div className="space-y-4">
-          {/* Email */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-semibold text-[#111827] mb-1.5"
-            >
-              Email
-            </label>
-            <div className="group relative transition-transform duration-200 focus-within:scale-[1.01]">
-              <Mail
-                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af] transition-colors duration-200 group-focus-within:text-[#059669]"
-                strokeWidth={1.5}
-              />
-              <input
-                id="email"
-                type="email"
-                placeholder="exemple@email.com"
-                autoComplete="email"
-                data-testid="email-input"
-                aria-invalid={!!errors.identifier}
-                aria-describedby={errors.identifier ? 'email-error' : undefined}
-                {...register('identifier')}
-                style={{ borderWidth: '1.5px' }}
-                className={cn(
-                  'w-full h-[48px] pl-10 pr-4 text-[15px] text-[#111827] rounded-[10px] bg-white',
-                  'border-[#e5e7eb]',
-                  'placeholder:text-[#9ca3af]',
-                  'transition-all duration-200 outline-none',
-                  'focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15',
-                  errors.identifier && '!border-[#dc2626] !focus:border-[#dc2626] !focus:ring-[#dc2626]/15'
-                )}
-              />
-            </div>
+      {/* ── Form ── */}
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        {/* Email field */}
+        <motion.div
+          custom={1}
+          variants={itemVariants}
+          style={{ marginBottom: '1.25rem' }}
+        >
+          <FloatInput
+            id="identifier"
+            label="Email ou identifiant"
+            icon={Mail}
+            type="email"
+            autoComplete="email"
+            error={errors.identifier?.message}
+            disabled={isLoginLoading}
+            registerProps={register('identifier')}
+          />
+          <AnimatePresence>
             {errors.identifier && (
               <motion.p
-                id="email-error"
+                id="identifier-error"
+                role="alert"
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                role="alert"
-                className="mt-1 text-xs text-[#dc2626]"
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.18 }}
+                style={{
+                  marginTop: '0.375rem',
+                  fontSize: '0.75rem',
+                  color: '#f87171',
+                  paddingLeft: '0.25rem',
+                }}
               >
                 {errors.identifier.message}
               </motion.p>
             )}
-          </div>
+          </AnimatePresence>
+        </motion.div>
 
-          {/* Password */}
-          <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-[#111827]"
-              >
-                Mot de passe
-              </label>
-              <Link
-                href="/forgot-password"
-                className="text-xs font-medium text-[#059669] hover:text-[#047857] transition-colors"
-              >
-                Mot de passe oublié ?
-              </Link>
-            </div>
-            <div className="group relative transition-transform duration-200 focus-within:scale-[1.01]">
-              <Lock
-                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af] transition-colors duration-200 group-focus-within:text-[#059669]"
-                strokeWidth={1.5}
-              />
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Entrez votre mot de passe"
-                autoComplete="current-password"
-                data-testid="password-input"
-                aria-invalid={!!errors.password}
-                aria-describedby={errors.password ? 'password-error' : undefined}
-                {...register('password')}
-                style={{ borderWidth: '1.5px' }}
-                className={cn(
-                  'w-full h-[48px] pl-10 pr-11 text-[15px] text-[#111827] rounded-[10px] bg-white',
-                  'border-[#e5e7eb]',
-                  'placeholder:text-[#9ca3af]',
-                  'transition-all duration-200 outline-none',
-                  'focus:border-[#059669] focus:ring-2 focus:ring-[#059669]/15',
-                  errors.password && '!border-[#dc2626] !focus:border-[#dc2626] !focus:ring-[#dc2626]/15'
-                )}
-              />
+        {/* Password field */}
+        <motion.div
+          custom={2}
+          variants={itemVariants}
+          style={{ marginBottom: '0.625rem' }}
+        >
+          <FloatInput
+            id="password"
+            label="Mot de passe"
+            icon={Lock}
+            type={showPassword ? 'text' : 'password'}
+            autoComplete="current-password"
+            error={errors.password?.message}
+            disabled={isLoginLoading}
+            registerProps={register('password')}
+            rightSlot={
               <button
                 type="button"
-                data-testid="toggle-password"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#6b7280] transition-colors p-0.5"
+                onClick={togglePassword}
                 aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '0.25rem',
+                  cursor: 'pointer',
+                  color: 'rgba(196,146,58,0.45)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color = '#C4923A';
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color =
+                    'rgba(196,146,58,0.45)';
+                }}
               >
                 {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
+                  <EyeOff style={{ width: '1rem', height: '1rem' }} />
                 ) : (
-                  <Eye className="h-4 w-4" />
+                  <Eye style={{ width: '1rem', height: '1rem' }} />
                 )}
               </button>
-            </div>
+            }
+          />
+          <AnimatePresence>
             {errors.password && (
               <motion.p
                 id="password-error"
+                role="alert"
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
-                role="alert"
-                className="mt-1 text-xs text-[#dc2626]"
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.18 }}
+                style={{
+                  marginTop: '0.375rem',
+                  fontSize: '0.75rem',
+                  color: '#f87171',
+                  paddingLeft: '0.25rem',
+                }}
               >
                 {errors.password.message}
               </motion.p>
             )}
-          </div>
+          </AnimatePresence>
+        </motion.div>
 
-          {/* Remember me */}
-          <div className="flex items-center">
-            <label className="flex cursor-pointer items-center gap-2.5 select-none">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-[#d1d5db] text-[#059669] focus:ring-[#059669]/30 accent-[#059669]"
-                {...register('remember_me')}
-              />
-              <span className="text-sm text-[#6b7280]">Se souvenir de moi</span>
-            </label>
-          </div>
+        {/* Forgot password link */}
+        <motion.div
+          custom={3}
+          variants={itemVariants}
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            marginBottom: '1.75rem',
+          }}
+        >
+          <Link
+            href="/forgot-password"
+            style={{
+              fontSize: '0.8125rem',
+              fontWeight: 500,
+              color: '#C4923A',
+              textDecoration: 'none',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = '#DDA85A';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = '#C4923A';
+            }}
+          >
+            Mot de passe oublié ?
+          </Link>
+        </motion.div>
 
-          {/* Submit */}
-          <div className="pt-1">
-            <button
-              type="submit"
-              disabled={isLoginLoading}
-              onClick={createRipple}
-              className={cn(
-                'relative w-full h-[48px] rounded-[10px] overflow-hidden',
-                'bg-[#059669] text-white font-semibold text-[15px]',
-                'transition-all duration-200',
-                'hover:bg-[#047857] hover:-translate-y-[1px] hover:shadow-lg hover:shadow-[#059669]/25',
-                'active:translate-y-0 active:shadow-md',
-                'disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none',
-                'flex items-center justify-center gap-2.5'
-              )}
-            >
-              {/* Ripple container */}
-              {ripples.map((r) => (
-                <span
-                  key={r.id}
-                  className="absolute rounded-full bg-white/40 pointer-events-none animate-ripple"
-                  style={{
-                    left: r.x - 3,
-                    top: r.y - 3,
-                    width: 6,
-                    height: 6,
-                  }}
+        {/* Submit button */}
+        <motion.div custom={4} variants={itemVariants}>
+          <button
+            type="submit"
+            disabled={isLoginLoading}
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '3rem',
+              borderRadius: '0.625rem',
+              border: 'none',
+              background: isLoginLoading
+                ? 'linear-gradient(135deg, rgba(196,146,58,0.5) 0%, rgba(176,121,40,0.5) 100%)'
+                : 'linear-gradient(135deg, #C4923A 0%, #b07928 100%)',
+              color: '#07100A',
+              fontSize: '0.9375rem',
+              fontWeight: 700,
+              cursor: isLoginLoading ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              boxShadow: isLoginLoading
+                ? 'none'
+                : '0 4px 20px rgba(196,146,58,0.28)',
+              opacity: isLoginLoading ? 0.6 : 1,
+              transition:
+                'opacity 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+              overflow: 'hidden',
+            }}
+            onMouseEnter={(e) => {
+              if (!isLoginLoading) {
+                const btn = e.currentTarget as HTMLButtonElement;
+                btn.style.filter = 'brightness(1.1)';
+                btn.style.transform = 'translateY(-1px)';
+                btn.style.boxShadow = '0 6px 24px rgba(196,146,58,0.36)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              const btn = e.currentTarget as HTMLButtonElement;
+              btn.style.filter = 'none';
+              btn.style.transform = 'translateY(0)';
+              btn.style.boxShadow = isLoginLoading
+                ? 'none'
+                : '0 4px 20px rgba(196,146,58,0.28)';
+            }}
+            onMouseDown={(e) => {
+              if (!isLoginLoading) {
+                (e.currentTarget as HTMLButtonElement).style.transform =
+                  'translateY(0)';
+              }
+            }}
+          >
+            {isLoginLoading ? (
+              <>
+                <Loader2
+                  style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }}
                 />
-              ))}
+                <span>Connexion en cours…</span>
+              </>
+            ) : (
+              <>
+                <span>Se connecter</span>
+                <ArrowRight style={{ width: '1rem', height: '1rem' }} />
+              </>
+            )}
+          </button>
+        </motion.div>
+      </form>
 
-              {isLoginLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Connexion en cours...</span>
-                </>
-              ) : (
-                <>
-                  <span>Se connecter</span>
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </motion.form>
-
-      {/* Divider + SSO */}
-      <motion.div custom={2} variants={itemVariants}>
-        <AuthDivider />
-        <div className="flex flex-col gap-2.5">
-          <SocialLoginButton
-            provider="google"
-            onClick={() => handleOAuth('google')}
-            loading={oauthLoading === 'google'}
-          />
-          <SocialLoginButton
-            provider="microsoft"
-            onClick={() => handleOAuth('microsoft')}
-            loading={oauthLoading === 'microsoft'}
-          />
-        </div>
-      </motion.div>
-
-      {/* Register link */}
-      <motion.div custom={3} variants={itemVariants}>
-        <AuthFooterLink
-          text="Pas encore de compte ?"
-          linkText="Créer un compte"
-          href="/register"
+      {/* ── Divider ── */}
+      <motion.div
+        custom={5}
+        variants={itemVariants}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          margin: '1.5rem 0',
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            height: '1px',
+            background: 'rgba(196,146,58,0.18)',
+          }}
+        />
+        <span
+          style={{
+            fontSize: '0.8125rem',
+            color: '#5E7A68',
+            fontWeight: 500,
+            letterSpacing: '0.04em',
+            userSelect: 'none',
+          }}
+        >
+          ou
+        </span>
+        <div
+          style={{
+            flex: 1,
+            height: '1px',
+            background: 'rgba(196,146,58,0.18)',
+          }}
         />
       </motion.div>
 
-      {/* Footer */}
-      <motion.p
-        custom={4}
+      {/* ── Social Login Buttons ── */}
+      <motion.div
+        custom={6}
         variants={itemVariants}
-        className="mt-7 text-center text-[11px] text-[#9ca3af]"
+        style={{
+          display: 'flex',
+          gap: '0.75rem',
+          marginBottom: '1.5rem',
+        }}
       >
-        En continuant, vous acceptez nos{' '}
-        <Link
-          href="/terms"
-          className="underline hover:text-[#6b7280] transition-colors"
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            height: '3rem',
+            borderRadius: '0.625rem',
+            border: '1px solid rgba(196, 146, 58, 0.20)',
+            background: 'rgba(255, 255, 255, 0.03)',
+            color: '#E4DBC8',
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            const btn = e.currentTarget as HTMLButtonElement;
+            btn.style.background = 'rgba(255, 255, 255, 0.07)';
+            btn.style.borderColor = '#C4923A';
+            btn.style.transform = 'translateY(-1px)';
+            btn.style.boxShadow = '0 4px 12px rgba(196, 146, 58, 0.12)';
+          }}
+          onMouseLeave={(e) => {
+            const btn = e.currentTarget as HTMLButtonElement;
+            btn.style.background = 'rgba(255, 255, 255, 0.03)';
+            btn.style.borderColor = 'rgba(196, 146, 58, 0.20)';
+            btn.style.transform = 'translateY(0)';
+            btn.style.boxShadow = 'none';
+          }}
         >
-          conditions d&apos;utilisation
-        </Link>{' '}
-        et notre{' '}
-        <Link
-          href="/privacy"
-          className="underline hover:text-[#6b7280] transition-colors"
+          <svg viewBox="0 0 24 24" width="18" height="18" style={{ flexShrink: 0 }}>
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          <span>Google</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleMicrosoftLogin}
+          style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            height: '3rem',
+            borderRadius: '0.625rem',
+            border: '1px solid rgba(196, 146, 58, 0.20)',
+            background: 'rgba(255, 255, 255, 0.03)',
+            color: '#E4DBC8',
+            fontSize: '0.875rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            const btn = e.currentTarget as HTMLButtonElement;
+            btn.style.background = 'rgba(255, 255, 255, 0.07)';
+            btn.style.borderColor = '#C4923A';
+            btn.style.transform = 'translateY(-1px)';
+            btn.style.boxShadow = '0 4px 12px rgba(196, 146, 58, 0.12)';
+          }}
+          onMouseLeave={(e) => {
+            const btn = e.currentTarget as HTMLButtonElement;
+            btn.style.background = 'rgba(255, 255, 255, 0.03)';
+            btn.style.borderColor = 'rgba(196, 146, 58, 0.20)';
+            btn.style.transform = 'translateY(0)';
+            btn.style.boxShadow = 'none';
+          }}
         >
-          politique de confidentialité
-        </Link>
-      </motion.p>
+          <svg viewBox="0 0 23 23" width="16" height="16" style={{ flexShrink: 0 }}>
+            <path fill="#F25022" d="M1 1h10v10H1z"/>
+            <path fill="#7FBA00" d="M12 1h10v10H12z"/>
+            <path fill="#00A4EF" d="M1 12h10v10H1z"/>
+            <path fill="#FFB900" d="M12 12h10v10H12z"/>
+          </svg>
+          <span>Microsoft</span>
+        </button>
+      </motion.div>
+
+      {/* ── Register link ── */}
+      <motion.div
+        custom={7}
+        variants={itemVariants}
+        style={{ textAlign: 'center' }}
+      >
+        <p
+          style={{
+            fontSize: '0.875rem',
+            color: '#5E7A68',
+          }}
+        >
+          Pas encore de compte ?{' '}
+          <Link
+            href="/register"
+            style={{
+              color: '#C4923A',
+              fontWeight: 600,
+              textDecoration: 'none',
+              transition: 'color 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = '#DDA85A';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLAnchorElement).style.color = '#C4923A';
+            }}
+          >
+            S&apos;inscrire
+          </Link>
+        </p>
+      </motion.div>
     </motion.div>
   );
-}
-
-function cn(...classes: (string | boolean | undefined | null)[]): string {
-  return classes.filter(Boolean).join(' ');
 }

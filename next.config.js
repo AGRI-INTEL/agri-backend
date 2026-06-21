@@ -1,30 +1,14 @@
 /** @type {import('next').NextConfig} */
 const isDev = process.env.NODE_ENV === 'development';
-const isStandalone = process.env.STANDALONE === 'true';
 
-// NOTE: La CSP est intentionnellement permissive pour garantir le chargement
-// des chunks _next/static/ sur l'hébergement LWS (shared hosting, Passenger).
-// Une CSP trop stricte bloque les scripts Next.js en production.
-function buildContentSecurityPolicy() {
-  // Désactivé temporairement pour débugger les erreurs 503/CSP sur LWS
-  return null;
-}
-
-const securityHeaders = [
-  { key: 'X-Content-Type-Options', value: 'nosniff' },
-  // SAMEORIGIN est préférable à DENY — permet d'afficher dans des iframes du même domaine
-  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-  { key: 'X-XSS-Protection', value: '1; mode=block' },
-  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
-];
-
-const csp = buildContentSecurityPolicy();
-if (csp) securityHeaders.push({ key: 'Content-Security-Policy', value: csp });
+// En mode export statique (production LWS), headers() et rewrites() ne fonctionnent pas.
+// Les headers de sécurité sont gérés par Apache via .htaccess.
+// Le proxy API est géré par Apache ProxyPass en production.
+// En développement (next dev, sans output:export), on garde le proxy vers le backend local.
 
 const nextConfig = {
+  output: 'export',
   outputFileTracingRoot: __dirname,
-  ...(isStandalone ? { output: 'standalone' } : {}),
 
   images: {
     unoptimized: true,
@@ -32,49 +16,19 @@ const nextConfig = {
 
   reactStrictMode: true,
 
-  // Laisser Next.js gérer la compression — LWS Passenger ne fait pas de gzip
   compress: true,
-
-  // Assure que les assets _next/static sont servis depuis la racine du domaine
-  // Ne pas définir assetPrefix sauf si les assets sont sur un CDN séparé
-  // assetPrefix: '',
-
-  async headers() {
-    return [
-      {
-        // Appliquer les headers de sécurité sur toutes les routes
-        source: '/(.*)',
-        headers: securityHeaders,
-      },
-      {
-        // Cache agressif pour les assets statiques Next.js (immutables)
-        source: '/_next/static/(.*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-    ];
-  },
-
-  async rewrites() {
-    // En production LWS, les requêtes /api/v1/* sont proxyées par Apache vers le backend
-    // Le rewrite Next.js n'est pas utilisé en production (Apache gère le proxy)
-    // En développement, proxy vers localhost
-    const isDev = process.env.NODE_ENV === 'development';
-    if (!isDev) {
-      return []; // Pas de rewrite en production - Apache gère le proxy
-    }
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://127.0.0.1:8000';
-    return [
-      {
-        source: '/api/v1/:path*',
-        destination: `${backendUrl}/api/v1/:path*`,
-      },
-    ];
-  },
 };
+
+// En dev seulement : activer les rewrites pour proxyer l'API locale
+// (next dev ignore output:'export' pour les rewrites)
+if (isDev) {
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://127.0.0.1:8000';
+  nextConfig.rewrites = async () => [
+    {
+      source: '/api/v1/:path*',
+      destination: `${backendUrl}/api/v1/:path*`,
+    },
+  ];
+}
 
 module.exports = nextConfig;

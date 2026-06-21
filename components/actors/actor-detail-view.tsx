@@ -27,7 +27,7 @@ export function ActorDetailView({ actor }: ActorDetailViewProps) {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 text-2xl font-bold text-primary">
-              {actor.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+              {(actor.name || '?').split(' ').map((n: string) => n[0] || '').join('').toUpperCase().slice(0, 2) || '?'}
             </div>
             <div className="flex-1">
               <div className="flex flex-wrap items-center gap-2 mb-1">

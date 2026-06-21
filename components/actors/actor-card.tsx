@@ -84,7 +84,7 @@ export function ActorCard({ row }: { row: ActorRow }) {
         {/* Header */}
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-primary/5 text-sm font-bold text-primary">
-            {row.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
+            {(row.name || '?').split(' ').map((n: string) => n[0] || '').join('').toUpperCase().slice(0, 2) || '?'}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">

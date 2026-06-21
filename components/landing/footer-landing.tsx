@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Facebook, Twitter, Linkedin, Youtube, Mail, Phone, MapPin, ArrowUpRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -19,7 +21,7 @@ const FOOTER_COLS = [
   {
     title: 'Support',
     links: [
-      { label: 'Centre d’aide', href: '/contact' },
+      { label: "Centre d'aide", href: '/contact' },
       { label: 'Documentation', href: '/contact' },
       { label: 'Statut du service', href: '/contact' },
       { label: 'Signaler un bug', href: '/contact' },
@@ -46,51 +48,81 @@ const SOCIAL_LINKS = [
 
 export function FooterLanding() {
   return (
-    <footer className="relative overflow-hidden bg-slate-950 text-slate-300 border-t border-slate-800/50" role="contentinfo">
-      {/* Background gradient */}
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-[150px] -translate-y-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-500/5 rounded-full blur-[120px] translate-y-1/2 pointer-events-none" />
+    <footer
+      className="relative overflow-hidden"
+      role="contentinfo"
+      style={{ background: '#101E14', borderTop: '1px solid rgba(196,146,58,0.16)' }}
+    >
+      {/* Very subtle glow at top */}
+      <div
+        className="absolute top-0 left-1/4 w-96 h-72 pointer-events-none"
+        style={{ background: 'radial-gradient(ellipse, rgba(196,146,58,0.06) 0%, transparent 70%)', transform: 'translateY(-50%)' }}
+        aria-hidden
+      />
 
-      <div className="max-w-content mx-auto px-4 sm:px-6 py-16 relative z-10">
+      <div className="max-w-[1200px] mx-auto px-6 sm:px-8 py-16 relative z-10">
         <div className="grid gap-12 lg:grid-cols-[1.8fr_1fr_1fr_1fr]">
           {/* Brand column */}
           <div>
-            <Link href="/" className="inline-flex items-center gap-4 mb-6 group">
-              <div className="relative h-12 w-12 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-2">
-                <Image
-                  src="/logo.png"
-                  alt="AgriIntel360 Logo"
-                  fill
-                  className="object-contain"
-                  sizes="48px"
-                />
+            <Link href="/" className="inline-flex items-center gap-3 mb-6 group" aria-label="AgriIntel360 — Accueil">
+              <div
+                className="relative h-12 w-12 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105"
+                style={{ background: 'rgba(196,146,58,0.10)', border: '1px solid rgba(196,146,58,0.20)' }}
+              >
+                <Image src="/logo.png" alt="" fill className="object-contain p-1.5" sizes="48px" />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-black tracking-tight text-white leading-none">AgriIntel<span className="text-emerald-400">360</span></span>
-                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-500 mt-1">Intelligence agricole</span>
+                <span className="text-[1.0625rem] font-black tracking-tight leading-none" style={{ color: '#E8E0CC' }}>
+                  AgriIntel<span style={{ color: '#C4923A' }}>360</span>
+                </span>
+                <span className="text-[0.625rem] font-bold uppercase tracking-[0.22em] mt-[3px]" style={{ color: '#4A6050' }}>
+                  Intelligence agricole
+                </span>
               </div>
             </Link>
-            <p className="max-w-sm text-sm leading-7 text-slate-400">
-              Une plateforme moderne pour piloter l&apos;agriculture africaine avec des données en temps réel, des alertes intelligentes et une communauté engagée.
+
+            <p className="text-sm leading-[1.75] max-w-[28ch] mb-6" style={{ color: '#7D9486' }}>
+              Plateforme de décision agricole pour l&apos;Afrique. Données en temps réel, IA prédictive et communauté pour les 4 filières.
             </p>
 
             {/* Contact info */}
-            <div className="mt-6 space-y-3 text-sm">
-              <a href={`mailto:${APP_CONTACT_EMAIL}`} className="flex items-center gap-3 text-slate-400 hover:text-emerald-400 transition-colors group">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/50 group-hover:bg-emerald-500/20 transition-colors">
-                  <Mail className="h-4 w-4" />
+            <div className="space-y-3 text-sm">
+              <a
+                href={`mailto:${APP_CONTACT_EMAIL}`}
+                className="flex items-center gap-3 transition-colors duration-200 group/link"
+                style={{ color: '#7D9486' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#DDA85A'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#7D9486'; }}
+              >
+                <span
+                  className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors duration-200"
+                  style={{ background: 'rgba(232,224,204,0.04)', border: '1px solid rgba(232,224,204,0.07)' }}
+                >
+                  <Mail className="h-3.5 w-3.5" />
                 </span>
                 {APP_CONTACT_EMAIL}
               </a>
-              <a href={`tel:${APP_SUPPORT_PHONE.replace(/[^+0-9]/g, '')}`} className="flex items-center gap-3 text-slate-400 hover:text-emerald-400 transition-colors group">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/50 group-hover:bg-emerald-500/20 transition-colors">
-                  <Phone className="h-4 w-4" />
+              <a
+                href={`tel:${APP_SUPPORT_PHONE.replace(/[^+0-9]/g, '')}`}
+                className="flex items-center gap-3 transition-colors duration-200"
+                style={{ color: '#7D9486' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#DDA85A'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#7D9486'; }}
+              >
+                <span
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{ background: 'rgba(232,224,204,0.04)', border: '1px solid rgba(232,224,204,0.07)' }}
+                >
+                  <Phone className="h-3.5 w-3.5" />
                 </span>
                 {APP_SUPPORT_PHONE}
               </a>
-              <div className="flex items-center gap-3 text-slate-400">
-                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/50">
-                  <MapPin className="h-4 w-4" />
+              <div className="flex items-center gap-3" style={{ color: '#7D9486' }}>
+                <span
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{ background: 'rgba(232,224,204,0.04)', border: '1px solid rgba(232,224,204,0.07)' }}
+                >
+                  <MapPin className="h-3.5 w-3.5" />
                 </span>
                 Dakar, Sénégal
               </div>
@@ -100,22 +132,27 @@ export function FooterLanding() {
           {/* Link columns */}
           {FOOTER_COLS.map((col) => (
             <div key={col.title}>
-              <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-white/80 mb-5">{col.title}</h3>
+              <h3
+                className="text-[0.6875rem] font-bold uppercase tracking-[0.20em] mb-5"
+                style={{ color: 'rgba(232,224,204,0.65)' }}
+              >
+                {col.title}
+              </h3>
               <ul className="space-y-3 text-sm">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    {link.href.startsWith('mailto:') || link.href.startsWith('tel:') ? (
-                      <a href={link.href} className="inline-flex items-center gap-1 text-slate-400 transition-colors hover:text-emerald-400">
-                        {link.label}
-                      </a>
-                    ) : (
-                      <Link href={link.href} className="inline-flex items-center gap-1 text-slate-400 transition-colors hover:text-emerald-400 group/link">
-                        {link.label}
-                        {link.href.startsWith('/') && link.href !== '#fonctionnalites' && link.href !== '#secteurs' && link.href !== '#tarifs' && link.href !== '#temoignages' ? (
-                          <ArrowUpRight className="h-3 w-3 opacity-0 -translate-y-1 group-hover/link:opacity-100 group-hover/link:translate-y-0 transition-all duration-200" />
-                        ) : null}
-                      </Link>
-                    )}
+                    <Link
+                      href={link.href}
+                      className="inline-flex items-center gap-1 transition-colors duration-200 group/link"
+                      style={{ color: '#7D9486' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#DDA85A'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#7D9486'; }}
+                    >
+                      {link.label}
+                      {link.href.startsWith('/') && (
+                        <ArrowUpRight className="h-3 w-3 opacity-0 group-hover/link:opacity-60 transition-all duration-200 -translate-y-0.5 group-hover/link:translate-y-0" />
+                      )}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -123,35 +160,42 @@ export function FooterLanding() {
           ))}
         </div>
 
-        <Separator className="my-10 bg-slate-800" />
+        <Separator className="my-10" style={{ background: 'rgba(232,224,204,0.07)' }} />
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between text-sm text-slate-500">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between text-sm" style={{ color: '#4A6050' }}>
           <p>© {new Date().getFullYear()} AgriIntel360. Tous droits réservés.</p>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             {/* Social links */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Suivez-nous :</span>
-              {SOCIAL_LINKS.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.label}
-                    href={link.href}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-slate-800/50 text-slate-400 transition-all duration-200 hover:bg-emerald-500/20 hover:text-emerald-400 hover:scale-110"
-                    aria-label={link.label}
-                  >
-                    <Icon className="h-4 w-4" aria-hidden />
-                  </Link>
-                );
-              })}
+              <span className="text-[0.625rem] font-bold uppercase tracking-wider mr-1" style={{ color: '#4A6050' }}>
+                Suivez-nous
+              </span>
+              {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-200 hover:scale-110"
+                  style={{ background: 'rgba(232,224,204,0.04)', border: '1px solid rgba(232,224,204,0.07)', color: '#4A6050' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.25)'; (e.currentTarget as HTMLElement).style.color = '#C4923A'; (e.currentTarget as HTMLElement).style.background = 'rgba(196,146,58,0.08)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(232,224,204,0.07)'; (e.currentTarget as HTMLElement).style.color = '#4A6050'; (e.currentTarget as HTMLElement).style.background = 'rgba(232,224,204,0.04)'; }}
+                  aria-label={label}
+                >
+                  <Icon className="h-4 w-4" aria-hidden />
+                </Link>
+              ))}
             </div>
 
             {/* Language selector */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Langue :</span>
+              <span className="text-xs" style={{ color: '#4A6050' }}>Langue :</span>
               <select
-                className="rounded-xl border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-sm text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-colors"
+                className="rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 transition-colors"
+                style={{
+                  border: '1px solid rgba(232,224,204,0.09)',
+                  background: 'rgba(232,224,204,0.04)',
+                  color: '#7D9486',
+                }}
                 aria-label="Sélectionner la langue"
               >
                 <option value="fr">🇫🇷 Français</option>
@@ -161,12 +205,27 @@ export function FooterLanding() {
             </div>
 
             {/* Legal links */}
-            <div className="flex items-center gap-3 text-xs">
-              <Link href="/contact" className="text-slate-500 hover:text-slate-300 transition-colors">Mentions légales</Link>
-              <span className="text-slate-700">·</span>
-              <Link href="/contact" className="text-slate-500 hover:text-slate-300 transition-colors">Confidentialité</Link>
-              <span className="text-slate-700">·</span>
-              <Link href="/contact" className="text-slate-500 hover:text-slate-300 transition-colors">Cookies</Link>
+            <div className="flex items-center gap-4 text-xs">
+              <Link href="/terms" className="transition-colors duration-200" style={{ color: '#4A6050' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#7D9486'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#4A6050'; }}
+              >
+                Mentions légales
+              </Link>
+              <span style={{ color: '#2A3C2E' }}>·</span>
+              <Link href="/privacy" className="transition-colors duration-200" style={{ color: '#4A6050' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#7D9486'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#4A6050'; }}
+              >
+                Confidentialité
+              </Link>
+              <span style={{ color: '#2A3C2E' }}>·</span>
+              <Link href="/contact" className="transition-colors duration-200" style={{ color: '#4A6050' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#7D9486'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = '#4A6050'; }}
+              >
+                Cookies
+              </Link>
             </div>
           </div>
         </div>

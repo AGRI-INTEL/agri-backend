@@ -2,224 +2,375 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Menu, X, ChevronUp, ArrowUpRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from '@/lib/motion';
 
 const NAV_LINKS = [
   { href: '#fonctionnalites', label: 'Fonctionnalités' },
   { href: '#secteurs', label: 'Secteurs' },
   { href: '#tarifs', label: 'Tarifs' },
-  { href: '#temoignages', label: 'Témoignages' },
-  { href: '/contact', label: 'Contact' },
+  { href: '#communaute', label: 'Communauté' },
 ];
-
-function BackToTop() {
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const handler = () => setVisible(window.scrollY > 600);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
-  }, []);
-
-  return (
-    <AnimatePresence>
-      {visible && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.5, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.5, y: 20 }}
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-8 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-xl shadow-emerald-500/25 backdrop-blur-sm transition-all duration-300 hover:shadow-emerald-500/40 hover:scale-110 active:scale-95"
-          aria-label="Retour en haut"
-        >
-          <ChevronUp className="h-5 w-5" />
-        </motion.button>
-      )}
-    </AnimatePresence>
-  );
-}
 
 export function NavbarLanding() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  useEffect(() => {
-    const sections = NAV_LINKS.filter(l => l.href.startsWith('#')).map(l => l.href.slice(1));
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          setActiveSection(entry.target.id);
-        }
-      }
-    }, { rootMargin: '-40% 0px -55% 0px' });
-
-    sections.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  const closeMobile = useCallback(() => setMobileOpen(false), []);
+  const closeMenu = useCallback(() => setIsOpen(false), []);
 
   return (
     <>
       <header
-        className={cn(
-          'fixed inset-x-0 top-0 z-50 transition-all duration-500',
-          scrolled
-            ? 'bg-white/80 text-slate-900 backdrop-blur-2xl shadow-lg shadow-slate-900/5 border-b border-slate-200/50'
-            : 'bg-transparent text-white'
-        )}
-        role="banner"
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          transition: 'background 0.3s, backdrop-filter 0.3s, border-color 0.3s',
+          background: scrolled ? 'rgba(7,16,10,0.92)' : 'transparent',
+          backdropFilter: scrolled ? 'blur(16px)' : 'none',
+          WebkitBackdropFilter: scrolled ? 'blur(16px)' : 'none',
+          borderBottom: `1px solid ${scrolled ? 'rgba(196,146,58,0.12)' : 'transparent'}`,
+        }}
       >
-        {/* Top gradient line */}
-        <div className={cn(
-          'absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent opacity-0 transition-opacity duration-500',
-          scrolled && 'opacity-100'
-        )} />
-
-        <div className="max-w-content mx-auto flex h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-          <Link href="/" className="flex items-center gap-4 shrink-0 group">
-            <div className="relative h-11 w-11 transition-all duration-300 group-hover:scale-110 group-hover:rotate-2">
+        <div
+          style={{
+            maxWidth: '1200px',
+            margin: '0 auto',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            height: '64px',
+            padding: '0 1.5rem',
+          }}
+        >
+          {/* Logo */}
+          <Link
+            href="/"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.625rem',
+              textDecoration: 'none',
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ position: 'relative', width: '36px', height: '36px', flexShrink: 0 }}>
               <Image
                 src="/logo.png"
-                alt="AgriIntel360 Logo"
+                alt="AgriIntel360"
                 fill
-                className="object-contain"
-                sizes="44px"
+                sizes="36px"
+                style={{ objectFit: 'contain' }}
                 priority
               />
             </div>
-            <div className="hidden xs:block">
-              <p className={cn('text-lg font-black tracking-tight leading-none transition-colors duration-300', scrolled ? 'text-slate-900' : 'text-white')}>
-                AgriIntel<span className="text-emerald-500">360</span>
-              </p>
-              <p className={cn('text-[11px] uppercase tracking-[0.25em] font-bold mt-1 transition-colors duration-300', scrolled ? 'text-slate-400' : 'text-white/60')}>
-                Intelligence agricole
-              </p>
-            </div>
+            <span
+              style={{
+                fontFamily: "'Playfair Display', Georgia, serif",
+                fontWeight: 700,
+                fontStyle: 'italic',
+                fontSize: '1.125rem',
+                color: '#E4DBC8',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              Agri<span style={{ color: '#C4923A' }}>Intel360</span>
+            </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1" aria-label="Navigation principale">
-            {NAV_LINKS.map((link) => {
-              const isActive = link.href.startsWith('#') && activeSection === link.href.slice(1);
-              const isExternal = link.href.startsWith('/');
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'relative rounded-full px-4 py-2 text-sm font-medium transition-all duration-200',
-                    scrolled
-                      ? 'text-slate-600 hover:text-slate-900'
-                      : 'text-white/80 hover:text-white',
-                    isActive && !isExternal && (scrolled ? 'text-emerald-600 bg-emerald-50' : 'text-emerald-300 bg-white/10')
-                  )}
-                >
-                  {link.label}
-                  {isExternal && <ArrowUpRight className="inline h-3 w-3 ml-0.5 -mt-0.5" />}
-                  {isActive && !isExternal && (
-                    <span className={cn(
-                      'absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full',
-                      scrolled ? 'bg-emerald-500' : 'bg-emerald-400'
-                    )} />
-                  )}
-                </Link>
-              );
-            })}
+          {/* Desktop nav links */}
+          <nav
+            style={{
+              display: 'none',
+              alignItems: 'center',
+              gap: '0.25rem',
+            }}
+            className="navbar-desktop-nav"
+          >
+            {NAV_LINKS.map((link) => (
+              <NavLink key={link.href} href={link.href}>
+                {link.label}
+              </NavLink>
+            ))}
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
+          {/* Desktop CTA */}
+          <div
+            style={{ display: 'none', alignItems: 'center', gap: '0.5rem' }}
+            className="navbar-desktop-cta"
+          >
             <Link
               href="/login"
-              className={cn(
-                'rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200',
-                scrolled
-                  ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  : 'text-white/80 hover:text-white hover:bg-white/10'
-              )}
+              style={{
+                color: '#5E7A68',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                textDecoration: 'none',
+                padding: '0.5rem 0.875rem',
+                borderRadius: '6px',
+                transition: 'color 0.2s',
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = '#C4923A')}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = '#5E7A68')}
             >
-              Connexion
+              Se connecter
             </Link>
             <Link
               href="/register"
-              className="rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition-all duration-200 hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(135deg, #C4923A 0%, #b07928 100%)',
+                color: '#07100A',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                textDecoration: 'none',
+                padding: '0.375rem 1rem',
+                height: '36px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                borderRadius: '6px',
+                boxShadow: '0 4px 20px rgba(196,146,58,0.28)',
+                transition: 'filter 0.2s, transform 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.filter = 'brightness(1.1)';
+                el.style.transform = 'translateY(-1px)';
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLAnchorElement;
+                el.style.filter = 'brightness(1)';
+                el.style.transform = 'translateY(0)';
+              }}
             >
-              S&apos;inscrire
+              Commencer
             </Link>
           </div>
 
+          {/* Mobile hamburger */}
           <button
-            className={cn(
-              'md:hidden rounded-2xl p-2 transition-all duration-200',
-              scrolled ? 'text-slate-700 hover:bg-slate-100' : 'text-white hover:bg-white/10'
-            )}
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Ouvrir le menu"
-            aria-expanded={mobileOpen}
+            onClick={() => setIsOpen((v) => !v)}
+            aria-label={isOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={isOpen}
+            className="navbar-hamburger"
+            style={{
+              display: 'none',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#5E7A68',
+              padding: '0.375rem',
+              borderRadius: '6px',
+              transition: 'color 0.2s',
+            }}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
+
+        <style>{`
+          @media (min-width: 768px) {
+            .navbar-desktop-nav { display: flex !important; }
+            .navbar-desktop-cta { display: flex !important; }
+            .navbar-hamburger { display: none !important; }
+          }
+          @media (max-width: 767px) {
+            .navbar-desktop-nav { display: none !important; }
+            .navbar-desktop-cta { display: none !important; }
+            .navbar-hamburger { display: flex !important; }
+          }
+        `}</style>
       </header>
 
-      {/* Mobile menu */}
+      {/* Mobile drawer */}
       <AnimatePresence>
-        {mobileOpen && (
+        {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            key="mobile-menu"
+            initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed inset-x-0 top-16 z-40 md:hidden"
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+            style={{
+              position: 'fixed',
+              top: '64px',
+              left: 0,
+              right: 0,
+              zIndex: 49,
+              background: '#07100A',
+              borderBottom: '1px solid rgba(196,146,58,0.15)',
+              padding: '1rem 1.5rem 1.25rem',
+            }}
           >
-            <div className="mx-4 rounded-2xl border border-slate-200/80 bg-white/95 backdrop-blur-2xl shadow-2xl shadow-slate-900/10 overflow-hidden">
-              <div className="space-y-1 px-4 pb-4 pt-3">
-                {NAV_LINKS.map((link) => (
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.125rem' }}>
+              {NAV_LINKS.map((link, i) => (
+                <motion.div
+                  key={link.href}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{
+                    delay: i * 0.08,
+                    duration: 0.3,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                  }}
+                >
                   <Link
-                    key={link.href}
                     href={link.href}
-                    className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-emerald-600"
-                    onClick={closeMobile}
+                    onClick={closeMenu}
+                    style={{
+                      display: 'block',
+                      color: '#E4DBC8',
+                      fontSize: '1.125rem',
+                      fontWeight: 500,
+                      textDecoration: 'none',
+                      padding: '0.75rem 0.5rem',
+                      borderBottom: '1px solid rgba(196,146,58,0.08)',
+                      transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={(e) =>
+                      ((e.currentTarget as HTMLAnchorElement).style.color = '#C4923A')
+                    }
+                    onMouseLeave={(e) =>
+                      ((e.currentTarget as HTMLAnchorElement).style.color = '#E4DBC8')
+                    }
                   >
                     {link.label}
-                    {link.href.startsWith('/') && <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />}
                   </Link>
-                ))}
-                <div className="mt-3 grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
-                  <Link
-                    href="/login"
-                    className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-center text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                    onClick={closeMobile}
-                  >
-                    Connexion
-                  </Link>
-                  <Link
-                    href="/register"
-                    className="rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg transition hover:shadow-emerald-500/20"
-                    onClick={closeMobile}
-                  >
-                    S&apos;inscrire
-                  </Link>
-                </div>
-              </div>
-            </div>
+                </motion.div>
+              ))}
+            </nav>
+
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                delay: NAV_LINKS.length * 0.08,
+                duration: 0.3,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              }}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.625rem',
+                marginTop: '1.25rem',
+              }}
+            >
+              <Link
+                href="/login"
+                onClick={closeMenu}
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  color: '#5E7A68',
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  padding: '0.75rem',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(196,146,58,0.15)',
+                  transition: 'color 0.2s, border-color 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.color = '#C4923A';
+                  el.style.borderColor = 'rgba(196,146,58,0.35)';
+                }}
+                onMouseLeave={(e) => {
+                  const el = e.currentTarget as HTMLAnchorElement;
+                  el.style.color = '#5E7A68';
+                  el.style.borderColor = 'rgba(196,146,58,0.15)';
+                }}
+              >
+                Se connecter
+              </Link>
+              <Link
+                href="/register"
+                onClick={closeMenu}
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  background: 'linear-gradient(135deg, #C4923A 0%, #b07928 100%)',
+                  color: '#07100A',
+                  fontSize: '0.9375rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  padding: '0.75rem',
+                  borderRadius: '6px',
+                  boxShadow: '0 4px 20px rgba(196,146,58,0.28)',
+                }}
+              >
+                Commencer
+              </Link>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <BackToTop />
     </>
+  );
+}
+
+function NavLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      style={{
+        position: 'relative',
+        color: '#5E7A68',
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        textDecoration: 'none',
+        padding: '0.5rem 0.875rem',
+        borderRadius: '6px',
+        transition: 'color 0.2s',
+      }}
+      onMouseEnter={(e) => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.color = '#C4923A';
+        const underline = el.querySelector('.nav-underline') as HTMLElement | null;
+        if (underline) {
+          underline.style.transform = 'scaleX(1)';
+          underline.style.opacity = '1';
+        }
+      }}
+      onMouseLeave={(e) => {
+        const el = e.currentTarget as HTMLAnchorElement;
+        el.style.color = '#5E7A68';
+        const underline = el.querySelector('.nav-underline') as HTMLElement | null;
+        if (underline) {
+          underline.style.transform = 'scaleX(0)';
+          underline.style.opacity = '0';
+        }
+      }}
+    >
+      {children}
+      <span
+        className="nav-underline"
+        style={{
+          position: 'absolute',
+          bottom: '4px',
+          left: '0.875rem',
+          right: '0.875rem',
+          height: '2px',
+          background: '#C4923A',
+          borderRadius: '1px',
+          transform: 'scaleX(0)',
+          opacity: 0,
+          transition: 'transform 0.2s, opacity 0.2s',
+          transformOrigin: 'left center',
+        }}
+      />
+    </Link>
   );
 }

@@ -1,62 +1,158 @@
+'use client';
+
+/**
+ * CTABanner — final CTA section.
+ *
+ * Background: linear-gradient(135deg, #0F1E12 0%, #162019 50%, #0F1E12 100%)
+ * with top/bottom borders in rgba(196,146,58,0.15).
+ *
+ * Floating hexagons: 6 decorative CSS-animated hexagons at opacity 0.04,
+ * color #C4923A. Built via clip-path polygon — no SVG path hand-authoring.
+ * Respects prefers-reduced-motion (animation: none when reduced).
+ */
+
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+
+/* Hexagon positions: [left%, top%, size(rem), animDuration(s), animDelay(s)] */
+const HEXAGONS: [number, number, number, number, number][] = [
+  [4,  10, 6.5, 18, 0],
+  [14, 62, 4.0, 24, 3],
+  [82, 8,  5.0, 21, 1.5],
+  [90, 58, 7.0, 27, 0.8],
+  [52, 80, 3.5, 19, 2.2],
+  [38, 5,  4.5, 22, 4],
+];
 
 export function CTABanner() {
   return (
-    <section className="relative overflow-hidden py-24 px-4" aria-labelledby="cta-heading">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-700 to-blue-900 animate-gradient" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,_rgba(16,185,129,0.3),_transparent_50%),radial-gradient(circle_at_70%_50%,_rgba(59,130,246,0.2),_transparent_50%)]" />
+    <section
+      className="relative overflow-hidden py-24 px-4"
+      aria-labelledby="cta-heading"
+      style={{
+        background: 'linear-gradient(135deg, #0F1E12 0%, #162019 50%, #0F1E12 100%)',
+        borderTop: '1px solid rgba(196,146,58,0.15)',
+        borderBottom: '1px solid rgba(196,146,58,0.15)',
+      }}
+    >
+      {/* Floating hexagon decorations */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <style>{`
+          @media (prefers-reduced-motion: no-preference) {
+            .hex-float { animation: hexFloat var(--dur, 20s) ease-in-out infinite; }
+          }
+          @keyframes hexFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            33%       { transform: translateY(-18px) rotate(4deg); }
+            66%       { transform: translateY(10px) rotate(-3deg); }
+          }
+        `}</style>
 
-      {/* Grid overlay */}
-      <div className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: '40px 40px',
-        }}
-      />
+        {HEXAGONS.map(([l, t, size, dur, delay], idx) => (
+          <div
+            key={idx}
+            className="hex-float absolute"
+            style={{
+              left: `${l}%`,
+              top: `${t}%`,
+              width: `${size}rem`,
+              height: `${size * 1.1547}rem`, /* hex height = width × (2/√3) */
+              background: '#C4923A',
+              opacity: 0.04,
+              clipPath:
+                'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)',
+              ['--dur' as string]: `${dur}s`,
+              animationDelay: `${delay}s`,
+            }}
+          />
+        ))}
+      </div>
 
-      {/* Floating orbs */}
-      <div className="absolute top-10 left-[20%] w-48 h-48 rounded-full bg-emerald-400/10 blur-[80px] animate-float-slow" />
-      <div className="absolute bottom-10 right-[20%] w-64 h-64 rounded-full bg-blue-400/10 blur-[100px] animate-float-reverse" />
+      <div className="max-w-[800px] mx-auto relative z-10 text-center">
+        {/* Eyebrow */}
+        <p
+          className="text-[0.6875rem] font-bold uppercase tracking-[0.24em] mb-5"
+          style={{ color: '#C4923A' }}
+        >
+          REJOIGNEZ LA COMMUNAUTÉ
+        </p>
 
-      <div className="max-w-5xl mx-auto relative z-10">
-        <div className="rounded-[2.5rem] border border-white/[0.08] bg-white/[0.04] p-10 sm:p-16 shadow-2xl shadow-emerald-950/30 backdrop-blur-xl">
-          <div className="grid gap-10 lg:grid-cols-[1.6fr_1fr] lg:items-center">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.3em] text-emerald-200 mb-6">
-                <Sparkles className="h-3 w-3" />
-                Passez à l&apos;action
-              </div>
-              <h2 id="cta-heading" className="text-3xl sm:text-4xl lg:text-5xl font-black leading-tight text-white">
-                Prêt à transformer votre agriculture avec des analyses claires
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-blue-300"> et des alertes actionnables</span> ?
-              </h2>
-              <p className="mt-4 text-slate-300 text-base sm:text-lg leading-7 max-w-xl">
-                Commencez en quelques minutes et bénéficiez d&apos;un accompagnement dédié pour votre exploitation.
-              </p>
-            </div>
+        {/* Headline */}
+        <h2
+          id="cta-heading"
+          className="font-display font-bold italic leading-[1.12] tracking-[-0.025em] mb-5"
+          style={{
+            color: '#E4DBC8',
+            fontSize: 'clamp(1.875rem, 4.5vw, 2.5rem)',
+          }}
+        >
+          Prêt à transformer votre agriculture ?
+        </h2>
 
-            <div className="flex flex-col gap-4 sm:flex-row lg:flex-col lg:justify-end">
-              <Button variant="glow" size="xl" asChild className="group relative overflow-hidden">
-                <Link href="/register" className="flex items-center gap-2">
-                  <span className="relative z-10">Créer un compte gratuit</span>
-                  <ArrowRight className="h-4 w-4 relative z-10 transition-transform group-hover:translate-x-1" />
-                  <span className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                </Link>
-              </Button>
-              <Button variant="secondary" size="xl" asChild className="bg-white/10 text-white border-white/20 hover:bg-white/20 backdrop-blur-sm">
-                <Link href="/login">Se connecter</Link>
-              </Button>
-              <Button variant="outline" size="xl" className="border-white/20 text-white/80 hover:text-white hover:bg-white/10 hover:border-white/40 font-semibold backdrop-blur-sm" asChild>
-                <Link href="/contact">
-                  Nous contacter
-                </Link>
-              </Button>
-            </div>
-          </div>
+        {/* Sub-headline */}
+        <p
+          className="text-base sm:text-lg leading-[1.7] mb-10 mx-auto"
+          style={{ color: '#5E7A68', maxWidth: '50ch' }}
+        >
+          Rejoignez 50 000+ professionnels qui utilisent AgriIntel360 pour décider mieux chaque jour.
+        </p>
+
+        {/* Button row */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link
+            href="/register"
+            className="group inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-4 text-sm font-black uppercase tracking-[0.05em] transition-all duration-200"
+            style={{
+              background: 'linear-gradient(135deg, #C4923A 0%, #b07928 100%)',
+              color: '#07100A',
+              boxShadow: '0 4px 20px rgba(196,146,58,0.28)',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.filter = 'brightness(1.1)';
+              (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 28px rgba(196,146,58,0.38)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.filter = '';
+              (e.currentTarget as HTMLElement).style.transform = '';
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 20px rgba(196,146,58,0.28)';
+            }}
+          >
+            Créer mon compte gratuitement
+            <ArrowRight
+              className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+              aria-hidden="true"
+            />
+          </Link>
+
+          <Link
+            href="/contact"
+            className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-sm font-semibold transition-all duration-200"
+            style={{
+              border: '1px solid rgba(196,146,58,0.28)',
+              color: '#C4923A',
+              background: 'transparent',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'rgba(196,146,58,0.07)';
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.5)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'transparent';
+              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.28)';
+            }}
+          >
+            Contacter l&apos;équipe
+          </Link>
         </div>
+
+        {/* Trust micro-copy */}
+        <p
+          className="mt-6 text-xs"
+          style={{ color: 'rgba(94,122,104,0.7)' }}
+        >
+          Gratuit à vie · Pas de carte bancaire · Données sécurisées
+        </p>
       </div>
     </section>
   );

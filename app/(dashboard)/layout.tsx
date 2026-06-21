@@ -13,8 +13,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <NotificationsProvider>
       <div
-        className="min-h-screen bg-background"
+        className="min-h-screen"
         style={{
+          background: '#0C1810',
           '--sidebar-width': sidebarCollapsed ? '64px' : '240px',
         } as React.CSSProperties}
       >

@@ -8,7 +8,7 @@ export interface MapMarker {
   label: string;
   lng: number;
   lat: number;
-  type: 'actor' | 'alert' | 'weather';
+  type: 'actor' | 'alert' | 'weather' | 'market' | 'prediction';
   color: string;
   sector?: string;
   description?: string;

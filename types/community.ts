@@ -6,10 +6,12 @@
  * Group visibility and access level.
  */
 export type GroupType =
-  | 'public'        // Visible et accessible à tous
-  | 'prive'         // Sur invitation ou demande d'adhésion
-  | 'professionnel' // Réservé aux professionnels du secteur
-  | 'institutionnel'; // Réservé aux institutions et ONG
+  | 'public'       // Visible et accessible à tous
+  | 'private'      // Sur invitation ou demande d'adhésion
+  | 'professional' // Réservé aux professionnels du secteur
+  | 'research'     // Groupe de recherche et d'études
+  | 'regional'     // Groupe régional ou local
+  | 'thematic';    // Groupe thématique spécialisé
 
 /**
  * Membership status of the current user in a group.
@@ -705,26 +707,32 @@ export interface UpdateMemberRoleRequest {
 
 /** Labels for group types */
 export const GROUP_TYPE_LABELS: Record<GroupType, string> = {
-  public: 'Public',
-  prive: 'Privé',
-  professionnel: 'Professionnel',
-  institutionnel: 'Institutionnel',
+  public:       'Public',
+  private:      'Privé',
+  professional: 'Professionnel',
+  research:     'Recherche',
+  regional:     'Régional',
+  thematic:     'Thématique',
 };
 
 /** Descriptions for group types */
 export const GROUP_TYPE_DESCRIPTIONS: Record<GroupType, string> = {
-  public: 'Visible et accessible à tous les utilisateurs',
-  prive: 'Sur invitation ou demande d\'adhésion approuvée',
-  professionnel: 'Réservé aux professionnels du secteur agricole',
-  institutionnel: 'Réservé aux institutions, ONG et gouvernements',
+  public:       'Visible et accessible à tous les utilisateurs',
+  private:      'Sur invitation ou demande d\'adhésion approuvée',
+  professional: 'Réservé aux professionnels du secteur agricole',
+  research:     'Groupe de recherche, études et expérimentation',
+  regional:     'Groupe ancré dans une région ou localité',
+  thematic:     'Groupe thématique spécialisé',
 };
 
 /** Icons for group types */
 export const GROUP_TYPE_ICONS: Record<GroupType, string> = {
-  public: '🌍',
-  prive: '🔒',
-  professionnel: '💼',
-  institutionnel: '🏛️',
+  public:       '🌍',
+  private:      '🔒',
+  professional: '💼',
+  research:     '🔬',
+  regional:     '📍',
+  thematic:     '🏷️',
 };
 
 /** Labels for membership statuses */

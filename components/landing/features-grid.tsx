@@ -2,156 +2,163 @@
 
 import { useRef } from 'react';
 import { motion, useInView } from '@/lib/motion';
-import { cn } from '@/lib/utils';
-import { Brain, BarChart3, MapPin, Bell, Users, FolderOpen, Sparkles } from 'lucide-react';
+import { BarChart2, Brain, Bell, Users, Map, MessageSquare } from 'lucide-react';
 
 const FEATURES = [
   {
+    icon: BarChart2,
+    title: 'Données temps réel',
+    description:
+      'Prix des marchés, volumes de production et indicateurs économiques actualisés quotidiennement pour 12 pays.',
+  },
+  {
     icon: Brain,
-    title: 'AgriBot IA',
-    description: 'Posez vos questions en langage naturel et obtenez des recommandations terrain précises.',
-    gradient: 'from-violet-500/20 to-violet-500/5',
-    iconBg: 'bg-violet-500/15',
-    iconColor: 'text-violet-400',
-    borderGlow: 'group-hover:border-violet-500/30',
-  },
-  {
-    icon: BarChart3,
-    title: 'Tableau de bord',
-    description: 'Suivez vos indicateurs clés, prévisions de récolte et tendances de marché en un coup d\'œil.',
-    gradient: 'from-blue-500/20 to-blue-500/5',
-    iconBg: 'bg-blue-500/15',
-    iconColor: 'text-blue-400',
-    borderGlow: 'group-hover:border-blue-500/30',
-  },
-  {
-    icon: MapPin,
-    title: 'Carte interactive',
-    description: 'Visualisez les champs, alertes météo et points de collecte sur une carte simple et claire.',
-    gradient: 'from-cyan-500/20 to-cyan-500/5',
-    iconBg: 'bg-cyan-500/15',
-    iconColor: 'text-cyan-400',
-    borderGlow: 'group-hover:border-cyan-500/30',
+    title: 'IA Prédictive',
+    description:
+      'Modèles de prévision météo, rendements et risques phytosanitaires entraînés sur 10 ans de données africaines.',
   },
   {
     icon: Bell,
     title: 'Alertes intelligentes',
-    description: 'Recevez des notifications sur le climat, les prix et les risques de ravageurs.',
-    gradient: 'from-amber-500/20 to-amber-500/5',
-    iconBg: 'bg-amber-500/15',
-    iconColor: 'text-amber-400',
-    borderGlow: 'group-hover:border-amber-500/30',
+    description:
+      'Notifications personnalisées sur les crises, opportunités et changements de prix qui impactent votre activité.',
   },
   {
     icon: Users,
     title: 'Communauté',
-    description: 'Collaborez avec d\'autres agriculteurs et experts locaux autour des meilleures pratiques.',
-    gradient: 'from-emerald-500/20 to-emerald-500/5',
-    iconBg: 'bg-emerald-500/15',
-    iconColor: 'text-emerald-400',
-    borderGlow: 'group-hover:border-emerald-500/30',
+    description:
+      'Échangez avec 50 000+ agriculteurs, coopératives et institutions à travers l\'Afrique de l\'Ouest.',
   },
   {
-    icon: FolderOpen,
-    title: 'Gestion de documents',
-    description: 'Stockez photos, rapports et documents de ferme dans un espace sécurisé.',
-    gradient: 'from-rose-500/20 to-rose-500/5',
-    iconBg: 'bg-rose-500/15',
-    iconColor: 'text-rose-400',
-    borderGlow: 'group-hover:border-rose-500/30',
+    icon: Map,
+    title: 'Cartographie interactive',
+    description:
+      'Visualisez zones de production, réseaux de distribution et données géospatiales sur carte.',
+  },
+  {
+    icon: MessageSquare,
+    title: 'Assistant IA',
+    description:
+      'Chatbot expert disponible 24h/24 pour répondre à vos questions agronomiques en français, anglais et langues locales.',
   },
 ];
 
 export function FeaturesGrid() {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref as React.RefObject<Element>, { once: true, margin: '-100px' });
+  const inView = useInView(ref as React.RefObject<Element>, { once: true, margin: '-80px' });
 
   return (
     <section
-      className="relative overflow-hidden py-32 px-4 bg-slate-950 text-white scroll-mt-24"
       id="fonctionnalites"
+      className="relative py-24 px-4 scroll-mt-20"
       aria-labelledby="features-heading"
+      style={{ background: '#07100A' }}
     >
-      <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-[150px] -translate-y-1/2" />
-      <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[120px] translate-y-1/2" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(16,185,129,0.03),_transparent_70%)]" />
+      {/* Top separator line */}
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[560px] h-px pointer-events-none"
+        style={{
+          background:
+            'linear-gradient(90deg, transparent, rgba(196,146,58,0.22), transparent)',
+        }}
+        aria-hidden
+      />
 
-      <div className="max-w-content mx-auto relative z-10">
-        <div className="text-center mb-20">
-          <motion.div
+      <div className="max-w-[1200px] mx-auto">
+        {/* Header */}
+        <div className="mb-14 text-center">
+          <motion.p
+            className="text-[0.6875rem] font-bold uppercase tracking-[0.22em] mb-4"
+            style={{ color: '#C4923A' }}
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.45 }}
           >
-            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.3em] text-emerald-400">
-              <Sparkles className="h-3 w-3" />
-              Notre Écosystème
-            </span>
-          </motion.div>
+            FONCTIONNALITÉS
+          </motion.p>
           <motion.h2
             id="features-heading"
-            className="mt-6 text-4xl sm:text-5xl font-black text-white tracking-tight"
-            initial={{ opacity: 0, y: 10 }}
+            className="font-display text-[clamp(1.75rem,3.5vw,2.625rem)] font-bold italic tracking-[-0.02em]"
+            style={{ color: '#E4DBC8' }}
+            initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.08, duration: 0.5 }}
           >
-            Une solution complète pour{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-emerald-300 to-blue-400">
-              l&apos;agriculture moderne
-            </span>
+            Tout ce dont vous avez besoin
           </motion.h2>
-          <motion.p
-            className="mt-6 text-slate-400 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed"
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-          >
-            Tous les outils dont vous avez besoin : intelligence terrain, suivi des cultures, analyse des prix et collaboration locale.
-          </motion.p>
         </div>
 
-        <div ref={ref} className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {/* Grid */}
+        <div
+          ref={ref}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+        >
           {FEATURES.map((feature, index) => {
             const Icon = feature.icon;
+
             return (
-              <article
+              <motion.article
                 key={feature.title}
-                className={cn(
-                  'group relative rounded-[2rem] border border-white/[0.06] bg-gradient-to-br p-10',
-                  'transition-all duration-500 hover:shadow-2xl hover:shadow-emerald-500/5',
-                  feature.gradient,
-                  feature.borderGlow
-                )}
+                className="group relative flex flex-col gap-4 rounded-2xl p-7 cursor-default"
+                style={{
+                  background: 'rgba(17,29,20,0.8)',
+                  border: '1px solid rgba(196,146,58,0.12)',
+                  transition:
+                    'border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease',
+                }}
+                initial={{ opacity: 0, y: 24, scale: 0.97 }}
+                animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+                transition={{
+                  delay: index * 0.1,
+                  duration: 0.55,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+                onMouseEnter={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.borderColor = 'rgba(196,146,58,0.35)';
+                  el.style.transform = 'translateY(-4px)';
+                  el.style.boxShadow = '0 12px 40px rgba(0,0,0,0.35)';
+                }}
+                onMouseLeave={e => {
+                  const el = e.currentTarget as HTMLElement;
+                  el.style.borderColor = 'rgba(196,146,58,0.12)';
+                  el.style.transform = 'translateY(0)';
+                  el.style.boxShadow = 'none';
+                }}
               >
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={inView ? { opacity: 1, y: 0 } : {}}
-                  transition={{ delay: index * 0.08, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-                  className="relative z-10"
+                {/* Icon */}
+                <div
+                  className="flex items-center justify-center w-12 h-12 rounded-xl flex-shrink-0"
+                  style={{
+                    background:
+                      'linear-gradient(135deg, #1E6B3E 0%, #14532d 100%)',
+                  }}
+                  aria-hidden
                 >
-                  <div className={cn(
-                    'mb-8 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/[0.08] shadow-lg',
-                    'transition-all duration-500 group-hover:scale-110 group-hover:rotate-2',
-                    feature.iconBg
-                  )}>
-                    <Icon className={cn('h-8 w-8', feature.iconColor)} aria-hidden />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-3 tracking-tight group-hover:text-emerald-300 transition-colors duration-300">
+                  <Icon
+                    className="w-5 h-5"
+                    style={{ color: '#ffffff', strokeWidth: 1.75 }}
+                  />
+                </div>
+
+                {/* Text */}
+                <div className="flex flex-col gap-2">
+                  <h3
+                    className="text-base font-bold leading-snug"
+                    style={{ color: '#E4DBC8' }}
+                  >
                     {feature.title}
                   </h3>
-                  <p className="text-slate-400 leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
+                  <p
+                    className="text-[0.875rem]"
+                    style={{ color: '#5E7A68', lineHeight: 1.7 }}
+                  >
                     {feature.description}
                   </p>
-                </motion.div>
-
-                {/* Hover glow effect */}
-                <div className={cn(
-                  'absolute inset-0 rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none',
-                  'bg-gradient-to-br from-transparent via-white/[0.02] to-white/[0.04]'
-                )} />
-              </article>
+                </div>
+              </motion.article>
             );
           })}
         </div>

@@ -32,46 +32,31 @@ export function useChatbot() {
   });
 
   const sendMessage = useMutation({
-    mutationFn: (formData: FormData) =>
-      apiClient.upload<Message>(`/chatbot/conversations/${activeConversationId}/messages`, formData),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['chatbot', 'conversations', activeConversationId] });
+    mutationFn: ({ content: msgContent, convId }: { content: string; convId: string }) =>
+      apiClient.post<Message>(`/chatbot/conversations/${convId}/messages`, {
+        content: msgContent,
+        provider,
+      }),
+    onSuccess: (_, { convId }) => {
+      qc.invalidateQueries({ queryKey: ['chatbot', 'conversations', convId] });
     },
     onError: (e: { message: string }) => toast.error(e.message),
   });
 
   const sendTextMessage = useCallback(
     async (content: string) => {
-      if (!activeConversationId) {
-        const conv = await createConversation.mutateAsync();
-        const formData = new FormData();
-        formData.append('content', content);
-        formData.append('provider', provider);
-        formData.append('conversation_id', conv.id);
-        return sendMessage.mutateAsync(formData);
-      }
-
-      const formData = new FormData();
-      formData.append('content', content);
-      formData.append('provider', provider);
-      return sendMessage.mutateAsync(formData);
+      const convId = activeConversationId ?? (await createConversation.mutateAsync()).id;
+      return sendMessage.mutateAsync({ content, convId });
     },
-    [activeConversationId, createConversation, provider, sendMessage]
+    [activeConversationId, createConversation, sendMessage]
   );
 
   const sendMediaMessage = useCallback(
-    async (content: string, files: File[]) => {
-      if (!activeConversationId) {
-        await createConversation.mutateAsync();
-      }
-
-      const formData = new FormData();
-      formData.append('content', content);
-      formData.append('provider', provider);
-      files.forEach((f) => formData.append('files', f));
-      return sendMessage.mutateAsync(formData);
+    async (content: string, _files: File[]) => {
+      const convId = activeConversationId ?? (await createConversation.mutateAsync()).id;
+      return sendMessage.mutateAsync({ content, convId });
     },
-    [activeConversationId, createConversation, provider, sendMessage]
+    [activeConversationId, createConversation, sendMessage]
   );
 
   const newConversation = useCallback(() => {

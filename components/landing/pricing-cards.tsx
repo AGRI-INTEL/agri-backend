@@ -1,179 +1,306 @@
 'use client';
 
-import { motion } from '@/lib/motion';
-import { Check, Star } from 'lucide-react';
-import Link from 'next/link';
-import { PRICING_PLANS } from '@/lib/constants';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { usePersistentState } from '@/hooks/use-persistent-state';
+/**
+ * PricingCards — 3 plans on dark ground, Pro card elevated with amber glow.
+ * Matches the existing design system: ground #07100A, accent #C4923A.
+ * The cream inversion (#F2EBD9) from the old version is removed — the brief
+ * specifies the project palette and the dark ground reads more premium.
+ */
 
-function formatPrice(value: number): string {
-  return value.toLocaleString('fr-FR');
+import { motion } from '@/lib/motion';
+import { Check } from 'lucide-react';
+import Link from 'next/link';
+
+interface PricingPlanLocal {
+  id: string;
+  name: string;
+  price: string;
+  period: string;
+  badge?: string;
+  features: string[];
+  cta: string;
+  ctaHref: string;
+  highlighted: boolean;
 }
 
+const PLANS: PricingPlanLocal[] = [
+  {
+    id: 'free',
+    name: 'Gratuit',
+    price: '0 FCFA',
+    period: '/mois',
+    features: [
+      'Accès limité aux données',
+      '1 alerte active',
+      'Communauté publique',
+      'Carte interactive (lecture)',
+      '5 requêtes AgriBot / jour',
+    ],
+    cta: "S'inscrire gratuitement",
+    ctaHref: '/register',
+    highlighted: false,
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '9 900 FCFA',
+    period: '/mois',
+    badge: 'Populaire',
+    features: [
+      'Données complètes toutes filières',
+      'Alertes illimitées',
+      'IA prédictive avancée',
+      'Export CSV / Excel / PDF',
+      'API limitée',
+      'Support prioritaire',
+      'Rapports personnalisés',
+    ],
+    cta: "Commencer l'essai gratuit",
+    ctaHref: '/register',
+    highlighted: true,
+  },
+  {
+    id: 'institution',
+    name: 'Institution',
+    price: 'Sur devis',
+    period: '',
+    features: [
+      'Tout Pro inclus',
+      'Accès API illimité',
+      'Multi-utilisateurs & SSO',
+      'Reporting sur mesure',
+      'Intégration SIG',
+      'SLA 99,9 % · Support 24/7',
+    ],
+    cta: "Contacter l'équipe",
+    ctaHref: '/contact',
+    highlighted: false,
+  },
+];
+
 export function PricingCards() {
-  const [annual, setAnnual] = usePersistentState('landing-pricing-annual', false);
-
   return (
-    <section className="py-32 px-4 bg-slate-50 scroll-mt-24 relative overflow-hidden" id="tarifs" aria-labelledby="pricing-heading">
-      <div className="absolute top-1/2 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] -translate-x-1/2" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-[120px] translate-x-1/4 -translate-y-1/4" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(16,185,129,0.02),_transparent_60%)]" />
+    <section
+      className="py-24 px-4 scroll-mt-20 relative overflow-hidden"
+      id="tarifs"
+      aria-labelledby="pricing-heading"
+      style={{
+        background: '#07100A',
+        borderTop: '1px solid rgba(196,146,58,0.10)',
+      }}
+    >
+      {/* Ambient glow beneath the Pro card */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden="true"
+        style={{
+          background:
+            'radial-gradient(ellipse 56% 40% at 50% 60%, rgba(196,146,58,0.06) 0%, transparent 70%)',
+        }}
+      />
 
-      <div className="max-w-content mx-auto relative z-10">
-        <div className="text-center mb-16">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
+      <div className="max-w-[1200px] mx-auto relative z-10">
+        {/* Header */}
+        <div className="text-center mb-14">
+          <motion.p
+            className="text-[0.6875rem] font-bold uppercase tracking-[0.24em] mb-3"
+            style={{ color: '#C4923A' }}
+            initial={{ opacity: 0, y: 8 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            <span className="inline-flex items-center rounded-full bg-emerald-500/10 border border-emerald-500/20 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.3em] text-emerald-600">
-              Nos Offres
-            </span>
-          </motion.div>
+            TARIFICATION
+          </motion.p>
           <motion.h2
             id="pricing-heading"
-            className="mt-6 text-4xl sm:text-5xl font-black text-slate-900 tracking-tight"
+            className="font-display text-[clamp(1.75rem,3.2vw,2.625rem)] font-bold italic tracking-[-0.02em] leading-[1.18]"
+            style={{ color: '#E4DBC8' }}
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.07, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           >
-            Choisissez le plan qui vous fait{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-emerald-500">
-              gagner du temps
-            </span>
+            Simple, transparent, sans surprise
           </motion.h2>
-
-          <motion.div
-            className="mt-12 inline-flex items-center rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl shadow-slate-200/50"
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-          >
-            <button
-              type="button"
-              onClick={() => setAnnual(false)}
-              className={cn(
-                'rounded-xl px-8 py-3 text-sm font-bold transition-all duration-300',
-                !annual
-                  ? 'bg-slate-900 text-white shadow-lg'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-              )}
-            >
-              Mensuel
-            </button>
-            <button
-              type="button"
-              onClick={() => setAnnual(true)}
-              className={cn(
-                'rounded-xl px-8 py-3 text-sm font-bold transition-all duration-300 flex items-center gap-3',
-                annual
-                  ? 'bg-slate-900 text-white shadow-lg'
-                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
-              )}
-            >
-              Annuel
-              <span className="rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 px-2 py-0.5 text-[10px] font-black text-white uppercase tracking-wider shadow-sm">
-                -20%
-              </span>
-            </button>
-          </motion.div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
-          {PRICING_PLANS.map((plan, index) => (
-            <article
+        {/* Cards grid */}
+        <div className="grid gap-5 md:grid-cols-3 max-w-[980px] mx-auto items-start">
+          {PLANS.map((plan, i) => (
+            <motion.article
               key={plan.id}
-              className={cn(
-                'relative overflow-hidden rounded-[3rem] border p-10 flex flex-col transition-all duration-500 group',
+              initial={{ opacity: 0, y: 24, scale: 0.97 }}
+              whileInView={{ opacity: 1, y: 0, scale: plan.highlighted ? 1.02 : 1 }}
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{
+                delay: i * 0.08,
+                duration: 0.55,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              }}
+              className="relative flex flex-col overflow-hidden"
+              style={
                 plan.highlighted
-                  ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700 shadow-[0_32px_80px_rgba(15,23,42,0.3)] scale-[1.05] z-10 text-white'
-                  : 'bg-white border-slate-100 hover:shadow-2xl hover:shadow-slate-200/60 hover:border-slate-200 text-slate-900'
-              )}
+                  ? {
+                      background: '#162019',
+                      border: '1px solid #C4923A',
+                      borderRadius: '1.25rem',
+                      boxShadow: '0 0 0 1px rgba(196,146,58,0.12), 0 8px 48px rgba(196,146,58,0.18)',
+                    }
+                  : {
+                      background: '#111D14',
+                      border: '1px solid rgba(196,146,58,0.13)',
+                      borderRadius: '1.25rem',
+                    }
+              }
             >
-              <motion.div
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-                className="flex flex-col h-full"
-              >
-                {plan.highlighted && (
-                  <>
-                    <div className="absolute top-0 right-0 p-8 opacity-[0.04]">
-                      <Star className="h-32 w-32 rotate-12" fill="white" />
-                    </div>
-                    <div className="absolute -top-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-emerald-400/50 to-transparent" />
-                  </>
-                )}
+              {/* Top accent line on Pro card */}
+              {plan.highlighted && (
+                <div
+                  className="absolute top-0 left-0 right-0 h-[2px]"
+                  style={{
+                    background:
+                      'linear-gradient(90deg, transparent 0%, #C4923A 40%, #DDA85A 60%, transparent 100%)',
+                  }}
+                  aria-hidden="true"
+                />
+              )}
 
-                <div className="mb-10 relative z-10">
-                  <div className="flex items-center justify-between gap-4 mb-6">
-                    <h3 className={cn(
-                      'text-2xl font-black tracking-tight',
-                      plan.highlighted ? 'text-white' : 'text-slate-900'
-                    )}>{plan.name}</h3>
-                    <span className={cn(
-                      'rounded-xl px-3 py-1 text-[10px] font-black uppercase tracking-widest',
-                      plan.highlighted ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-sm' : 'bg-gradient-to-r from-emerald-50 to-emerald-100 text-emerald-600'
-                    )}>{plan.badge}</span>
-                  </div>
-
-                  <div className="flex items-baseline gap-2">
-                    {plan.price_monthly !== null ? (
-                      <>
-                        <span className="text-5xl font-black tracking-tighter">{formatPrice(annual ? (plan.price_annual || 0) : plan.price_monthly)}</span>
-                        <div className="flex flex-col">
-                          <span className={cn('text-xs font-bold uppercase tracking-widest', plan.highlighted ? 'text-slate-400' : 'text-slate-500')}>
-                            {plan.currency}
-                          </span>
-                          <span className={cn('text-xs font-medium', plan.highlighted ? 'text-slate-500' : 'text-slate-400')}>
-                            /mois
-                          </span>
-                        </div>
-                      </>
-                    ) : (
-                      <p className="text-4xl font-black tracking-tighter">Sur devis</p>
-                    )}
-                  </div>
+              <div className="flex flex-col flex-1 p-8">
+                {/* Plan name + badge */}
+                <div className="flex items-center justify-between gap-3 mb-6">
+                  <h3
+                    className="text-base font-black uppercase tracking-[0.08em]"
+                    style={{ color: plan.highlighted ? '#C4923A' : '#5E7A68' }}
+                  >
+                    {plan.name}
+                  </h3>
+                  {plan.badge && (
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-[0.625rem] font-black uppercase tracking-[0.1em]"
+                      style={{ background: '#C4923A', color: '#07100A' }}
+                    >
+                      {plan.badge}
+                    </span>
+                  )}
                 </div>
 
-                <div className={cn(
-                  'h-px w-full mb-10',
-                  plan.highlighted ? 'bg-white/[0.08]' : 'bg-slate-200'
-                )} />
+                {/* Price */}
+                <div className="mb-7">
+                  <span
+                    className="font-display text-[2.25rem] font-bold tracking-[-0.03em]"
+                    style={{ color: '#E4DBC8' }}
+                  >
+                    {plan.price}
+                  </span>
+                  {plan.period && (
+                    <span
+                      className="ml-1 text-sm font-medium"
+                      style={{ color: '#5E7A68' }}
+                    >
+                      {plan.period}
+                    </span>
+                  )}
+                </div>
 
-                <ul className="mb-12 space-y-4 flex-1 relative z-10">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-4 text-sm font-medium">
-                      <div className={cn(
-                        'mt-0.5 shrink-0 inline-flex h-5 w-5 items-center justify-center rounded-full',
-                        plan.highlighted ? 'bg-emerald-500/20 text-emerald-400' : 'bg-emerald-50 text-emerald-600'
-                      )}>
-                        <Check className="h-3 w-3" strokeWidth={3} aria-hidden />
-                      </div>
-                      <span className={plan.highlighted ? 'text-slate-300' : 'text-slate-600'}>{feature}</span>
+                {/* Divider */}
+                <div
+                  className="mb-7"
+                  style={{
+                    height: '1px',
+                    background: plan.highlighted
+                      ? 'rgba(196,146,58,0.18)'
+                      : 'rgba(196,146,58,0.08)',
+                  }}
+                />
+
+                {/* Features */}
+                <ul className="flex-1 flex flex-col gap-3 mb-8" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm">
+                      <span
+                        className="mt-[2px] shrink-0 flex h-[17px] w-[17px] items-center justify-center rounded-full"
+                        style={{
+                          background: plan.highlighted
+                            ? 'rgba(196,146,58,0.14)'
+                            : 'rgba(30,107,62,0.16)',
+                        }}
+                        aria-hidden="true"
+                      >
+                        <Check
+                          className="h-[9px] w-[9px]"
+                          style={{
+                            color: plan.highlighted ? '#C4923A' : '#1E6B3E',
+                            strokeWidth: 2.5,
+                          }}
+                        />
+                      </span>
+                      <span style={{ color: '#5E7A68' }}>{f}</span>
                     </li>
                   ))}
                 </ul>
 
-                <Button
-                  asChild
-                  size="xl"
-                  className={cn(
-                    'mt-auto rounded-2xl py-4 text-sm font-black uppercase tracking-widest transition-all duration-300 shadow-lg',
-                    plan.highlighted
-                      ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-emerald-500/25'
-                      : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/10'
-                  )}
-                >
-                  <Link href={plan.id === 'enterprise' ? '/contact' : '/register'}>{plan.cta}</Link>
-                </Button>
-              </motion.div>
-            </article>
+                {/* CTA */}
+                {plan.highlighted ? (
+                  <Link
+                    href={plan.ctaHref}
+                    className="block w-full rounded-xl py-3.5 text-center text-sm font-black uppercase tracking-[0.06em] transition-all duration-200"
+                    style={{
+                      background: 'linear-gradient(135deg, #C4923A 0%, #b07928 100%)',
+                      color: '#07100A',
+                      boxShadow: '0 4px 20px rgba(196,146,58,0.28)',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.filter = 'brightness(1.1)';
+                      (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.filter = '';
+                      (e.currentTarget as HTMLElement).style.transform = '';
+                    }}
+                  >
+                    {plan.cta}
+                  </Link>
+                ) : plan.id === 'free' ? (
+                  <Link
+                    href={plan.ctaHref}
+                    className="block w-full rounded-xl py-3.5 text-center text-sm font-bold transition-all duration-200"
+                    style={{
+                      border: '1px solid rgba(196,146,58,0.28)',
+                      color: '#C4923A',
+                      background: 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = 'rgba(196,146,58,0.07)';
+                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.5)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.background = 'transparent';
+                      (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.28)';
+                    }}
+                  >
+                    {plan.cta}
+                  </Link>
+                ) : (
+                  <Link
+                    href={plan.ctaHref}
+                    className="block w-full rounded-xl py-3.5 text-center text-sm font-medium transition-all duration-200"
+                    style={{
+                      color: '#5E7A68',
+                      background: 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.color = '#E4DBC8';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.color = '#5E7A68';
+                    }}
+                  >
+                    {plan.cta} →
+                  </Link>
+                )}
+              </div>
+            </motion.article>
           ))}
         </div>
       </div>

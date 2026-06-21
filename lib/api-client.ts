@@ -53,11 +53,10 @@ export type ErrorInterceptor = (error: ApiError) => ApiError | Promise<ApiError>
 // SECTION 2: DEFAULT CONFIGURATION
 // ============================================================================
 
-const API_BASE = '';
 const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
 
 const DEFAULT_CONFIG: Required<ApiClientConfig> = {
-  baseUrl: process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || API_BASE,
+  baseUrl: '',
   apiVersion: 'v1',
   timeout: 30000,
   retries: 3,
@@ -69,7 +68,8 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
   maxRetries: 3,
   delayMs: 1000,
   backoffMultiplier: 2,
-  retryableStatuses: [408, 429, 500, 502, 503, 504],
+  // 503 excluded: means backend is down, retrying creates a storm and wastes budget
+  retryableStatuses: [408, 429, 500, 502, 504],
 };
 
 // ============================================================================
@@ -239,6 +239,9 @@ class ApiClient {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
       'X-Requested-With': 'XMLHttpRequest',
+      // Force Varnish CDN to revalidate on every request — prevents serving stale 503/502 cached responses
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
       ...customHeaders,
     };
 
@@ -284,14 +287,10 @@ class ApiClient {
   // ───────────────────────────────────────────────────────────────────────────
 
   private buildUrl(path: string, params?: Record<string, string | number | boolean | undefined | null>): string {
-    // Production: use relative URLs (Apache proxy handles /api/v1/* routing)
-    // Dev: use NEXT_PUBLIC_API_URL for local development server
-    const isProduction = typeof window !== 'undefined' && window.location.origin.startsWith('https://');
-    const baseUrl = (isProduction ? '' : this.config.baseUrl) || '';
     const prefix = API_PREFIX;
     const cleanPath = path.startsWith('/') ? path : `/${path}`;
-    
-    // If path is already an absolute URL, use it
+
+    // Absolute URL provided — use directly
     if (path.startsWith('http')) {
       const url = new URL(path);
       if (params) {
@@ -304,18 +303,17 @@ class ApiClient {
       return url.toString();
     }
 
-    // Build the full URL
+    // Always build relative to the current origin.
+    // - Dev: Next.js rewrites in next.config.js proxy /api/v1/* → local backend (no CORS)
+    // - Production: Apache/PHP proxy routes /api/v1/* → uvicorn (same origin, no CORS)
+    // Never build cross-origin absolute URLs from inside the browser — that's the CORS root cause.
     let url: URL;
     try {
-      if (baseUrl && baseUrl.startsWith('http')) {
-        url = new URL(`${baseUrl}${prefix}${cleanPath}`);
-      } else if (typeof window !== 'undefined') {
-        // Relative URL for production (Apache proxy) or dev
-        url = new URL(`${prefix}${cleanPath}`, window.location.origin);
-      } else {
-        // Fallback for SSR
-        url = new URL(`${prefix}${cleanPath}`, 'https://agriintel360.lsgrouptogo.com');
-      }
+      const origin =
+        typeof window !== 'undefined'
+          ? window.location.origin
+          : 'https://agriintel360.lsgrouptogo.com';
+      url = new URL(`${prefix}${cleanPath}`, origin);
     } catch (e) {
       console.error('Failed to build URL:', e);
       return `${prefix}${cleanPath}`;
