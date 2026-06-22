@@ -21,9 +21,9 @@ export function useMapMarkers() {
       const markers: MapMarker[] = [];
 
       try {
-        const actorsRes = await apiClient.get<{ data?: Array<{ id: string; name: string; latitude?: number; longitude?: number; sector?: string; city?: string }> }>('/actors', {
-        params: { limit: 100 },
-      });
+        const actorsRes = await apiClient.get<{ data?: Array<{ id: string; name: string; latitude?: number; longitude?: number; sector?: string; city?: string }> }>('/actors/', {
+          params: { per_page: 100 },
+        });
         const actors = Array.isArray(actorsRes) ? actorsRes : actorsRes.data || [];
         const sectorColors: Record<string, string> = {
           vegetal: '#16A34A',

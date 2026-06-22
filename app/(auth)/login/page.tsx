@@ -198,7 +198,12 @@ function FloatInput({
 export default function LoginPage() {
   const { loginAsync, isLoginLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams(window.location.search);
+    const err = params.get('error');
+    return err ? decodeURIComponent(err) : null;
+  });
 
   const {
     register,

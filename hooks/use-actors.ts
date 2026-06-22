@@ -74,3 +74,38 @@ export async function uploadActorImage(file: File, qc: ReturnType<typeof useQuer
     toast.error('Ce modèle ne supporte pas les images. Utilisez l\'assistant IA.', { duration: 6000 });
   }
 }
+
+export function useUpdateActor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      apiClient.put<Record<string, unknown>>(`/actors/${id}`, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['actors'] });
+      toast.success('Acteur mis à jour');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useDeleteActor() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.delete<{ message: string; id: string }>(`/actors/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['actors'] });
+      toast.success('Acteur supprimé');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useActorsBySector(sector: string) {
+  return useQuery({
+    queryKey: ['actors', 'sector-stats', sector],
+    queryFn: () => apiClient.get<ActorListResponse>('/actors/', {
+      params: { sector, per_page: 100 }
+    }),
+    enabled: !!sector,
+  });
+}

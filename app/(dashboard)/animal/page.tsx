@@ -1,10 +1,15 @@
 'use client';
-
 import { Beef } from 'lucide-react';
-import { SectorActorsPage } from '@/components/actors/sector-actors-page';
+import { SectorDashboard } from '@/components/actors/sector-dashboard';
 
 export default function AnimalPage() {
   return (
-    <SectorActorsPage sector="animal" title="Secteur Animal" description="Éleveurs et cheptel" icon={Beef} />
+    <SectorDashboard
+      sector="animal"
+      title="Secteur Animal"
+      description="Éleveurs, cheptel et production animale"
+      icon={Beef}
+      color="#D97706"
+    />
   );
 }

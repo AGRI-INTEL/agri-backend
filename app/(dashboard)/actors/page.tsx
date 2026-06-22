@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, BadgeCheck, Star, RefreshCw, Download, FileText,
   Upload, Trash2, ImageIcon, AlertTriangle, Activity, ChevronDown,
 } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { ActorFiltersBar } from '@/components/actors/actor-filters';
 import { ActorCard, type ActorRow } from '@/components/actors/actor-card';
+import { ActorDetailView } from '@/components/actors/actor-detail-view';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ErrorState } from '@/components/shared/error-state';
@@ -18,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useActor } from '@/hooks/use-actors';
 import { apiClient } from '@/lib/api-client';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -129,7 +132,7 @@ function ImageUploadSection() {
         qc.invalidateQueries({ queryKey: ['actors'] });
       })
       .catch(() => {
-        toast.error('Ce modèle ne supporte pas les images. Utilisez l\'assistant IA.', { duration: 6000 });
+        toast.error('Ce modèle ne supporte pas les images. Rendez-vous sur la page Indicateurs pour l\'analyse visuelle IA.', { duration: 8000 });
         setPreview(null);
       });
   }, [qc]);
@@ -175,6 +178,45 @@ function ImageUploadSection() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function ActorDetailPanel() {
+  const searchParams = useSearchParams();
+  const actorId = searchParams.get('id');
+  const router = useRouter();
+  const { data: rawActor, isLoading } = useActor(actorId || '');
+  const actor = rawActor ? (rawActor as unknown as ActorRow) : undefined;
+
+  if (!actorId) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm overflow-y-auto"
+      onClick={(e) => { if (e.target === e.currentTarget) router.push('/actors'); }}
+    >
+      <div className="min-h-screen flex items-start justify-center py-8 px-4">
+        <div
+          className="w-full max-w-4xl bg-background rounded-xl shadow-2xl border border-border p-6 relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-muted transition-colors"
+            onClick={() => router.push('/actors')}
+            aria-label="Fermer"
+          >
+            ✕
+          </button>
+          {isLoading ? (
+            <LoadingSkeleton variant="card" count={2} />
+          ) : actor ? (
+            <ActorDetailView actor={actor} />
+          ) : (
+            <EmptyState icon="👤" title="Acteur introuvable" description="Cet acteur n'existe pas ou a été supprimé." />
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -345,6 +387,7 @@ export default function ActorsPage() {
 
         <ImageUploadSection />
       </div>
+      <Suspense><ActorDetailPanel /></Suspense>
     </PageWrapper>
   );
 }

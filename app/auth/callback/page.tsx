@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { persistAuthSession } from '@/lib/auth-session';
+import { useAuthStore } from '@/stores/auth-store';
+import { mapBackendUser } from '@/lib/user-mapper';
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -16,18 +18,21 @@ export default function AuthCallbackPage() {
       try {
         const decoded = JSON.parse(atob(data));
         if (decoded.access_token) {
+          // Store tokens in localStorage + cookie
           persistAuthSession(
             decoded.access_token,
             decoded.refresh_token,
-            3600 // 1 hour default
+            3600
           );
-          
-          // Optional: Store user info if needed
-          if (decoded.user && typeof window !== 'undefined') {
-            localStorage.setItem('user_info', JSON.stringify(decoded.user));
+
+          // Sync Zustand auth store — without this, the persisted store still
+          // has isAuthenticated: false and the dashboard layout redirects to /login.
+          // mapBackendUser normalises the partial OAuth user object (id/email/username/full_name)
+          // into the full User shape; useAuth's /auth/me query will refresh it on next render.
+          if (decoded.user) {
+            useAuthStore.getState().setUser(mapBackendUser(decoded.user as Record<string, unknown>));
           }
 
-          // Redirect to dashboard
           router.replace('/dashboard');
         } else {
           setError('Token non trouvé dans la réponse.');
@@ -74,5 +79,22 @@ export default function AuthCallbackPage() {
         <p className="text-gray-600">Veuillez patienter pendant que nous préparons votre espace...</p>
       </div>
     </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-[#f9fafb]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-[#059669] mx-auto mb-6" />
+            <p className="text-gray-600">Chargement...</p>
+          </div>
+        </div>
+      }
+    >
+      <AuthCallbackContent />
+    </Suspense>
   );
 }

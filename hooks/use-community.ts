@@ -33,6 +33,69 @@ function mapBackendGroup(g: any): Group {
   } as Group;
 }
 
+function mapBackendPost(p: any): Post {
+  return {
+    id: p.id,
+    group_id: p.group_id,
+    author: p.author ?? {
+      id: p.author_id ?? '',
+      name: p.author_name ?? 'Anonyme',
+      avatar: p.author_avatar ?? undefined,
+      role: p.author_role ?? '',
+    },
+    content: p.content ?? '',
+    media: p.attachments?.map((a: any) => ({
+      id: a.id,
+      type: (a.file_type as any) ?? 'document',
+      url: a.storage_url ?? a.url ?? '',
+      filename: a.original_name ?? a.filename,
+      caption: a.caption,
+    })) ?? p.media ?? [],
+    reactions: p.reactions ?? {
+      like: p.like_count ?? 0,
+      love: 0,
+      insightful: 0,
+      support: 0,
+      sad: 0,
+      angry: 0,
+    },
+    user_reaction: p.user_reaction,
+    comments_count: p.comments_count ?? p.comment_count ?? 0,
+    shares_count: p.shares_count ?? p.share_count ?? 0,
+    views_count: p.views_count ?? p.view_count ?? 0,
+    is_bookmarked: p.is_bookmarked ?? false,
+    is_pinned: p.is_pinned ?? false,
+    status: p.status ?? (p.is_published ? 'published' : 'draft'),
+    created_at: p.created_at ?? new Date().toISOString(),
+    updated_at: p.updated_at ?? new Date().toISOString(),
+    group: p.group_name ? {
+      id: p.group_id,
+      name: p.group_name,
+      slug: '',
+      type: 'public',
+      sector: p.group_sector || 'general',
+      members_count: 0,
+      posts_count: 0,
+      is_member: false,
+      membership_status: 'none',
+    } : undefined,
+  } as Post;
+}
+
+function mapBackendMember(m: any): Member {
+  return {
+    id: m.user_id ?? m.id ?? '',
+    user_id: m.user_id ?? m.id ?? '',
+    name: m.full_name ?? m.username ?? m.name ?? 'Inconnu',
+    avatar: m.avatar_url ?? m.avatar,
+    role: (m.role ?? 'member') as any,
+    joined_at: m.joined_at ?? new Date().toISOString(),
+    country: m.country,
+    is_verified: m.is_verified,
+    is_online: m.is_online,
+  };
+}
+
 function mapBackendGroupList(raw: any): PaginatedResponse<Group> {
   const items = (raw.groups || raw.data || []).map(mapBackendGroup);
   const page = raw.page || 1;
@@ -53,49 +116,18 @@ function mapBackendGroupList(raw: any): PaginatedResponse<Group> {
   };
 }
 
-export function useGroups(filters: { type?: string; search?: string; sort?: string } = {}) {
+export function useGroups(filters: { type?: string; search?: string; sort?: string; sector?: string } = {}) {
   return useQuery({
     queryKey: ['groups', filters],
     queryFn: async () => {
-      try {
-        const raw = await apiClient.get<any>('/community/groups', {
-          params: { ...filters } as Record<string, string>,
-        });
-        return mapBackendGroupList(raw);
-      } catch (e: any) {
-        if (e?.status === 401) {
-          const mock: PaginatedResponse<Group> = {
-            data: [
-              {
-                id: 'public-1',
-                name: 'Groupe Demo: Maïs & Légumes',
-                slug: 'demo-mais-legumes',
-                description: "Espace d'échange pour les producteurs de maïs et légumes.",
-                type: 'public',
-                sector: 'vegetal',
-                tags: ['maïs', 'légumes'],
-                members_count: 120,
-                posts_count: 45,
-                is_member: false,
-                membership_status: 'none',
-                requires_approval: false,
-                moderated: false,
-                created_at: new Date().toISOString(),
-                created_by: 'system',
-              } as Group,
-            ],
-            meta: { page: 1, limit: 20, total: 1 } as any,
-            page: 1,
-            limit: 20,
-            total: 1,
-            total_pages: 1,
-            has_next: false,
-            has_prev: false,
-          };
-          return mock;
-        }
-        throw e;
-      }
+      const params: Record<string, string> = {};
+      if (filters.search) params.search = filters.search;
+      if (filters.type) params.type = filters.type;
+      if (filters.sort) params.sort = filters.sort;
+      if (filters.sector) params.sector = filters.sector;
+
+      const raw = await apiClient.get<any>('/community/groups', { params });
+      return mapBackendGroupList(raw);
     },
   });
 }
@@ -116,10 +148,7 @@ export function useCommunityStats() {
 }
 
 function mapBackendPostList(raw: any): PaginatedResponse<Post> {
-  const items = (raw.posts || raw.data || []).map((p: any) => ({
-    ...p,
-    author: p.author || { id: p.author_id, name: p.author_name, avatar: p.author_avatar },
-  }));
+  const items = (raw.posts || raw.data || []).map(mapBackendPost);
   const page = raw.page || 1;
   const limit = raw.per_page || raw.limit || 10;
   const total = raw.total || 0;
@@ -164,15 +193,32 @@ export function useGroupPosts(groupId: string) {
   });
 }
 
+export function usePublicPosts(filters: { search?: string; page?: number } = {}) {
+  return useQuery({
+    queryKey: ['community', 'public-posts', filters],
+    queryFn: async () => {
+      const params: Record<string, any> = { per_page: 20 };
+      if (filters.search) params.search = filters.search;
+      if (filters.page) params.page = filters.page;
+      const raw = await apiClient.get<any>('/community/posts/public', { params });
+      return {
+        posts: (raw.posts || []).map(mapBackendPost) as Post[],
+        total: raw.total || 0,
+        has_next: raw.has_next || false,
+        page: raw.page || 1,
+      };
+    },
+    staleTime: 30_000,
+    retry: false,
+  });
+}
+
 export function usePostComments(postId: string) {
   return useInfiniteQuery({
     queryKey: ['posts', postId, 'comments'],
     queryFn: ({ pageParam = 1 }) =>
       apiClient.get<PaginatedResponse<Comment>>(`/community/posts/${postId}/comments`, {
-        params: {
-          page: pageParam as number,
-          limit: 10,
-        },
+        params: { page: pageParam as number, limit: 10 },
       }),
     initialPageParam: 1,
     getNextPageParam: (last) => last.has_next ? last.page + 1 : undefined,
@@ -183,7 +229,10 @@ export function usePostComments(postId: string) {
 export function useGroupMembers(groupId: string) {
   return useQuery({
     queryKey: ['groups', groupId, 'members'],
-    queryFn: () => apiClient.get<Member[]>(`/community/groups/${groupId}/members`),
+    queryFn: async () => {
+      const raw = await apiClient.get<any[]>(`/community/groups/${groupId}/members`);
+      return (raw || []).map(mapBackendMember);
+    },
     enabled: !!groupId,
   });
 }
@@ -244,6 +293,9 @@ export function useCreatePost() {
     mutationFn: (data: FormData) => apiClient.upload<Post>('/community/posts', data),
     onSuccess: (post) => {
       qc.invalidateQueries({ queryKey: ['groups', post.group_id, 'posts'] });
+      qc.invalidateQueries({ queryKey: ['community', 'public-posts'] });
+      qc.invalidateQueries({ queryKey: ['community', 'trending-posts'] });
+      qc.invalidateQueries({ queryKey: ['community', 'stats'] });
       toast.success('Publication créée !');
     },
     onError: (e: { message: string }) => toast.error(e.message),
@@ -257,6 +309,8 @@ export function useReactToPost() {
       apiClient.post(`/community/posts/${postId}/react`, { reaction }),
     onSuccess: (_, { postId }) => {
       qc.invalidateQueries({ queryKey: ['posts', postId] });
+      qc.invalidateQueries({ queryKey: ['community', 'public-posts'] });
+      qc.invalidateQueries({ queryKey: ['community', 'trending-posts'] });
     },
   });
 }
@@ -272,7 +326,6 @@ export function useAddComment() {
   });
 }
 
-// Create a new group
 export function useCreateGroup() {
   const qc = useQueryClient();
   return useMutation({
@@ -281,44 +334,32 @@ export function useCreateGroup() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['groups'] });
       qc.invalidateQueries({ queryKey: ['community', 'stats'] });
+      qc.invalidateQueries({ queryKey: ['community', 'trending-groups'] });
     },
-    onError: (e: any, _vars, _ctx) => {
-      // If unauthorized, add a local optimistic group so the UI shows the created group
-      if (e?.status === 401) {
-        const local: Group = {
-          id: `local-${Date.now()}`,
-          name: (e?.name as string) || 'Nouveau groupe (local)',
-          slug: `local-${Date.now()}`,
-          description: 'Groupe créé localement. Connectez-vous pour le sauvegarder.',
-          type: 'public',
-          sector: 'general',
-          tags: [],
-          members_count: 1,
-          posts_count: 0,
-          is_member: true,
-          membership_status: 'member',
-          requires_approval: false,
-          moderated: false,
-          created_at: new Date().toISOString(),
-          created_by: 'local',
-        } as Group;
-        qc.setQueryData(['groups'], (old: any) => {
-          if (!old) return { data: [local], page: 1, limit: 20, total: 1, total_pages: 1, has_next: false, has_prev: false };
-          return { ...old, data: [local, ...(old.data || [])], total: (old.total || 0) + 1 };
-        });
-        toast.success('Groupe créé localement (connexion requise pour le sauvegarder)');
-      }
-    },
+    onError: (e: { message: string }) => toast.error(e.message),
   });
 }
 
-// Simple messages polling hook for group chat (fallback when WS unavailable)
+export function useTrendingPosts(limit = 10) {
+  return useQuery({
+    queryKey: ['community', 'trending-posts', limit],
+    queryFn: async () => {
+      const raw = await apiClient.get<any[]>('/community/trending-posts', {
+        params: { limit },
+      });
+      return (raw || []).map(mapBackendPost);
+    },
+    staleTime: 60_000,
+    retry: false,
+  });
+}
+
 export function useGroupMessages(groupId: string, opts: { enabled?: boolean; refetchInterval?: number } = {}) {
   return useQuery({
     queryKey: ['groups', groupId, 'messages'],
     queryFn: () => apiClient.get<any[]>(`/community/groups/${groupId}/messages`),
     enabled: !!groupId && opts.enabled !== false,
-    refetchInterval: opts.refetchInterval ?? 3000,
+    refetchInterval: opts.refetchInterval ?? 5000,
     retry: 1,
   });
 }

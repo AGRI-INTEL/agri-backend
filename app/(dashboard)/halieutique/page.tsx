@@ -1,10 +1,15 @@
 'use client';
-
 import { Fish } from 'lucide-react';
-import { SectorActorsPage } from '@/components/actors/sector-actors-page';
+import { SectorDashboard } from '@/components/actors/sector-dashboard';
 
 export default function HalieutiquePage() {
   return (
-    <SectorActorsPage sector="halieutique" title="Secteur Halieutique" description="Pêcheurs et aquaculture" icon={Fish} />
+    <SectorDashboard
+      sector="halieutique"
+      title="Secteur Halieutique"
+      description="Pêcheurs, flotte et ressources halieutiques"
+      icon={Fish}
+      color="#0891B2"
+    />
   );
 }

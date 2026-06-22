@@ -1,9 +1,8 @@
-import ActorDetailClient from './actor-detail-client';
+import ActorRedirect from './redirect';
 
-export function generateStaticParams() {
-  return [{ id: '_' }];
-}
+export function generateStaticParams() { return [{ id: '_' }]; }
+export const dynamicParams = false;
 
-export default function ActorDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  return <ActorDetailClient params={params} />;
+export default function ActorDetailPage() {
+  return <ActorRedirect />;
 }

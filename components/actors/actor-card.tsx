@@ -156,7 +156,7 @@ export function ActorCard({ row }: { row: ActorRow }) {
         {/* Actions */}
         <div className="flex gap-2 pt-1">
           <Button variant="default" size="sm" className="flex-1 h-8 text-xs gap-1" asChild>
-            <Link href={`/actors/${row.id}`}>
+            <Link href={`/actors?id=${row.id}`}>
               <Eye className="h-3 w-3" />
               Profil
             </Link>

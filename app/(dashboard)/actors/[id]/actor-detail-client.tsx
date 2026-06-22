@@ -1,6 +1,6 @@
 'use client';
 
-import { use } from 'react';
+import { usePathname } from 'next/navigation';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { ActorDetailView } from '@/components/actors/actor-detail-view';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
@@ -8,10 +8,22 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { useActor } from '@/hooks/use-actors';
 import type { ActorRow } from '@/components/actors/actor-card';
 
-export default function ActorDetailClient({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  const { data: rawActor, isLoading } = useActor(id);
+export default function ActorDetailClient(_: { params: Promise<{ id: string }> }) {
+  // In static export, params always contains the build-time value ('_').
+  // Read the real UUID from the URL instead.
+  const pathname = usePathname();
+  const id = pathname?.split('/actors/')?.[1]?.split('/')?.[0] ?? '_';
+
+  const { data: rawActor, isLoading } = useActor(id === '_' ? '' : id);
   const actor = rawActor ? (rawActor as unknown as ActorRow) : undefined;
+
+  if (!id || id === '_') {
+    return (
+      <PageWrapper>
+        <EmptyState icon="👤" title="Acteur introuvable" description="Identifiant d'acteur invalide." />
+      </PageWrapper>
+    );
+  }
 
   if (isLoading) {
     return (

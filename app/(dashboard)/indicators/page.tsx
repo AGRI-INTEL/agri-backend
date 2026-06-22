@@ -4,7 +4,7 @@ import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, Activity, Globe, AlertTriangle, Upload, Trash2,
-  RefreshCw, Download, ImageIcon, FileText, ChevronDown,
+  RefreshCw, Download, ImageIcon, FileText, ChevronDown, Loader2,
 } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { IndicatorFiltersBar } from '@/components/indicators/indicator-filters';
@@ -14,7 +14,6 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { ErrorState } from '@/components/shared/error-state';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -127,6 +126,8 @@ function OverviewStats() {
 
 function ImageUploadSection() {
   const [preview, setPreview] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,55 +138,80 @@ function ImageUploadSection() {
       return;
     }
     setPreview(URL.createObjectURL(f));
+    setAnalysis(null);
+    setIsAnalyzing(true);
     const formData = new FormData();
     formData.append('file', f);
     apiClient.upload('/indicators/upload-image', formData)
-      .then(() => toast.success('Image envoyée pour analyse'))
+      .then((res: unknown) => {
+        const r = res as { analysis?: string; status?: string };
+        setAnalysis(r.analysis ?? 'Analyse reçue.');
+        toast.success('Analyse IA terminée');
+      })
       .catch(() => {
-        toast.error('Ce modèle ne supporte pas les images. Utilisez l\'assistant IA.', { duration: 6000 });
+        toast.error('Erreur lors de l\'analyse visuelle');
         setPreview(null);
-      });
+      })
+      .finally(() => setIsAnalyzing(false));
   }, []);
+
+  const handleClear = () => {
+    setPreview(null);
+    setAnalysis(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   return (
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <ImageIcon className="h-5 w-5 text-pink-500" />
-          Analyse visuelle
-          <Badge variant="outline" className="text-[10px]">Bientôt</Badge>
+          Analyse visuelle IA
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div
-          onClick={() => fileInputRef.current?.click()}
-          className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center transition-colors hover:border-primary/50 hover:bg-primary/5"
+          onClick={() => !isAnalyzing && fileInputRef.current?.click()}
+          className={cn(
+            'flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center transition-colors',
+            isAnalyzing ? 'cursor-not-allowed opacity-60' : 'hover:border-primary/50 hover:bg-primary/5',
+          )}
         >
-          <Upload className="mb-3 h-8 w-8 text-muted-foreground" />
-          <p className="text-sm font-medium">Cliquez pour uploader un graphique ou document</p>
-          <p className="mt-1 text-xs text-muted-foreground">Graphiques, tableaux, captures d&apos;écran</p>
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="mb-3 h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm font-medium">Analyse en cours…</p>
+              <p className="mt-1 text-xs text-muted-foreground">L&apos;IA examine l&apos;image</p>
+            </>
+          ) : (
+            <>
+              <Upload className="mb-3 h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium">Cliquez pour uploader un graphique ou document</p>
+              <p className="mt-1 text-xs text-muted-foreground">Graphiques, tableaux, captures d&apos;écran</p>
+            </>
+          )}
         </div>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
         {preview && (
           <div className="relative rounded-lg overflow-hidden border border-border">
             <Image src={preview} alt="Aperçu" width={400} height={160} className="max-h-40 w-full object-contain bg-muted/20" unoptimized />
-            <Button variant="ghost" size="icon-sm" className="absolute top-1 right-1 bg-background/80 backdrop-blur-sm" onClick={() => setPreview(null)}>
+            <Button variant="ghost" size="icon-sm" className="absolute top-1 right-1 bg-background/80 backdrop-blur-sm" onClick={handleClear}>
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
         )}
 
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-800/30 dark:bg-amber-950/20 dark:text-amber-300">
-          <p className="flex items-center gap-1.5 font-medium mb-1">
-            <AlertTriangle className="h-3.5 w-3.5" />
-            Information
-          </p>
-          <p>
-            Le modèle d&apos;indicateurs actuel ne supporte pas les images. Utilisez les données
-            statistiques ci-dessus. Pour l&apos;analyse visuelle, utilisez l&apos;assistant IA.
-          </p>
-        </div>
+        {analysis && (
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800/30 dark:bg-green-950/20">
+            <p className="text-xs font-semibold text-green-800 dark:text-green-300 mb-2 flex items-center gap-1.5">
+              ✅ Résultat de l&apos;analyse IA
+            </p>
+            <p className="text-xs text-green-900 dark:text-green-200 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
+              {analysis}
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -235,6 +261,24 @@ export default function IndicatorsPage() {
 
   const [exportOpen, setExportOpen] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+  const [isFetchingExternal, setIsFetchingExternal] = useState(false);
+
+  const handleFetchExternal = async () => {
+    setIsFetchingExternal(true);
+    try {
+      const res = await apiClient.get<{ success: boolean; count: number; errors: string[] }>('/indicators/external-fetch');
+      if (res.success) {
+        toast.success(`${res.count} indicateurs récupérés depuis World Bank`);
+        qc.invalidateQueries({ queryKey: ['indicators'] });
+      } else {
+        toast.error('Échec de la récupération externe');
+      }
+    } catch {
+      toast.error('Impossible de contacter les sources externes');
+    } finally {
+      setIsFetchingExternal(false);
+    }
+  };
 
   const handleExportCSV = () => {
     setExportOpen(false);
@@ -275,6 +319,10 @@ export default function IndicatorsPage() {
           <Button variant="outline" size="sm" onClick={() => { refetch(); qc.invalidateQueries({ queryKey: ['indicators'] }); }}>
             <RefreshCw className="h-4 w-4" />
             <span className="hidden sm:inline">Actualiser</span>
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleFetchExternal} disabled={isFetchingExternal}>
+            {isFetchingExternal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+            <span className="hidden sm:inline">Données en ligne</span>
           </Button>
           <div className="relative" ref={exportRef}>
             <Button variant="outline" size="sm" onClick={() => setExportOpen(!exportOpen)}>

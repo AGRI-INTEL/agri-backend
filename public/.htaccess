@@ -21,12 +21,22 @@ RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 # -------------------------------------------------------
-# 3. Toutes les autres requêtes → index.html (SPA fallback)
+# 3. Community group detail — shell page for dynamic group IDs
+#    Only /community/groups/_.html is pre-built (output:'export' static).
+#    Serve it for any /community/groups/<uuid> path; client JS reads
+#    the real ID from window.location.pathname via usePathname().
+# -------------------------------------------------------
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^community/groups/([^/]+)(/.*)?$ /community/groups/_.html [L]
+
+# -------------------------------------------------------
+# 4. Toutes les autres requêtes → index.html (SPA fallback)
 # -------------------------------------------------------
 RewriteRule ^ /index.html [L]
 
 # -------------------------------------------------------
-# 4. Types MIME pour les assets Next.js
+# 5. Types MIME pour les assets Next.js
 # -------------------------------------------------------
 <IfModule mod_mime.c>
   AddType application/javascript .js .mjs
@@ -38,7 +48,7 @@ RewriteRule ^ /index.html [L]
 </IfModule>
 
 # -------------------------------------------------------
-# 5. Cache des assets statiques (chunks Next.js sont immutables)
+# 6. Cache des assets statiques (chunks Next.js sont immutables)
 # -------------------------------------------------------
 <IfModule mod_expires.c>
   ExpiresActive On
@@ -51,7 +61,7 @@ RewriteRule ^ /index.html [L]
 </IfModule>
 
 # -------------------------------------------------------
-# 6. Compression Gzip
+# 7. Compression Gzip
 # -------------------------------------------------------
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json

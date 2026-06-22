@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import React from 'react';
 import Image from 'next/image';
 import { Users, Lock, Globe, Briefcase, Building2, MessageSquare, TrendingUp, Heart, Sprout, Beef, Fish, TreePine, LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,12 +8,14 @@ import { useJoinGroup } from '@/hooks/use-community';
 import { cn } from '@/lib/utils';
 import type { Group } from '@/types/community';
 
-const TYPE_CONFIG = {
-  public:         { icon: Globe,      label: 'Public',         ring: 'ring-blue-400',   text: 'text-blue-600' },
-  prive:          { icon: Lock,       label: 'Privé',          ring: 'ring-slate-400',  text: 'text-slate-600' },
-  professionnel:  { icon: Briefcase,  label: 'Pro',            ring: 'ring-violet-400', text: 'text-violet-600' },
-  institutionnel: { icon: Building2,  label: 'Institution',    ring: 'ring-emerald-400',text: 'text-emerald-700' },
-} as const;
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; label: string; ring: string; text: string }> = {
+  public:       { icon: Globe,      label: 'Public',     ring: 'ring-blue-400',    text: 'text-blue-600' },
+  private:      { icon: Lock,       label: 'Privé',      ring: 'ring-slate-400',   text: 'text-slate-600' },
+  professional: { icon: Briefcase,  label: 'Pro',        ring: 'ring-violet-400',  text: 'text-violet-600' },
+  research:     { icon: Building2,  label: 'Recherche',  ring: 'ring-emerald-400', text: 'text-emerald-700' },
+  regional:     { icon: Globe,      label: 'Régional',   ring: 'ring-cyan-400',    text: 'text-cyan-700' },
+  thematic:     { icon: Globe,      label: 'Thématique', ring: 'ring-purple-400',  text: 'text-purple-700' },
+};
 
 const SECTOR_GRADIENT = {
   general:     'from-indigo-600/80 to-indigo-900/90',
@@ -38,7 +40,7 @@ interface GroupCardProps {
 
 export function GroupCard({ group, variant = 'grid' }: GroupCardProps) {
   const join = useJoinGroup();
-  const typeKey = (group.type as keyof typeof TYPE_CONFIG) in TYPE_CONFIG ? group.type as keyof typeof TYPE_CONFIG : 'public';
+  const typeKey = group.type in TYPE_CONFIG ? group.type : 'public';
   const typeCfg = TYPE_CONFIG[typeKey];
   const TypeIcon = typeCfg.icon;
   const sectorKey = (group.sector as keyof typeof SECTOR_GRADIENT) in SECTOR_GRADIENT ? group.sector as keyof typeof SECTOR_GRADIENT : 'general';
@@ -90,7 +92,7 @@ export function GroupCard({ group, variant = 'grid' }: GroupCardProps) {
           )}
           {isMember && (
             <Button variant="outline" size="sm" asChild>
-              <Link href={`/community/groups/${group.id}`}>Visiter</Link>
+              <a href={`/community/groups/${group.id}`}>Visiter</a>
             </Button>
           )}
         </div>
@@ -157,7 +159,7 @@ export function GroupCard({ group, variant = 'grid' }: GroupCardProps) {
         {/* CTA */}
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" asChild>
-            <Link href={`/community/groups/${group.id}`}>Voir</Link>
+            <a href={`/community/groups/${group.id}`}>Voir</a>
           </Button>
           {!isMember && group.membership_status !== 'pending' && (
             <Button size="sm" className="flex-1 h-8 text-xs bg-[#064E3B] hover:bg-[#065f46]" onClick={() => join.mutate(group.id)} disabled={join.isPending}>

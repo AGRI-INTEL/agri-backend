@@ -97,23 +97,29 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
         const r = await apiClient.upload<{ url: string }>('/files/upload', fd);
         banner_url = r.url;
       }
-      create.mutate(
-        { name, description, type, sector, requires_approval: requiresApproval,
-          tags: tags.trim() ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
-          avatar_url, banner_url },
-        {
-          onSuccess: (data: Record<string, unknown>) => {
-            resetDialog();
-            onOpenChange(false);
-            const id = data?.id || data?.groupId;
-            toast.success('Groupe créé avec succès !');
-            if (id) router.push(`/community/groups/${id}`);
-          },
-          onError: (err: Error) => toast.error(err?.message || 'Erreur lors de la création'),
-        }
-      );
+      setUploading(false);
+      await new Promise<void>((resolve, reject) => {
+        create.mutate(
+          { name, description, type, sector, requires_approval: requiresApproval,
+            tags: tags.trim() ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+            avatar_url, banner_url },
+          {
+            onSuccess: (_data: Record<string, unknown>) => {
+              resetDialog();
+              onOpenChange(false);
+              toast.success('Groupe créé avec succès !');
+              router.push('/community');
+              resolve();
+            },
+            onError: (err: Error) => {
+              toast.error(err?.message || 'Erreur lors de la création du groupe');
+              reject(err);
+            },
+          }
+        );
+      });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur lors de l'upload");
+      toast.error(err instanceof Error ? err.message : "Erreur lors de l'opération");
     } finally {
       setUploading(false);
     }
@@ -338,7 +344,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
                 </label>
                 <div className="flex items-center gap-4">
                   <div
-                    className="h-20 w-20 rounded-2xl border-2 border-dashed border-border bg-primary/5 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden flex-shrink-0"
+                    className="relative h-20 w-20 rounded-2xl border-2 border-dashed border-border bg-primary/5 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden flex-shrink-0"
                     onClick={() => avatarRef.current?.click()}
                   >
                     {avatarPreview

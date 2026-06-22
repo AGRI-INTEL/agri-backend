@@ -1,15 +1,15 @@
 'use client';
-
 import { Sprout } from 'lucide-react';
-import { SectorActorsPage } from '@/components/actors/sector-actors-page';
+import { SectorDashboard } from '@/components/actors/sector-dashboard';
 
 export default function ProductionPage() {
   return (
-    <SectorActorsPage
+    <SectorDashboard
       sector="vegetal"
       title="Secteur Végétal"
-      description="Producteurs, cultures et superficies"
+      description="Producteurs, cultures et superficies agricoles"
       icon={Sprout}
+      color="#16A34A"
     />
   );
 }

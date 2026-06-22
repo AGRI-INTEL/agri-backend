@@ -1,10 +1,15 @@
 'use client';
-
 import { TreePine } from 'lucide-react';
-import { SectorActorsPage } from '@/components/actors/sector-actors-page';
+import { SectorDashboard } from '@/components/actors/sector-dashboard';
 
 export default function ForestierPage() {
   return (
-    <SectorActorsPage sector="forestier" title="Secteur Forestier" description="Exploitants et gestion durable" icon={TreePine} />
+    <SectorDashboard
+      sector="forestier"
+      title="Secteur Forestier"
+      description="Exploitants forestiers, concessions et produits forestiers"
+      icon={TreePine}
+      color="#92400E"
+    />
   );
 }

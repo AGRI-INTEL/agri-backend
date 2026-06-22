@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import {
   Users, UserPlus, UserMinus, MessageSquare, FileText,
@@ -39,7 +39,10 @@ const SECTOR_COLORS: Record<string, string> = {
 };
 
 export default function GroupDetailClient() {
-  const { groupId } = useParams<{ groupId: string }>();
+  // In static export, useParams() always returns the build-time value ('_').
+  // Read the real UUID from the URL instead.
+  const pathname = usePathname();
+  const groupId = pathname?.split('/community/groups/')?.[1]?.split('/')?.[0] ?? '_';
   const [tab, setTab] = useState<Tab>('posts');
   const [expandedPost, setExpandedPost] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
