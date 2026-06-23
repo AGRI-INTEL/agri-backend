@@ -23,9 +23,7 @@ export function useEconomicIndicators(country?: string, indicator?: string) {
     queryFn: async () => {
       const res = await apiClient.get<{ data: EconomicIndicatorRow[]; count: number }>(
         '/economics/indicators',
-        {
-          params: { country, indicator, limit: 100 },
-        }
+        { params: { country, indicator, limit: 100 } }
       );
       return res.data || [];
     },
@@ -67,5 +65,48 @@ export function useUpdateIndicatorThresholds(id: string) {
     mutationFn: (thresholds: { critical: number; alert: number; optimal: number }) =>
       apiClient.patch(`/indicators/${id}/thresholds`, thresholds),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['indicators', id] }),
+  });
+}
+
+export function useCreateIndicator() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: Record<string, unknown>) =>
+      apiClient.post<{ id: string; message: string }>('/indicators', data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['indicators'] });
+    },
+  });
+}
+
+export function useDeleteIndicator() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiClient.delete<{ message: string }>(`/indicators/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['indicators'] });
+    },
+  });
+}
+
+export function useFetchExternalIndicators() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient.get<{ success: boolean; count: number; saved: number; errors: string[] }>('/indicators/external-fetch'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['indicators'] });
+    },
+  });
+}
+
+export function useSeedDemoIndicators() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      apiClient.post<{ message: string; count: number }>('/indicators/seed'),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['indicators'] });
+    },
   });
 }

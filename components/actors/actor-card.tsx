@@ -11,6 +11,7 @@ import type { SectorKey } from '@/lib/utils';
 
 export interface ActorRow {
   id: string;
+  user_id?: string | null;
   name: string;
   sector: string;
   role: string;

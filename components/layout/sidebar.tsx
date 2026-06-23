@@ -14,6 +14,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuthStore } from '@/stores/auth-store';
 import { useAuth } from '@/hooks/use-auth';
+import { useUnreadMessageCount } from '@/hooks/use-messaging';
 
 type NavItem = {
   href?: string;
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { href: '/map', icon: Map, label: 'Carte' },
   { type: 'separator' as const },
   { href: '/chatbot', icon: MessageSquare, label: 'AgriBot IA' },
+  { href: '/messages', icon: MessageSquare, label: 'Messages', badgeKey: 'messages' },
   { href: '/community', icon: Users, label: 'Communauté' },
   { href: '/files', icon: FolderOpen, label: 'Fichiers' },
 ];
@@ -64,6 +66,8 @@ export function Sidebar() {
   const { sidebarCollapsed, toggleSidebar, unreadNotifications } = useUIStore();
   const { user } = useAuthStore();
   const { logout } = useAuth();
+  const { data: msgUnreadData } = useUnreadMessageCount();
+  const unreadMessages = msgUnreadData?.unread_count ?? 0;
 
   const isActive = (href: string, exact?: boolean) => {
     if (exact) return pathname === href;
@@ -145,7 +149,10 @@ export function Sidebar() {
 
             const Icon = item.icon!;
             const active = isActive(item.href!, item.exact);
-            const showBadge = item.badgeKey === 'alerts' && unreadNotifications > 0;
+            const showBadge =
+              (item.badgeKey === 'alerts' && unreadNotifications > 0) ||
+              (item.badgeKey === 'messages' && unreadMessages > 0);
+            const badgeCount = item.badgeKey === 'alerts' ? unreadNotifications : unreadMessages;
 
             const linkContent = (
               <Link
@@ -196,7 +203,7 @@ export function Sidebar() {
                     className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
                     style={{ background: '#ef4444', color: 'white' }}
                   >
-                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                    {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
                 )}
               </Link>

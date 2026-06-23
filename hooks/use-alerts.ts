@@ -17,7 +17,10 @@ export function useAlerts(filters: AlertFilters = {}) {
       apiClient.get<PaginatedResponse<Alert> | Alert[]>('/alerts', {
         params: filters as Record<string, string | number | boolean | undefined | null>,
       }),
-    refetchInterval: 15_000, // Temps réel: toutes les 15s
+    refetchInterval: (query) => {
+      if (query.state.error) return false;
+      return 15_000;
+    },
     staleTime: 10_000,
   });
 }

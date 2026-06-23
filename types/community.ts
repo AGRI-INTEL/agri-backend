@@ -117,6 +117,8 @@ export interface Group {
   membership_status: MembershipStatus;
   /** Whether the group requires approval to join */
   requires_approval: boolean;
+  /** Maximum number of members (0 = unlimited) */
+  max_members?: number;
   /** Whether posts require moderation before publishing */
   moderated: boolean;
   /** Creation timestamp (ISO 8601) */

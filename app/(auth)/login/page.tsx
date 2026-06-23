@@ -610,27 +610,23 @@ export default function LoginPage() {
             gap: '0.5rem',
             height: '3rem',
             borderRadius: '0.625rem',
-            border: '1px solid rgba(196, 146, 58, 0.20)',
+            border: '1px solid rgba(196, 146, 58, 0.18)',
             background: 'rgba(255, 255, 255, 0.03)',
-            color: '#E4DBC8',
+            color: 'rgba(228, 219, 200, 0.75)',
             fontSize: '0.875rem',
             fontWeight: 600,
             cursor: 'pointer',
-            transition: 'background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+            transition: 'border-color 0.15s ease, background 0.15s ease',
           }}
           onMouseEnter={(e) => {
             const btn = e.currentTarget as HTMLButtonElement;
-            btn.style.background = 'rgba(255, 255, 255, 0.07)';
-            btn.style.borderColor = '#C4923A';
-            btn.style.transform = 'translateY(-1px)';
-            btn.style.boxShadow = '0 4px 12px rgba(196, 146, 58, 0.12)';
+            btn.style.borderColor = 'rgba(196,146,58,0.45)';
+            btn.style.background = 'rgba(255,255,255,0.06)';
           }}
           onMouseLeave={(e) => {
             const btn = e.currentTarget as HTMLButtonElement;
-            btn.style.background = 'rgba(255, 255, 255, 0.03)';
-            btn.style.borderColor = 'rgba(196, 146, 58, 0.20)';
-            btn.style.transform = 'translateY(0)';
-            btn.style.boxShadow = 'none';
+            btn.style.borderColor = 'rgba(196,146,58,0.18)';
+            btn.style.background = 'rgba(255,255,255,0.03)';
           }}
         >
           <svg viewBox="0 0 24 24" width="18" height="18" style={{ flexShrink: 0 }}>
@@ -653,27 +649,23 @@ export default function LoginPage() {
             gap: '0.5rem',
             height: '3rem',
             borderRadius: '0.625rem',
-            border: '1px solid rgba(196, 146, 58, 0.20)',
+            border: '1px solid rgba(196, 146, 58, 0.18)',
             background: 'rgba(255, 255, 255, 0.03)',
-            color: '#E4DBC8',
+            color: 'rgba(228, 219, 200, 0.75)',
             fontSize: '0.875rem',
             fontWeight: 600,
             cursor: 'pointer',
-            transition: 'background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease',
+            transition: 'border-color 0.15s ease, background 0.15s ease',
           }}
           onMouseEnter={(e) => {
             const btn = e.currentTarget as HTMLButtonElement;
-            btn.style.background = 'rgba(255, 255, 255, 0.07)';
-            btn.style.borderColor = '#C4923A';
-            btn.style.transform = 'translateY(-1px)';
-            btn.style.boxShadow = '0 4px 12px rgba(196, 146, 58, 0.12)';
+            btn.style.borderColor = 'rgba(196,146,58,0.45)';
+            btn.style.background = 'rgba(255,255,255,0.06)';
           }}
           onMouseLeave={(e) => {
             const btn = e.currentTarget as HTMLButtonElement;
-            btn.style.background = 'rgba(255, 255, 255, 0.03)';
-            btn.style.borderColor = 'rgba(196, 146, 58, 0.20)';
-            btn.style.transform = 'translateY(0)';
-            btn.style.boxShadow = 'none';
+            btn.style.borderColor = 'rgba(196,146,58,0.18)';
+            btn.style.background = 'rgba(255,255,255,0.03)';
           }}
         >
           <svg viewBox="0 0 23 23" width="16" height="16" style={{ flexShrink: 0 }}>

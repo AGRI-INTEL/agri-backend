@@ -50,7 +50,69 @@ export type ResponseInterceptor<T> = (response: ApiResponse<T>) => ApiResponse<T
 export type ErrorInterceptor = (error: ApiError) => ApiError | Promise<ApiError>;
 
 // ============================================================================
-// SECTION 2: DEFAULT CONFIGURATION
+// SECTION 2: CIRCUIT BREAKER
+// ============================================================================
+
+let backendDown = false;
+let healthCheckTimer: ReturnType<typeof setTimeout> | null = null;
+const HEALTH_CHECK_INTERVAL = 30_000; // Retry health check every 30s
+const HEALTH_CHECK_PATH = '/health';
+
+export function isBackendDown(): boolean {
+  return backendDown;
+}
+
+function markBackendDown(): void {
+  if (backendDown) return;
+  backendDown = true;
+  if (typeof document !== 'undefined') {
+    document.dispatchEvent(new CustomEvent('backend-status-change', { detail: { status: 'down' } }));
+  }
+  // Start periodic health checks
+  if (!healthCheckTimer) {
+    healthCheckTimer = setTimeout(pollHealthCheck, HEALTH_CHECK_INTERVAL);
+  }
+}
+
+function markBackendUp(): void {
+  if (!backendDown) return;
+  backendDown = false;
+  if (healthCheckTimer) {
+    clearTimeout(healthCheckTimer);
+    healthCheckTimer = null;
+  }
+  if (typeof document !== 'undefined') {
+    document.dispatchEvent(new CustomEvent('backend-status-change', { detail: { status: 'up' } }));
+  }
+}
+
+async function pollHealthCheck(): Promise<void> {
+  try {
+    const response = await fetch(`${API_PREFIX}${HEALTH_CHECK_PATH}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: { 'Accept': 'application/json' },
+    });
+    if (response.ok) {
+      markBackendUp();
+    } else {
+      healthCheckTimer = setTimeout(pollHealthCheck, HEALTH_CHECK_INTERVAL);
+    }
+  } catch {
+    healthCheckTimer = setTimeout(pollHealthCheck, HEALTH_CHECK_INTERVAL);
+  }
+}
+
+export function resetCircuitBreaker(): void {
+  backendDown = false;
+  if (healthCheckTimer) {
+    clearTimeout(healthCheckTimer);
+    healthCheckTimer = null;
+  }
+}
+
+// ============================================================================
+// SECTION 3: DEFAULT CONFIGURATION
 // ============================================================================
 
 const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || '/api/v1';
@@ -133,7 +195,21 @@ function createApiError(error: unknown, status?: number): ApiException {
   // If object-like and has useful fields, normalize
   if (error && typeof error === 'object') {
     const e = error as Record<string, unknown>;
-    const message = (e.message as string) || (e.detail as string) || `Erreur ${status || e.status || 'inconnue'}`;
+    // Force string coercion — FastAPI may return "message" or "detail" as an array
+    const rawMessage = e.message as string | string[] | undefined;
+    const rawDetail = e.detail as string | string[] | undefined;
+    let message: string;
+    if (Array.isArray(rawMessage)) {
+      message = String(rawMessage);
+    } else if (rawMessage) {
+      message = rawMessage;
+    } else if (Array.isArray(rawDetail)) {
+      message = String(rawDetail);
+    } else if (rawDetail) {
+      message = rawDetail;
+    } else {
+      message = `Erreur ${status || e.status || 'inconnue'}`;
+    }
     const payload: Partial<ApiError> = {
       message,
       status: (e.status as number) ?? status ?? 0,
@@ -346,6 +422,18 @@ class ApiClient {
       requestConfig = await interceptor(requestConfig);
     }
 
+    // Circuit breaker: skip request if backend is known to be down
+    if (isBackendDown()) {
+      // Allow health check requests through to re-evaluate status
+      if (!path.includes('/health')) {
+        throw new ApiException({
+          message: 'Service temporairement indisponible',
+          status: 503,
+          code: 'BACKEND_DOWN',
+        });
+      }
+    }
+
     const url = this.buildUrl(path, requestConfig.params);
     const headers = await this.getHeaders(requestConfig.headers);
     const timeout = requestConfig.timeout || this.config.timeout;
@@ -432,6 +520,11 @@ class ApiClient {
             : typeof (errorData as Record<string, unknown>).error === 'string'
               ? (errorData as Record<string, unknown>).error as string
               : detailMessage || `Erreur ${response.status}: ${response.statusText}`;
+
+        // Trip circuit breaker on 503 — backend is down
+        if (response.status === 503) {
+          markBackendDown();
+        }
 
         const error: ApiError = {
           message: errorMessage,
@@ -732,6 +825,12 @@ export const authResponseInterceptor: ResponseInterceptor<unknown> = (response) 
  * Error interceptor that logs errors.
  */
 export const loggingErrorInterceptor: ErrorInterceptor = (error) => {
+  // Suppress 503 logs — backend is down, no need to spam the console
+  const status = typeof error === 'object' && error !== null
+    ? (error as unknown as Record<string, unknown>).status
+    : undefined;
+  if (status === 503) return error;
+
   try {
     // If the error exposes a toJSON method, prefer it.
     if (

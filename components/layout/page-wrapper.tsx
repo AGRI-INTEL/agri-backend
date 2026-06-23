@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { Breadcrumb } from './breadcrumb';
 
 interface PageWrapperProps {
-  title?: string;
+  title?: React.ReactNode;
   description?: string;
   actions?: React.ReactNode;
   children: React.ReactNode;

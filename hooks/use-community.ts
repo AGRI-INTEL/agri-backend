@@ -167,6 +167,10 @@ function mapBackendPostList(raw: any): PaginatedResponse<Post> {
   };
 }
 
+function isValidGroupId(id: string | undefined | null): boolean {
+  return !!id && id !== '_' && id.length > 4;
+}
+
 export function useGroup(id: string) {
   return useQuery({
     queryKey: ['groups', id],
@@ -174,7 +178,8 @@ export function useGroup(id: string) {
       const raw = await apiClient.get<any>(`/community/groups/${id}`);
       return mapBackendGroup(raw);
     },
-    enabled: !!id,
+    enabled: isValidGroupId(id),
+    retry: 1,
   });
 }
 
@@ -189,7 +194,7 @@ export function useGroupPosts(groupId: string) {
     },
     initialPageParam: 1,
     getNextPageParam: (last) => last.has_next ? last.page + 1 : undefined,
-    enabled: !!groupId,
+    enabled: isValidGroupId(groupId),
   });
 }
 
@@ -233,7 +238,7 @@ export function useGroupMembers(groupId: string) {
       const raw = await apiClient.get<any[]>(`/community/groups/${groupId}/members`);
       return (raw || []).map(mapBackendMember);
     },
-    enabled: !!groupId,
+    enabled: isValidGroupId(groupId),
   });
 }
 
@@ -359,7 +364,11 @@ export function useGroupMessages(groupId: string, opts: { enabled?: boolean; ref
     queryKey: ['groups', groupId, 'messages'],
     queryFn: () => apiClient.get<any[]>(`/community/groups/${groupId}/messages`),
     enabled: !!groupId && opts.enabled !== false,
-    refetchInterval: opts.refetchInterval ?? 5000,
+    // Stop polling on error — prevents infinite 503 error storm when backend is down
+    refetchInterval: (query) => {
+      if (query.state.error) return false;
+      return opts.refetchInterval ?? 5000;
+    },
     retry: 1,
   });
 }
@@ -372,5 +381,106 @@ export function useSendGroupMessage() {
     onSuccess: (_, { groupId }) => {
       qc.invalidateQueries({ queryKey: ['groups', groupId, 'messages'] });
     },
+  });
+}
+
+export function useEditGroupMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, messageId, content }: { groupId: string; messageId: string; content: string }) =>
+      apiClient.put(`/community/groups/${groupId}/messages/${messageId}`, { content }),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'messages'] });
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useDeleteGroupMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, messageId }: { groupId: string; messageId: string }) =>
+      apiClient.delete(`/community/groups/${groupId}/messages/${messageId}`),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'messages'] });
+      toast.success('Message supprimé');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useSendVoiceMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, audioUrl, duration }: { groupId: string; audioUrl: string; duration: number }) =>
+      apiClient.post(`/community/groups/${groupId}/messages/voice`, { audio_url: audioUrl, duration }),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'messages'] });
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useAddGroupMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, userId }: { groupId: string; userId: string }) =>
+      apiClient.post(`/community/groups/${groupId}/members/add`, { user_id: userId }),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'members'] });
+      qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      toast.success('Membre ajouté');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useRemoveGroupMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, userId }: { groupId: string; userId: string }) =>
+      apiClient.delete(`/community/groups/${groupId}/members/${userId}`),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'members'] });
+      qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      toast.success('Membre retiré');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useUpdateMemberRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, userId, role }: { groupId: string; userId: string; role: string }) =>
+      apiClient.put(`/community/groups/${groupId}/members/${userId}/role`, { role }),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'members'] });
+      toast.success('Rôle mis à jour');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+// ── Meetups / Events ──────────────────────────────────────────────────────────
+
+export function useGroupMeetups(groupId: string) {
+  return useQuery({
+    queryKey: ['groups', groupId, 'meetups'],
+    queryFn: () => apiClient.get<Post[]>(`/community/groups/${groupId}/meetups`),
+    enabled: !!groupId,
+  });
+}
+
+export function useCreateMeetup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, ...data }: { groupId: string; title: string; description: string; date: string; time?: string; end_time?: string; location?: string; meeting_url?: string; event_type?: string }) =>
+      apiClient.post(`/community/groups/${groupId}/meetups`, data),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'meetups'] });
+      toast.success('Événement créé');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
   });
 }

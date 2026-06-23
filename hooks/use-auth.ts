@@ -62,8 +62,11 @@ export function useAuth() {
     onSuccess: (data) => {
       persistAuthSession(data.access_token, data.refresh_token, data.expires_in);
       setUser(mapBackendUser(data.user));
-      toast.success('Connexion réussie ! Redirection vers le tableau de bord...');
-      router.push('/dashboard');
+      toast.success('Connexion réussie !');
+      // Redirect to the originally requested page if any (e.g. /community/groups/UUID)
+      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const next = params?.get('next');
+      router.push(next && next.startsWith('/') ? decodeURIComponent(next) : '/dashboard');
     },
     onError: (error: { message: string }) => {
       toast.error(error.message || 'Identifiants incorrects');

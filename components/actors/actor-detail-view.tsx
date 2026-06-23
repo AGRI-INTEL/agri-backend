@@ -1,20 +1,30 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, MapPin, Mail, Phone, Star, Eye, BadgeCheck, Shield, Medal } from 'lucide-react';
+import { ArrowLeft, MapPin, Mail, Phone, Star, Eye, BadgeCheck, Shield, Medal, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { getSectorColor, getSectorEmoji, formatNumber } from '@/lib/utils';
 import type { ActorRow } from '@/components/actors/actor-card';
+import { useCreateConversation } from '@/hooks/use-messaging';
 
 interface ActorDetailViewProps { actor: ActorRow; }
 
 export function ActorDetailView({ actor }: ActorDetailViewProps) {
+  const createConv = useCreateConversation();
   const sectorKey = actor.sector as 'vegetal' | 'animal' | 'halieutique' | 'forestier' | 'minier' | 'industriel';
   const sectorColor = getSectorColor(sectorKey);
   const sectorEmoji = getSectorEmoji(sectorKey);
+
+  async function handleContact() {
+    if (!actor.user_id) return;
+    const conv = await createConv.mutateAsync({ userId: actor.user_id });
+    if (conv?.id) {
+      window.location.href = '/messages';
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -79,6 +89,20 @@ export function ActorDetailView({ actor }: ActorDetailViewProps) {
             )}
             {!actor.email && !actor.phone && (
               <p className="text-sm text-muted-foreground">Aucune information de contact disponible</p>
+            )}
+            {actor.user_id && (
+              <>
+                <Separator />
+                <Button
+                  onClick={handleContact}
+                  disabled={createConv.isPending}
+                  className="w-full gap-2 bg-[#064E3B] hover:bg-[#065f46]"
+                  size="sm"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  {createConv.isPending ? 'Ouverture...' : 'Contacter'}
+                </Button>
+              </>
             )}
           </CardContent>
         </Card>

@@ -36,7 +36,10 @@ export function useNotifications() {
       }
     },
     enabled: isAuthenticated,
-    refetchInterval: 60_000,
+    refetchInterval: (query) => {
+      if (query.state.error) return false;
+      return 60_000;
+    },
   });
 
   // Setup WebSocket (native) to backend `/ws/{user_id}`

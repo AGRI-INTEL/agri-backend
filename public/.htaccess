@@ -14,14 +14,22 @@ RewriteCond %{REQUEST_URI} ^/_next/static/
 RewriteRule ^_next/static/(.*)$ /_next/static/$1 [L]
 
 # -------------------------------------------------------
-# 2. Servir les fichiers qui existent physiquement
+# 2. API proxy — ne pas réécrire les appels API,
+#    les laisser passer au backend FastAPI via le proxy
+#    Apache VirtualHost (ProxyPass / Reverse Proxy).
+# -------------------------------------------------------
+RewriteCond %{REQUEST_URI} ^/api/v1/
+RewriteRule ^ - [L]
+
+# -------------------------------------------------------
+# 3. Servir les fichiers qui existent physiquement
 # -------------------------------------------------------
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
 # -------------------------------------------------------
-# 3. Community group detail — shell page for dynamic group IDs
+# 4. Community group detail — shell page for dynamic group IDs
 #    Only /community/groups/_.html is pre-built (output:'export' static).
 #    Serve it for any /community/groups/<uuid> path; client JS reads
 #    the real ID from window.location.pathname via usePathname().
@@ -31,7 +39,7 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^community/groups/([^/]+)(/.*)?$ /community/groups/_.html [L]
 
 # -------------------------------------------------------
-# 4. Toutes les autres requêtes → index.html (SPA fallback)
+# 5. Toutes les autres requêtes → index.html (SPA fallback)
 # -------------------------------------------------------
 RewriteRule ^ /index.html [L]
 

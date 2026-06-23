@@ -55,7 +55,8 @@ export function getErrorMessage(error: unknown): string {
  */
 export function isRetryableError(error: unknown): boolean {
   if (!isApiError(error)) return true;
-  const nonRetryableStatuses = [400, 401, 403, 404, 409, 422];
+  // 503 = backend down / unhealthy — retrying creates a storm and wastes budget
+  const nonRetryableStatuses = [400, 401, 403, 404, 409, 422, 503];
   return !nonRetryableStatuses.includes(error.status ?? 0);
 }
 
@@ -127,23 +128,30 @@ export function createQueryClient(options?: {
     },
     queryCache: new QueryCache({
       onError: (error, query) => {
-        // Log query errors
-        console.error(`[Query Error] ${query.queryKey.join('/')}:`, error);
+        // Suppress 503 query errors — circuit breaker handles it silently
+        const is503 = typeof error === 'object' && error !== null && (error as unknown as Record<string, unknown>).status === 503;
+        if (!is503) {
+          console.error(`[Query Error] ${query.queryKey.join('/')}:`, error);
+        }
 
         // Call optional callback
         options?.onError?.(error, { queryKey: query.queryKey as unknown[] });
 
-        // Show toast for non-background refetches
-        if (!query.state.data) {
+        // Show toast for non-background refetches (skip 503)
+        if (!query.state.data && !is503) {
           toast.error(getErrorMessage(error));
         }
       },
     }),
     mutationCache: new MutationCache({
       onError: (error, variables, context, mutation) => {
-        console.error(`[Mutation Error] ${mutation.options.mutationKey?.join('/') || 'unknown'}:`, error);
-        options?.onMutationError?.(error, variables, context);
-        toast.error(getErrorMessage(error));
+        // Suppress 503 mutation logs — circuit breaker handles it silently
+        const is503 = typeof error === 'object' && error !== null && (error as unknown as Record<string, unknown>).status === 503;
+        if (!is503) {
+          console.error(`[Mutation Error] ${mutation.options.mutationKey?.join('/') || 'unknown'}:`, error);
+          options?.onMutationError?.(error, variables, context);
+          toast.error(getErrorMessage(error));
+        }
       },
       onSuccess: (data, variables, context) => {
         options?.onMutationSuccess?.(data, variables, context);
