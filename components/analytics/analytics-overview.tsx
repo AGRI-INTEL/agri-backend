@@ -52,6 +52,7 @@ const PERIODS = [
   { value: '3M', label: '3 mois' },
   { value: '6M', label: '6 mois' },
   { value: '1Y', label: '1 an' },
+  { value: '2Y', label: '2 ans' },
 ];
 
 const CHART_COLORS = [
@@ -117,15 +118,19 @@ function OverviewSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={(d?.monthly_production as Array<{ month: string; value: number }>) ?? []}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
-                <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip />
-                <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={32} />
-              </BarChart>
-            </ResponsiveContainer>
+            {((d?.monthly_production as Array<{ year: string; value: number }>) ?? []).length === 0 ? (
+              <EmptyState icon="📊" title="Aucune donnée" description="Données de production indisponibles" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={(d?.monthly_production as Array<{ year: string; value: number }>) ?? []}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
+                  <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -138,38 +143,42 @@ function OverviewSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={(d?.production_by_crop as Array<{ crop: string; tonnes: number }>) ?? []}
-                layout="vertical"
-              >
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
-                <XAxis type="number" tick={{ fontSize: 10 }} />
-                <YAxis dataKey="crop" type="category" tick={{ fontSize: 10 }} width={70} />
-                <Tooltip />
-                <Bar dataKey="tonnes" fill="#D97706" radius={[0, 4, 4, 0]} maxBarSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
+            {((d?.production_by_crop as Array<{ crop: string; tonnes: number }>) ?? []).length === 0 ? (
+              <EmptyState icon="🌾" title="Aucune donnée" description="Données par culture indisponibles" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={(d?.production_by_crop as Array<{ crop: string; tonnes: number }>) ?? []}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
+                  <XAxis type="number" tick={{ fontSize: 10 }} />
+                  <YAxis dataKey="crop" type="category" tick={{ fontSize: 10 }} width={80} />
+                  <Tooltip />
+                  <Bar dataKey="tonnes" fill="#D97706" radius={[0, 4, 4, 0]} maxBarSize={20} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Top crops pie */}
-      {(d?.top_crops as Array<{ name: string; value: number }> ?? []).length > 0 && (
+      {((d?.top_crops as Array<{ name: string; value: number }>) ?? []).length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
               <TrendingUp className="h-4 w-4 text-purple-500" />
-              Répartition des cultures
+              Top cultures — production
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {((d?.top_crops as Array<{ name: string; value: number }>) ?? []).map((c, i) => (
-                <div key={c.name} className="flex items-center gap-2 rounded-lg border border-border/40 p-2.5 text-sm">
+                <div key={c.name ?? i} className="flex items-center gap-2 rounded-lg border border-border/40 p-2.5 text-sm">
                   <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }} />
-                  <span className="font-medium">{c.name}</span>
-                  <span className="ml-auto text-muted-foreground">{c.value}%</span>
+                  <span className="font-medium truncate">{c.name}</span>
+                  <span className="ml-auto text-muted-foreground shrink-0">{formatNumber(c.value)}</span>
                 </div>
               ))}
             </div>
@@ -229,7 +238,13 @@ function ProductionTrendsSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="h-72">
-          {isLoading ? <LoadingSkeleton variant="chart" /> : isError ? <ErrorState onRetry={() => refetch()} /> : (
+          {isLoading ? (
+            <LoadingSkeleton variant="chart" />
+          ) : isError ? (
+            <ErrorState onRetry={() => refetch()} />
+          ) : (data?.data ?? []).length === 0 ? (
+            <EmptyState icon="📈" title="Aucune donnée" description="Aucun historique de production disponible" />
+          ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data?.data ?? []}>
                 <defs>
@@ -303,7 +318,13 @@ function PriceTrendsSection() {
           </CardTitle>
         </CardHeader>
         <CardContent className="h-72">
-          {isLoading ? <LoadingSkeleton variant="chart" /> : isError ? <ErrorState onRetry={() => refetch()} /> : (
+          {isLoading ? (
+            <LoadingSkeleton variant="chart" />
+          ) : isError ? (
+            <ErrorState onRetry={() => refetch()} />
+          ) : chartData.length === 0 ? (
+            <EmptyState icon="💰" title="Aucune donnée" description="Aucun historique de prix disponible" />
+          ) : (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
@@ -331,7 +352,7 @@ function WeatherSection() {
     queryFn: () => apiClient.get<{
       temperature: Array<{ date: string; temperature: number }>;
       precipitation: Array<{ date: string; precipitation: number }>;
-      summary: { avg_temp: number; avg_precip: number; max_temp: number; min_temp: number };
+      summary: { avg_temp: number; avg_precip: number; max_temp: number; min_temp: number; data_points: number };
     }>(`/analytics/trends/weather?country=${encodeURIComponent(country)}&period=${period}`),
   });
 
@@ -365,10 +386,10 @@ function WeatherSection() {
 
       {data?.summary && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatCard icon={Thermometer} label="Temp. moyenne" value={`${data.summary.avg_temp}°C`} color="bg-gradient-to-br from-orange-500 to-orange-600" />
-          <StatCard icon={Droplets} label="Précip. moyenne" value={`${data.summary.avg_precip} mm`} color="bg-gradient-to-br from-blue-500 to-blue-600" />
-          <StatCard icon={ArrowUp} label="Temp. max" value={`${data.summary.max_temp}°C`} color="bg-gradient-to-br from-red-500 to-red-600" />
-          <StatCard icon={ArrowDown} label="Temp. min" value={`${data.summary.min_temp}°C`} color="bg-gradient-to-br from-cyan-500 to-cyan-600" />
+          <StatCard icon={Thermometer} label="Temp. moyenne" value={data.summary.avg_temp != null ? `${data.summary.avg_temp}°C` : 'N/A'} color="bg-gradient-to-br from-orange-500 to-orange-600" />
+          <StatCard icon={Droplets} label="Précip. moyenne" value={data.summary.avg_precip != null ? `${data.summary.avg_precip} mm` : 'N/A'} color="bg-gradient-to-br from-blue-500 to-blue-600" />
+          <StatCard icon={ArrowUp} label="Temp. max" value={data.summary.max_temp != null ? `${data.summary.max_temp}°C` : 'N/A'} color="bg-gradient-to-br from-red-500 to-red-600" />
+          <StatCard icon={ArrowDown} label="Temp. min" value={data.summary.min_temp != null ? `${data.summary.min_temp}°C` : 'N/A'} color="bg-gradient-to-br from-cyan-500 to-cyan-600" />
         </div>
       )}
 
@@ -381,7 +402,13 @@ function WeatherSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="h-56">
-            {isLoading ? <LoadingSkeleton variant="chart" /> : isError ? <ErrorState onRetry={() => refetch()} /> : (
+            {isLoading ? (
+              <LoadingSkeleton variant="chart" />
+            ) : isError ? (
+              <ErrorState onRetry={() => refetch()} />
+            ) : (data?.temperature ?? []).length === 0 ? (
+              <EmptyState icon="🌡️" title="Aucune donnée" description="Données météo indisponibles pour ce pays" />
+            ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={data?.temperature ?? []}>
                   <defs>
@@ -409,7 +436,13 @@ function WeatherSection() {
             </CardTitle>
           </CardHeader>
           <CardContent className="h-56">
-            {isLoading ? <LoadingSkeleton variant="chart" /> : isError ? <ErrorState onRetry={() => refetch()} /> : (
+            {isLoading ? (
+              <LoadingSkeleton variant="chart" />
+            ) : isError ? (
+              <ErrorState onRetry={() => refetch()} />
+            ) : (data?.precipitation ?? []).length === 0 ? (
+              <EmptyState icon="🌧️" title="Aucune donnée" description="Données de précipitations indisponibles" />
+            ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data?.precipitation ?? []}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />

@@ -132,18 +132,18 @@ function OverviewStats({ onFetchExternal, isFetching }: {
         <StatCard
           icon={Layers} label="Catégories" value={String(d?.categories ?? 0)}
           color="bg-gradient-to-br from-blue-500 to-blue-700"
-          chart={{ data: chartData.map(v => ({ v: v * 0.3 })), color: '#3b82f6' }}
+          chart={{ data: chartData.map(v => ({ v: v.v * 0.3 })), color: '#3b82f6' }}
         />
         <StatCard
           icon={Globe} label="Pays" value={String(d?.countries ?? 0)}
           color="bg-gradient-to-br from-violet-500 to-violet-700"
-          chart={{ data: chartData.map(v => ({ v: v * 0.5 })), color: '#8b5cf6' }}
+          chart={{ data: chartData.map(v => ({ v: v.v * 0.5 })), color: '#8b5cf6' }}
         />
         <StatCard
           icon={AlertTriangle} label="Alertes" value={String(d?.with_alerts ?? 0)}
           color="bg-gradient-to-br from-amber-500 to-amber-700"
           trend={{ dir: healthPct > 60 ? 'down' : 'up', val: `${healthPct}%` }}
-          chart={{ data: chartData.map(v => ({ v: v * 0.7 })), color: '#f59e0b' }}
+          chart={{ data: chartData.map(v => ({ v: v.v * 0.7 })), color: '#f59e0b' }}
         />
       </div>
 
@@ -205,12 +205,9 @@ function OverviewStats({ onFetchExternal, isFetching }: {
                         <span className="font-mono font-semibold">{h.count} ({pct}%)</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-muted/50 overflow-hidden">
-                        <motion.div
-                          className="h-full rounded-full transition-all"
-                          style={{ backgroundColor: h.color, width: `${pct}%` }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.8, delay: 0.2 }}
+                        <div
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: h.color, width: `${pct}%`, transition: 'width 0.8s ease 0.2s' }}
                         />
                       </div>
                     </div>
@@ -247,7 +244,7 @@ function OverviewStats({ onFetchExternal, isFetching }: {
                   Base de données
                 </span>
                 <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-300">
-                  ✓ {d?.total_indicators ?? 0} enregistrements
+                  ✓ {String(d?.total_indicators ?? 0)} enregistrements
                 </Badge>
               </div>
             </div>
@@ -297,13 +294,11 @@ function IndicatorDataTable({ items, onRowClick }: {
           </thead>
           <tbody>
             {items.map((row, i) => (
-              <motion.tr
+              <tr
                 key={row.id}
-                className="border-b last:border-0 hover:bg-muted/10 transition-colors cursor-pointer group"
+                className="border-b last:border-0 hover:bg-muted/10 transition-colors cursor-pointer group animate-in"
                 onClick={() => onRowClick(row)}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: Math.min(i * 0.015, 0.3) }}
+                style={{ animationDelay: `${Math.min(i * 0.015, 0.3)}s`, animationFillMode: 'backwards' }}
               >
                 <td className="px-4 py-3.5 font-medium text-sm">{row.name}</td>
                 <td className="px-4 py-3.5">
@@ -327,7 +322,7 @@ function IndicatorDataTable({ items, onRowClick }: {
                 </td>
                 <td className="px-4 py-3.5 text-xs text-muted-foreground">{row.country || '-'}</td>
                 <td className="px-4 py-3.5 text-right text-xs font-mono text-muted-foreground">{row.year || '-'}</td>
-              </motion.tr>
+              </tr>
             ))}
           </tbody>
         </table>
@@ -419,20 +414,19 @@ function ImageUploadSection() {
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
 
         {preview && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="relative rounded-xl overflow-hidden border border-border">
+          <div className="relative rounded-xl overflow-hidden border border-border animate-in" style={{ animationFillMode: 'backwards' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={preview} alt="Aperçu" className="max-h-44 w-full object-contain bg-muted/10" />
             <Button variant="ghost" size="icon" className="absolute top-2 right-2 bg-background/70 backdrop-blur-sm hover:bg-background/90 h-7 w-7 rounded-full" onClick={() => { setPreview(null); setAnalysis(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
-          </motion.div>
+          </div>
         )}
 
         {analysis && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-xl border border-green-200 dark:border-green-800/30 bg-gradient-to-br from-green-50 to-emerald-50/50 dark:from-green-950/20 dark:to-emerald-950/10 p-4"
+          <div
+            className="rounded-xl border border-green-200 dark:border-green-800/30 bg-gradient-to-br from-green-50 to-emerald-50/50 dark:from-green-950/20 dark:to-emerald-950/10 p-4 animate-in"
+            style={{ animationFillMode: 'backwards' }}
           >
             <p className="text-xs font-semibold text-green-800 dark:text-green-300 mb-2 flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-green-600" />
@@ -441,7 +435,7 @@ function ImageUploadSection() {
             <p className="text-xs text-green-900 dark:text-green-200 whitespace-pre-wrap leading-relaxed max-h-64 overflow-y-auto">
               {analysis}
             </p>
-          </motion.div>
+          </div>
         )}
       </CardContent>
     </Card>
@@ -616,10 +610,9 @@ export default function IndicatorsPage() {
               <ChevronDown className="h-3 w-3" />
             </Button>
             {exportOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                className="absolute right-0 mt-1.5 w-44 rounded-xl border bg-popover p-1.5 shadow-xl z-50 backdrop-blur-sm"
+              <div
+                className="absolute right-0 mt-1.5 w-44 rounded-xl border bg-popover p-1.5 shadow-xl z-50 backdrop-blur-sm animate-in"
+                style={{ animationFillMode: 'backwards' }}
               >
                 <button onClick={handleExportCSV} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm hover:bg-accent transition-colors">
                   <FileText className="h-4 w-4 text-emerald-600" /> CSV
@@ -627,7 +620,7 @@ export default function IndicatorsPage() {
                 <button onClick={handleExportJSON} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm hover:bg-accent transition-colors">
                   <Download className="h-4 w-4 text-blue-600" /> JSON
                 </button>
-              </motion.div>
+              </div>
             )}
           </div>
         </div>
@@ -726,23 +719,13 @@ export default function IndicatorsPage() {
               {viewMode === 'table' ? (
                 <IndicatorDataTable items={filtered} onRowClick={handleCardClick} />
               ) : (
-                <motion.div
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-                  variants={{ animate: { transition: { staggerChildren: 0.03 } } }}
-                  initial="initial"
-                  animate="animate"
-                >
-                  {filtered.map((row, i) => (
-                    <motion.div
-                      key={row.id || i}
-                      initial={{ opacity: 0, y: 12 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: Math.min(i * 0.025, 0.4) }}
-                    >
-                      <IndicatorCard row={row} onClick={() => handleCardClick(row)} />
-                    </motion.div>
-                  ))}
-                </motion.div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {filtered.map((row, i) => (
+                  <div key={row.id || i} className="animate-in" style={{ animationDelay: `${Math.min(i * 0.05, 0.4)}s`, animationFillMode: 'backwards' }}>
+                    <IndicatorCard row={row} onClick={() => handleCardClick(row)} />
+                  </div>
+                ))}
+              </div>
               )}
             </motion.div>
           )}
