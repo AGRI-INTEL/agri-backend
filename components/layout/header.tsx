@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Bell, Search, Menu, LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Bell, Search, Menu, LogOut, User, Settings, ChevronDown, Languages } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUIStore } from '@/stores/ui-store';
 import { useAuth } from '@/hooks/use-auth';
@@ -87,6 +87,9 @@ export function Header({ className }: HeaderProps) {
       </div>
 
       <div className="flex items-center gap-2 ml-auto">
+        {/* Language Switcher */}
+        <LanguageSwitcherInHeader />
+
         {/* Notifications */}
         <Link href="/notifications">
           <button
@@ -230,5 +233,49 @@ export function Header({ className }: HeaderProps) {
         )}
       </div>
     </header>
+  );
+}
+
+function LanguageSwitcherInHeader() {
+  const [current, setCurrent] = useState<'fr' | 'en'>('fr');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('agriintel-locale');
+      if (stored === 'en' || stored === 'fr') setCurrent(stored);
+    }
+    setMounted(true);
+  }, []);
+
+  const toggle = () => {
+    const next = current === 'fr' ? 'en' : 'fr';
+    setCurrent(next);
+    localStorage.setItem('agriintel-locale', next);
+    document.documentElement.lang = next;
+    document.cookie = `AGRI_LANG=${next}; path=/; max-age=${365 * 86400}; SameSite=Lax`;
+    window.location.reload();
+  };
+
+  if (!mounted) return null;
+
+  return (
+    <button
+      onClick={toggle}
+      className="flex items-center gap-1 h-9 px-2 rounded-xl text-xs font-bold uppercase transition-all duration-150"
+      style={{ color: MUTED }}
+      aria-label="Changer de langue"
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.background = HOVER_BG;
+        (e.currentTarget as HTMLElement).style.color = TEXT;
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.background = 'transparent';
+        (e.currentTarget as HTMLElement).style.color = MUTED;
+      }}
+    >
+      <Languages className="h-3.5 w-3.5" />
+      <span>{current === 'fr' ? 'EN' : 'FR'}</span>
+    </button>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { ActorCard, type ActorRow } from '@/components/actors/actor-card';
@@ -22,6 +23,7 @@ export function SectorActorsPage({ sector, title, description, icon: Icon }: Sec
   const [role, setRole] = useState('all');
   const [country, setCountry] = useState('all');
   const [status, setStatus] = useState('all');
+  const router = useRouter();
 
   const { data, isLoading } = useActors({
     search: search || undefined,
@@ -39,7 +41,7 @@ export function SectorActorsPage({ sector, title, description, icon: Icon }: Sec
       title={title}
       description={description}
       actions={
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => router.push('/actors')}>
           <Plus className="h-4 w-4" />
           Ajouter
         </Button>

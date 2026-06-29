@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
-import { Playfair_Display } from 'next/font/google';
 import '@/styles/globals.css';
 import { Providers } from './providers';
 import { cn } from '@/lib/utils';
@@ -19,12 +18,15 @@ const inter = localFont({
   preload: false,
 });
 
-const playfair = Playfair_Display({
-  subsets: ['latin'],
+const playfair = localFont({
+  src: [
+    { path: '../fonts/playfair/PlayfairDisplay-400.woff2', weight: '400', style: 'normal' },
+    { path: '../fonts/playfair/PlayfairDisplay-700.woff2', weight: '700', style: 'normal' },
+    { path: '../fonts/playfair/PlayfairDisplay-400italic.woff2', weight: '400', style: 'italic' },
+    { path: '../fonts/playfair/PlayfairDisplay-700italic.woff2', weight: '700', style: 'italic' },
+  ],
   variable: '--font-display',
   display: 'swap',
-  weight: ['400', '700'],
-  style: ['normal', 'italic'],
   preload: false,
 });
 
@@ -85,6 +87,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={cn(inter.variable, mono.variable, playfair.variable)}
     >
       <head>
+        <script
+          id="set-lang-from-storage"
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+              try {
+                var l = localStorage.getItem('agriintel-locale');
+                if (l === 'en' || l === 'fr') document.documentElement.lang = l;
+              } catch(e) {}
+            })()`,
+          }}
+        />
         {process.env.NODE_ENV === 'production' && (
           <script
             id="disable-react-devtools-hook"

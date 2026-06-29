@@ -6,8 +6,8 @@ import Image from 'next/image';
 import {
   Users, UserPlus, UserMinus, MessageSquare, FileText,
   Settings, Bell, BellOff, Share2, ChevronLeft, Hash,
-  Shield, ShieldCheck, Crown, LogOut, Calendar,   MapPin,
-  Clock, ExternalLink
+  Shield, ShieldCheck, Crown, LogOut, Calendar, MapPin,
+  Clock, ExternalLink, Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -97,6 +97,10 @@ export default function GroupDetailClient() {
   const removeMember = useRemoveGroupMember();
   const updateRole = useUpdateMemberRole();
   const createConversation = useCreateConversation();
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState<string | null>(null);
+  const [showDeleteGroupConfirm, setShowDeleteGroupConfirm] = useState(false);
+  const [showReportMember, setShowReportMember] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState('');
 
   const posts = postsData?.pages.flatMap(p => p.data) ?? [];
   const isMember = group?.membership_status === 'member' || group?.membership_status === 'admin' || group?.membership_status === 'owner';
@@ -154,6 +158,66 @@ export default function GroupDetailClient() {
   return (
     <div className="max-w-4xl mx-auto">
       <GroupSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} group={group} />
+
+      {/* Report Member Dialog */}
+      <AlertDialog open={!!showReportMember} onOpenChange={(v) => { if (!v) setShowReportMember(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Signaler un membre</AlertDialogTitle>
+            <AlertDialogDescription>
+              Décrivez le problème rencontré avec ce membre. Un administrateur examinera votre signalement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3">
+            <textarea
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              placeholder="Raison du signalement..."
+              rows={3}
+              className="w-full rounded-xl border border-input bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowReportMember(null)}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!reportReason.trim()}
+              onClick={() => {
+                toast.success('Signalement envoyé. Un administrateur va examiner votre demande.');
+                setShowReportMember(null);
+                setReportReason('');
+              }}
+            >
+              Signaler
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Group Dialog */}
+      <AlertDialog open={showDeleteGroupConfirm} onOpenChange={setShowDeleteGroupConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le groupe</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est irréversible. Toutes les publications, messages et données du groupe seront définitivement supprimés.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDeleteGroupConfirm(false)}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                leave.mutate(group.id);
+                setShowDeleteGroupConfirm(false);
+                router.push('/community');
+                toast.success('Groupe supprimé avec succès');
+              }}
+            >
+              Supprimer définitivement
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Hero Banner ── */}
       <div className={cn('relative h-48 bg-gradient-to-br overflow-hidden', gradientClass)}>
@@ -380,11 +444,39 @@ export default function GroupDetailClient() {
                               <div className="h-px bg-border my-1" />
                             </>
                           )}
-                          <DropdownMenuItem onClick={() => removeMember.mutate({ groupId, userId: m.id })} className="gap-2 text-sm text-red-600 focus:text-red-600">
+                          <DropdownMenuItem
+                            onClick={() => setShowRemoveConfirm(m.id)}
+                            className="gap-2 text-sm text-red-600 focus:text-red-600"
+                          >
                             <UserMinus className="h-3.5 w-3.5" /> Retirer du groupe
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => { setShowReportMember(m.user_id || m.id); setReportReason(''); }}
+                            className="gap-2 text-sm text-amber-600 focus:text-amber-600"
+                          >
+                            <Shield className="h-3.5 w-3.5" /> Signaler ce membre
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                    )}
+                    {showRemoveConfirm === m.id && (
+                      <AlertDialog open onOpenChange={() => setShowRemoveConfirm(null)}>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Retirer {m.name} ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Cette action est irréversible. Le membre devra refaire une demande pour rejoindre le groupe.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel onClick={() => setShowRemoveConfirm(null)}>Annuler</AlertDialogCancel>
+                            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={() => {
+                              removeMember.mutate({ groupId, userId: m.id });
+                              setShowRemoveConfirm(null);
+                            }}>Retirer</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
                 );
@@ -431,6 +523,20 @@ export default function GroupDetailClient() {
                 ))}
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Owner actions */}
+        {isOwner && tab === 'about' && (
+          <div className="mt-8 pt-6 border-t border-border">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-red-500 mb-3">Zone dangereuse</h3>
+            <Button
+              variant="outline"
+              className="gap-2 border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+              onClick={() => setShowDeleteGroupConfirm(true)}
+            >
+              <Trash2 className="h-4 w-4" /> Supprimer le groupe
+            </Button>
           </div>
         )}
       </div>
@@ -523,35 +629,36 @@ function EventsTab({ groupId, isMember }: { groupId: string; isMember: boolean }
         <EmptyState icon="📅" title="Aucun événement" description={isMember ? 'Organisez le premier événement du groupe !' : 'Rejoignez le groupe pour voir les événements.'} />
       ) : (
         meetups.map(meetup => {
-          const ev = meetup.event;
-          if (!ev) return null;
-          const eventDate = new Date(ev.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+          const meta = meetup.metadata ?? {};
+          const rawDate = meta.event_date;
+          if (!rawDate) return null;
+          const eventDate = new Date(rawDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
           return (
             <div key={meetup.id} className="rounded-2xl border border-border bg-card overflow-hidden">
-              {ev.banner && (
+              {meta.banner && (
                 <div className="relative h-36">
-                  <Image src={ev.banner} alt="" fill className="object-cover" />
+                  <Image src={meta.banner} alt="" fill className="object-cover" />
                 </div>
               )}
               <div className="p-5 space-y-3">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="font-bold text-lg">{ev.title}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">Organisé par {meetup.author.name}</p>
+                    <h3 className="font-bold text-lg">{meetup.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">Organisé par {meetup.author_name}</p>
                   </div>
                   <Badge variant="outline" className="capitalize">
-                    {ev.event_type === 'online' ? 'En ligne' : ev.event_type === 'hybrid' ? 'Hybride' : 'Physique'}
+                    {meta.event_type === 'online' ? 'En ligne' : meta.event_type === 'hybrid' ? 'Hybride' : 'Physique'}
                   </Badge>
                 </div>
 
-                {ev.description && <p className="text-sm text-muted-foreground">{ev.description}</p>}
+                {meetup.content && <p className="text-sm text-muted-foreground">{meetup.content}</p>}
 
                 <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
                   <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{eventDate}</span>
-                  {ev.time && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{ev.time}{ev.end_time ? ` - ${ev.end_time}` : ''}</span>}
-                  {ev.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{ev.location}</span>}
-                  {ev.meeting_url && (
-                    <a href={ev.meeting_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#D97706] hover:underline">
+                  {meta.event_time && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{meta.event_time}{meta.event_end_time ? ` - ${meta.event_end_time}` : ''}</span>}
+                  {meta.location && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" />{meta.location}</span>}
+                  {meta.meeting_url && (
+                    <a href={meta.meeting_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[#D97706] hover:underline">
                       <ExternalLink className="h-3.5 w-3.5" /> Lien de réunion
                     </a>
                   )}

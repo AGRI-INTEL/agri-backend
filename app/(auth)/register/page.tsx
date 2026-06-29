@@ -121,6 +121,7 @@ function FloatInput({
 }: FloatInputProps) {
   const [focused, setFocused] = useState(false);
   const [hasValue, setHasValue] = useState(false);
+  const { onBlur: regOnBlur, ...registrationRest } = registration;
 
   const isLifted = focused || hasValue;
 
@@ -161,13 +162,14 @@ function FloatInput({
           transition: 'border-color 0.2s, box-shadow 0.2s',
           boxShadow: focused && !hasError ? `0 2px 0 0 ${COLORS.accent}, inset 0 0 0 100px ${COLORS.accentGlow}` : 'none',
         }}
+        {...registrationRest}
         onFocus={() => setFocused(true)}
         onBlur={(e) => {
+          regOnBlur(e);
           setFocused(false);
           setHasValue(e.target.value.length > 0);
         }}
         onInput={(e) => setHasValue((e.target as HTMLInputElement).value.length > 0)}
-        {...registration}
       />
 
       {/* Floating label */}
@@ -550,6 +552,9 @@ export default function RegisterPage() {
       organisation: '',
     },
   });
+
+  const step2OrgReg = step2Form.register('organisation');
+  const { onBlur: step2OrgOnBlur, ...step2OrgRest } = step2OrgReg;
 
   const step3Form = useForm<RegisterStep3Data>({
     resolver: zodResolver(registerStep3Schema),
@@ -1006,10 +1011,11 @@ export default function RegisterPage() {
                           e.currentTarget.style.boxShadow = `0 0 0 3px ${COLORS.accentGlow}`;
                         }}
                         onBlur={(e) => {
+                          step2OrgOnBlur(e);
                           e.currentTarget.style.borderColor = COLORS.inputBorder;
                           e.currentTarget.style.boxShadow = 'none';
                         }}
-                        {...step2Form.register('organisation')}
+                        {...step2OrgRest}
                       />
                     </div>
                   </div>

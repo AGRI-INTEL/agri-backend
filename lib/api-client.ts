@@ -809,7 +809,10 @@ export const authRequestInterceptor: RequestInterceptor = (config) => {
 export const authResponseInterceptor: ResponseInterceptor<unknown> = (response) => {
   if (response.status === 401) {
     if (typeof window !== 'undefined') {
+      // Clear both localStorage token and the access_token cookie
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      document.cookie = 'access_token=; max-age=0; path=/';
       const authPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
       const currentPath = window.location.pathname;
       const isAuthPage = authPaths.some((path) => currentPath.startsWith(path));

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   Mail,
   Lock,
@@ -195,13 +196,12 @@ function FloatInput({
 
 // ─── LoginPage ─────────────────────────────────────────────────────────────────
 
-export default function LoginPage() {
+function LoginForm() {
+  const searchParams = useSearchParams();
   const { loginAsync, isLoginLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    const params = new URLSearchParams(window.location.search);
-    const err = params.get('error');
+    const err = searchParams.get('error');
     return err ? decodeURIComponent(err) : null;
   });
 
@@ -711,5 +711,13 @@ export default function LoginPage() {
         </p>
       </motion.div>
     </motion.div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -218,13 +218,40 @@ export function usePublicPosts(filters: { search?: string; page?: number } = {})
   });
 }
 
+function mapBackendComment(c: any): Comment {
+  return {
+    id: c.id,
+    post_id: c.post_id,
+    author: c.author ?? {
+      id: c.author_id ?? '',
+      name: c.author_name ?? 'Anonyme',
+      avatar: c.author_avatar ?? undefined,
+      role: c.author_role ?? '',
+    },
+    content: c.content ?? c.body ?? '',
+    parent_id: c.parent_id,
+    created_at: c.created_at ?? new Date().toISOString(),
+    reactions: c.reactions ?? {},
+    replies_count: c.replies_count ?? 0,
+    user_reaction: c.user_reaction,
+    is_edited: c.is_edited ?? false,
+    edited_at: c.edited_at,
+    is_pinned: c.is_pinned ?? false,
+  };
+}
+
 export function usePostComments(postId: string) {
   return useInfiniteQuery({
     queryKey: ['posts', postId, 'comments'],
-    queryFn: ({ pageParam = 1 }) =>
-      apiClient.get<PaginatedResponse<Comment>>(`/community/posts/${postId}/comments`, {
+    queryFn: async ({ pageParam = 1 }) => {
+      const raw = await apiClient.get<any>(`/community/posts/${postId}/comments`, {
         params: { page: pageParam as number, limit: 10 },
-      }),
+      });
+      const items = (raw?.data || raw || []).map(mapBackendComment);
+      const page = raw?.page || 1;
+      const has_next = raw?.has_next ?? false;
+      return { data: items, page, has_next } as PaginatedResponse<Comment>;
+    },
     initialPageParam: 1,
     getNextPageParam: (last) => last.has_next ? last.page + 1 : undefined,
     enabled: !!postId,
@@ -340,6 +367,7 @@ export function useCreateGroup() {
       qc.invalidateQueries({ queryKey: ['groups'] });
       qc.invalidateQueries({ queryKey: ['community', 'stats'] });
       qc.invalidateQueries({ queryKey: ['community', 'trending-groups'] });
+      toast.success('Groupe créé avec succès');
     },
     onError: (e: { message: string }) => toast.error(e.message),
   });
@@ -413,7 +441,12 @@ export function useSendVoiceMessage() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ groupId, audioUrl, duration }: { groupId: string; audioUrl: string; duration: number }) =>
-      apiClient.post(`/community/groups/${groupId}/messages/voice`, { audio_url: audioUrl, duration }),
+      apiClient.post(`/community/groups/${groupId}/messages`, {
+        content: '',
+        message_type: 'voice',
+        audio_url: audioUrl,
+        audio_duration: duration,
+      }),
     onSuccess: (_, { groupId }) => {
       qc.invalidateQueries({ queryKey: ['groups', groupId, 'messages'] });
     },
@@ -464,10 +497,32 @@ export function useUpdateMemberRole() {
 
 // ── Meetups / Events ──────────────────────────────────────────────────────────
 
+export interface Meetup {
+  id: string;
+  group_id: string;
+  title?: string;
+  content?: string;
+  type: string;
+  author_id: string;
+  author_name: string;
+  author_avatar?: string;
+  metadata?: {
+    event_date?: string;
+    event_time?: string;
+    event_end_time?: string;
+    location?: string;
+    meeting_url?: string;
+    event_type?: string;
+    max_participants?: number;
+    banner?: string;
+  };
+  created_at: string;
+}
+
 export function useGroupMeetups(groupId: string) {
   return useQuery({
     queryKey: ['groups', groupId, 'meetups'],
-    queryFn: () => apiClient.get<Post[]>(`/community/groups/${groupId}/meetups`),
+    queryFn: () => apiClient.get<Meetup[]>(`/community/groups/${groupId}/meetups`),
     enabled: !!groupId,
   });
 }
@@ -480,6 +535,25 @@ export function useCreateMeetup() {
     onSuccess: (_, { groupId }) => {
       qc.invalidateQueries({ queryKey: ['groups', groupId, 'meetups'] });
       toast.success('Événement créé');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useReportMember() {
+  return useMutation({
+    mutationFn: ({ groupId, userId, reason, description }: {
+      groupId: string;
+      userId: string;
+      reason: string;
+      description?: string;
+    }) =>
+      apiClient.post(`/community/groups/${groupId}/members/${userId}/report`, {
+        reason,
+        description: description || '',
+      }),
+    onSuccess: () => {
+      toast.success('Signalement envoyé aux administrateurs');
     },
     onError: (e: { message: string }) => toast.error(e.message),
   });

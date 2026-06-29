@@ -10,7 +10,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/', label: '🏠 Dashboard' },
+  { href: '/dashboard', label: '🏠 Dashboard' },
   { href: '/production', label: '🌱 Végétal' },
   { href: '/animal', label: '🐄 Animal' },
   { href: '/halieutique', label: '🎣 Halieutique' },

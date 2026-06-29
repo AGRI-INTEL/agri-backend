@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import {
   Users, UserCheck, Shield, Activity, Clock,
@@ -79,10 +79,19 @@ const STATUS_FILTER = [
   { value: 'banned', label: 'Banni' },
 ];
 
-export function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<
-    'overview' | 'users' | 'roles' | 'activity' | 'moderation' | 'reports' | 'system'
-  >('overview');
+interface AdminDashboardProps {
+  activeSection?: string;
+}
+
+export function AdminDashboard({ activeSection }: AdminDashboardProps) {
+  const tabs = useMemo(() => ['overview', 'users', 'roles', 'activity', 'moderation', 'reports', 'system'] as const, []);
+  const [activeTab, setActiveTab] = useState<typeof tabs[number]>('overview');
+
+  useEffect(() => {
+    if (activeSection && tabs.includes(activeSection as typeof tabs[number])) {
+      setActiveTab(activeSection as typeof tabs[number]);
+    }
+  }, [activeSection, tabs]);
 
   // Users tab state
   const [searchQuery, setSearchQuery] = useState('');

@@ -7,8 +7,8 @@ import {
   RefreshCw, Download, ImageIcon, FileText, ChevronDown, Loader2,
   LayoutGrid, Table2, Database, ExternalLink,
   Bell, BellOff, TrendingUp, TrendingDown,
-  Sparkles, LayoutDashboard, LineChart, PieChart as PieChartIcon,
-  ArrowUpRight, Layers,
+  Sparkles, LayoutDashboard, PieChart as PieChartIcon,
+  Layers,
 } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { IndicatorFiltersBar } from '@/components/indicators/indicator-filters';
@@ -24,8 +24,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell,
+  AreaChart, Area,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from 'recharts';
 
 const fadeUp = {
@@ -233,6 +233,15 @@ function OverviewStats({ onFetchExternal, isFetching }: {
                 <span className="flex items-center gap-1.5">
                   <ExternalLink className="h-3 w-3 text-blue-500" />
                   World Bank API
+                </span>
+                <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-300">
+                  ✓ Actif
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="flex items-center gap-1.5">
+                  <Database className="h-3 w-3 text-amber-600" />
+                  FAOSTAT (FAO)
                 </span>
                 <Badge variant="outline" className="text-[9px] h-4 px-1.5 bg-green-50 text-green-700 border-green-200 dark:bg-green-950/20 dark:text-green-300">
                   ✓ Actif
@@ -495,7 +504,7 @@ export default function IndicatorsPage() {
     try {
       const res = await apiClient.get<{ success: boolean; count: number; saved: number; errors: string[] }>('/indicators/external-fetch');
       if (res.success) {
-        toast.success(`${res.count} indicateurs récupérés, ${res.saved} sauvegardés depuis World Bank`);
+        toast.success(`${res.saved} indicateurs sauvegardés (World Bank + FAOSTAT)`);
         qc.invalidateQueries({ queryKey: ['indicators'] });
       } else {
         toast.error('Échec de la récupération externe');

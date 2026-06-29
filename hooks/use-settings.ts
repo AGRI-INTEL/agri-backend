@@ -3,6 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { useAuthStore } from '@/stores/auth-store';
+import { mapBackendUser } from '@/lib/user-mapper';
 
 // ============================================================================
 // TYPES
@@ -180,13 +182,17 @@ export function useLoginActivity(params: { page?: number; limit?: number } = {})
 
 export function useUploadAvatar() {
   const qc = useQueryClient();
+  const updateUser = useAuthStore((s) => s.updateUser);
   return useMutation({
     mutationFn: (file: File) => {
       const fd = new FormData();
       fd.append('avatar', file);
-      return apiClient.upload<{ avatar_url: string }>('/auth/avatar', fd);
+      return apiClient.upload('/auth/avatar', fd);
     },
-    onSuccess: () => {
+    onSuccess: (data: unknown) => {
+      if (data && typeof data === 'object') {
+        updateUser(mapBackendUser(data as Record<string, unknown>));
+      }
       qc.invalidateQueries({ queryKey: ['auth', 'me'] });
       toast.success('Photo de profil mise à jour');
     },
@@ -196,13 +202,17 @@ export function useUploadAvatar() {
 
 export function useUploadCover() {
   const qc = useQueryClient();
+  const updateUser = useAuthStore((s) => s.updateUser);
   return useMutation({
     mutationFn: (file: File) => {
       const fd = new FormData();
       fd.append('cover', file);
-      return apiClient.upload<{ cover_url: string }>('/auth/cover', fd);
+      return apiClient.upload('/auth/cover', fd);
     },
-    onSuccess: () => {
+    onSuccess: (data: unknown) => {
+      if (data && typeof data === 'object') {
+        updateUser(mapBackendUser(data as Record<string, unknown>));
+      }
       qc.invalidateQueries({ queryKey: ['auth', 'me'] });
       toast.success('Photo de couverture mise à jour');
     },

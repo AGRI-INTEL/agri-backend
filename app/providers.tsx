@@ -26,6 +26,11 @@ function ThemeProvider({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * Suppresses noisy React DevTools install prompts in production.
+ * Only filters known DevTools-related messages; all other warnings/errors pass through.
+ * Restores originals on unmount for safety.
+ */
 function ProductionConsoleGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production') {

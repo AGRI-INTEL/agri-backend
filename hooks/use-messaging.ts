@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
-import type { Conversation, PrivateMessage } from '@/types/messaging';
+import type { Conversation, PrivateMessage, SearchUserResult, PollData } from '@/types/messaging';
 
 export function useConversations(opts: { enabled?: boolean; refetchInterval?: number } = {}) {
   return useQuery({
@@ -51,16 +51,26 @@ export function useCreateConversation() {
 export function useSendPrivateMessage() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ conversationId, content, audioUrl, duration }: {
+    mutationFn: (params: {
       conversationId: string;
       content?: string;
+      messageType?: string;
       audioUrl?: string;
       duration?: number;
+      fileUrl?: string;
+      fileName?: string;
+      fileType?: string;
+      pollData?: PollData;
     }) =>
-      apiClient.post(`/messaging/conversations/${conversationId}/messages`, {
-        content: content || '',
-        audio_url: audioUrl || null,
-        audio_duration: duration || null,
+      apiClient.post(`/messaging/conversations/${params.conversationId}/messages`, {
+        content: params.content || '',
+        message_type: params.messageType || 'text',
+        audio_url: params.audioUrl || null,
+        audio_duration: params.duration || null,
+        file_url: params.fileUrl || null,
+        file_name: params.fileName || null,
+        file_type: params.fileType || null,
+        poll_data: params.pollData || null,
       }),
     onSuccess: (_, { conversationId }) => {
       qc.invalidateQueries({ queryKey: ['conversations', conversationId, 'messages'] });
@@ -145,5 +155,36 @@ export function useUserOnline(userId: string | null) {
     queryFn: () => apiClient.get<{ online: boolean; last_seen: string | null }>(`/messaging/users/${userId}/online`),
     enabled: !!userId,
     refetchInterval: 30000,
+  });
+}
+
+export function useSearchUsers() {
+  return useQuery({
+    queryKey: ['messaging', 'users', 'search'],
+    queryFn: () => apiClient.get<SearchUserResult[]>('/messaging/users/search'),
+    enabled: false,
+  });
+}
+
+export function useUploadFile() {
+  return useMutation({
+    mutationFn: (file: File) => {
+      const form = new FormData();
+      form.append('file', file);
+      return apiClient.upload<{ url: string; name: string; type: string }>('/messaging/upload', form);
+    },
+  });
+}
+
+export function useVotePoll() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ messageId, optionIndex, conversationId }: {
+      messageId: string; optionIndex: number; conversationId: string;
+    }) =>
+      apiClient.post<PollData>(`/messaging/polls/${messageId}/vote`, { option_index: optionIndex }),
+    onSuccess: (_, { conversationId }) => {
+      qc.invalidateQueries({ queryKey: ['conversations', conversationId, 'messages'] });
+    },
   });
 }

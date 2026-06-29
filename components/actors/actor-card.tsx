@@ -19,6 +19,8 @@ export interface ActorRow {
   country_name: string;
   region: string;
   city: string;
+  latitude?: number | null;
+  longitude?: number | null;
   phone?: string;
   email?: string;
   organisation?: string;

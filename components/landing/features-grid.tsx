@@ -115,13 +115,13 @@ export function FeaturesGrid() {
                   duration: 0.55,
                   ease: [0.25, 0.46, 0.45, 0.94],
                 }}
-                onMouseEnter={e => {
+                onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
                   const el = e.currentTarget as HTMLElement;
                   el.style.borderColor = 'rgba(196,146,58,0.35)';
                   el.style.transform = 'translateY(-4px)';
                   el.style.boxShadow = '0 12px 40px rgba(0,0,0,0.35)';
                 }}
-                onMouseLeave={e => {
+                onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
                   const el = e.currentTarget as HTMLElement;
                   el.style.borderColor = 'rgba(196,146,58,0.12)';
                   el.style.transform = 'translateY(0)';

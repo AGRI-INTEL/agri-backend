@@ -7,6 +7,7 @@ export interface Conversation {
     content: string | null;
     sender_id: string | null;
     created_at: string | null;
+    message_type?: string | null;
   } | null;
   unread_count: number;
   updated_at: string | null;
@@ -31,5 +32,22 @@ export interface PrivateMessage {
   is_edited: boolean;
   audio_url?: string;
   audio_duration?: number;
+  file_url?: string;
+  file_name?: string;
+  file_type?: string;
+  poll_data?: PollData;
   created_at: string | null;
+}
+
+export interface PollData {
+  question: string;
+  options: string[];
+  votes: Record<string, number>;
+}
+
+export interface SearchUserResult {
+  id: string;
+  name: string;
+  email?: string;
+  avatar?: string;
 }

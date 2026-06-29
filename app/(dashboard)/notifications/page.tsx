@@ -8,6 +8,7 @@ import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { useNotifications } from '@/hooks/use-notifications';
 import { formatRelativeDate } from '@/lib/utils';
+import type { Notification } from '@/types/api';
 import Link from 'next/link';
 
 export default function NotificationsPage() {
@@ -30,7 +31,7 @@ export default function NotificationsPage() {
         <EmptyState icon="🔔" title="Aucune notification" description="Vous êtes à jour !" />
       ) : (
         <div className="space-y-2">
-          {notifications.map((n) => (
+          {notifications.map((n: Notification) => (
             <Card key={n.id} className={!n.is_read ? 'border-l-4 border-l-primary' : ''}>
               <CardContent className="p-4 flex gap-3">
                 <Bell className="h-5 w-5 text-primary shrink-0 mt-0.5" />

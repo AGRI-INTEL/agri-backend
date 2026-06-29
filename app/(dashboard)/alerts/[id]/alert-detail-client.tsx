@@ -1,7 +1,7 @@
 'use client';
 
 import LinkButton from '@/components/ui/link-button';
-import { use } from 'react';
+import { usePathname } from 'next/navigation';
 import { ArrowLeft, MapPin, Clock } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { SeverityBadge } from '@/components/shared/severity-badge';
@@ -12,8 +12,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAlert, useMarkAlertRead } from '@/hooks/use-alerts';
 import { getAlertAge, getAlertTypeLabel } from '@/types/alert';
 
-export default function AlertDetailClient({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function AlertDetailClient({ params: _params }: { params: Promise<{ id: string }> }) {
+  const pathname = usePathname();
+  const id = pathname.split('/').pop() || '';
   const { data: alert, isLoading } = useAlert(id);
   const markRead = useMarkAlertRead();
 

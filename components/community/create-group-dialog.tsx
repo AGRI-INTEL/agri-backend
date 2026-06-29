@@ -104,14 +104,14 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
             tags: tags.trim() ? tags.split(',').map(t => t.trim()).filter(Boolean) : [],
             avatar_url, banner_url },
           {
-            onSuccess: (_data: Record<string, unknown>) => {
+            onSuccess: (_data) => {
               resetDialog();
               onOpenChange(false);
               toast.success('Groupe créé avec succès !');
               router.push('/community');
               resolve();
             },
-            onError: (err: Error) => {
+            onError: (err) => {
               toast.error(err?.message || 'Erreur lors de la création du groupe');
               reject(err);
             },

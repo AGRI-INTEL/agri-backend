@@ -26,7 +26,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { href: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', exact: true },
   { href: '/production', icon: Sprout, label: 'Végétal' },
   { href: '/animal', icon: Beef, label: 'Animal' },
   { href: '/halieutique', icon: Fish, label: 'Halieutique' },

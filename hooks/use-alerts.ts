@@ -49,7 +49,10 @@ export function useInfiniteAlerts(filters: AlertFilters = {}) {
       (last as PaginatedResponse<Alert>).has_next
         ? (last as PaginatedResponse<Alert>).page + 1
         : undefined,
-    refetchInterval: 15_000,
+    refetchInterval: (query) => {
+      if (query.state.error) return false;
+      return 15_000;
+    },
   });
 }
 

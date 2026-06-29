@@ -384,7 +384,7 @@ function WeatherSection() {
         </div>
       </div>
 
-      {data?.summary && (
+      {data?.summary && data.summary.data_points > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard icon={Thermometer} label="Temp. moyenne" value={data.summary.avg_temp != null ? `${data.summary.avg_temp}°C` : 'N/A'} color="bg-gradient-to-br from-orange-500 to-orange-600" />
           <StatCard icon={Droplets} label="Précip. moyenne" value={data.summary.avg_precip != null ? `${data.summary.avg_precip} mm` : 'N/A'} color="bg-gradient-to-br from-blue-500 to-blue-600" />

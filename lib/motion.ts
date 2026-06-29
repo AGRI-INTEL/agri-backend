@@ -4,10 +4,10 @@
  * Wrappers framer-motion compatibles React 19.
  * framer-motion@11 infère mal className sur motion.* avec @types/react@19.
  */
-import { motion as fm } from 'framer-motion';
+import { motion as fm, type MotionProps, type Variants, type Transition, type AnimationProps } from 'framer-motion';
 import type { ComponentType } from 'react';
 
-type MotionComponent = ComponentType<Record<string, unknown>>;
+type MotionComponent = ComponentType<MotionProps & Record<string, unknown>>;
 
 export const motion = {
   div: fm.div as MotionComponent,
@@ -32,6 +32,7 @@ export const motion = {
   label: fm.label as MotionComponent,
 };
 
+export type { MotionProps, Variants, Transition, AnimationProps };
 export {
   AnimatePresence,
   useInView,

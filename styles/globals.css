@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    --header-height: 64px;
     /* Light mode */
     --background: 210 40% 98%;       /* #F8FAFC Slate-50 */
     --foreground: 222 47% 11%;       /* #0F172A Slate-900 */

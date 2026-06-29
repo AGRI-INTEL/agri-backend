@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useAuthStore } from '@/stores/auth-store';
+import { useAuthStore, useAuthHydrated } from '@/stores/auth-store';
+import { mapBackendUser } from '@/lib/user-mapper';
 import { useUpdateProfile } from '@/hooks/use-auth';
 import { CountrySelector } from '@/components/shared/country-selector';
 import { apiClient } from '@/lib/api-client';
@@ -28,7 +29,8 @@ interface ProfileFormValues {
 }
 
 export function ProfileForm() {
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
+  const hydrated = useAuthHydrated();
   const updateProfile = useUpdateProfile();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function ProfileForm() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
 
-  const { register, handleSubmit, setValue } = useForm<ProfileFormValues>({
+  const { register, handleSubmit, setValue, reset } = useForm<ProfileFormValues>({
     defaultValues: {
       full_name: user?.name || '',
       phone_number: user?.phone || '',
@@ -49,6 +51,21 @@ export function ProfileForm() {
       gender: user?.gender || '',
     },
   });
+
+  useEffect(() => {
+    if (hydrated && user) {
+      reset({
+        full_name: user.name || '',
+        phone_number: user.phone || '',
+        organization: user.organisation || '',
+        country: user.country || 'SN',
+        bio: user.bio || '',
+        job_title: user.job_title || '',
+        department: user.department || '',
+        gender: user.gender || '',
+      });
+    }
+  }, [hydrated, user, reset]);
 
   const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,7 +90,10 @@ export function ProfileForm() {
       setIsUploadingAvatar(true);
       const fd = new FormData();
       fd.append('avatar', file);
-      await apiClient.upload('/auth/avatar', fd);
+      const updated = await apiClient.upload('/auth/avatar', fd);
+      if (updated && typeof updated === 'object') {
+        updateUser(mapBackendUser(updated as Record<string, unknown>));
+      }
       toast.success('Photo de profil mise à jour');
     } catch (err: unknown) {
       const e = err as { message?: string };
@@ -104,7 +124,10 @@ export function ProfileForm() {
       setIsUploadingCover(true);
       const fd = new FormData();
       fd.append('cover', file);
-      await apiClient.upload('/auth/cover', fd);
+      const updated = await apiClient.upload('/auth/cover', fd);
+      if (updated && typeof updated === 'object') {
+        updateUser(mapBackendUser(updated as Record<string, unknown>));
+      }
       toast.success('Photo de couverture mise à jour');
     } catch (err: unknown) {
       const e = err as { message?: string };

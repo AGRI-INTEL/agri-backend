@@ -74,6 +74,7 @@ export default function ForgotPasswordPage() {
     resolver: zodResolver(forgotPasswordSchema),
   });
 
+  const emailReg = register('email');
   const emailValue = watch('email', '');
 
   // Cleanup timer on unmount
@@ -303,10 +304,10 @@ export default function ForgotPasswordPage() {
                           : {}),
                       }
                 }
+                {...emailReg}
                 onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
+                onBlur={(e) => { emailReg.onBlur(e); setEmailFocused(false); }}
                 aria-invalid={!!errors.email}
-                {...register('email')}
               />
 
               {/* Floating label */}

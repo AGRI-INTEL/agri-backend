@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 // Use native WebSocket to match backend plain WebSocket endpoint
 import { apiClient } from '@/lib/api-client';
@@ -9,11 +9,10 @@ import { useAuthStore } from '@/stores/auth-store';
 import type { Notification } from '@/types/api';
 import { toast } from 'sonner';
 
-let socket: WebSocket | null = null;
-
 export function useNotifications() {
   const { isAuthenticated } = useAuthStore();
-  const { setUnreadNotifications, decrementUnread } = useUIStore();
+  const { setUnreadNotifications, decrementUnread, incrementUnread } = useUIStore();
+  const socketRef = useRef<WebSocket | null>(null);
   const queryClient = useQueryClient();
 
   const { data: notifications, isLoading } = useQuery({
@@ -47,7 +46,7 @@ export function useNotifications() {
   // Le hook utilise le polling via refetchInterval à la place
   const currentUser = useAuthStore((s) => s.user);
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !currentUser?.id) return;
 
     // Désactivé en production - LWS shared hosting ne supporte pas les WebSockets
     if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
@@ -65,20 +64,20 @@ export function useNotifications() {
       // Backend websocket endpoint is mounted under the API prefix: /api/v1/ws/{user_id}
       // Ensure we use the correct host (strip port 8001 if present, use 8000 or the configured host)
       const finalHost = host.includes(':8001') ? host.replace(':8001', ':8000') : host;
-      socket = new WebSocket(`${proto}://${finalHost}${apiPrefix}/ws/${userId}`);
+      socketRef.current = new WebSocket(`${proto}://${finalHost}${apiPrefix}/ws/${userId}`);
 
-      socket.onopen = () => {
+      socketRef.current.onopen = () => {
         // Optionally subscribe to topics
-        try { socket?.send(JSON.stringify({ type: 'subscribe', topics: ['notifications'] })); } catch (e) {}
+        try { socketRef.current?.send(JSON.stringify({ type: 'subscribe', topics: ['notifications'] })); } catch (e) {}
       };
 
-      socket.onmessage = (ev) => {
+      socketRef.current.onmessage = (ev) => {
         try {
           const payload = JSON.parse(ev.data);
           if (payload?.type === 'notification' || payload?.type === 'alert') {
             const notification: Notification = payload.data;
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
-            setUnreadNotifications((notifications?.unread || 0) + 1);
+            incrementUnread();
             if (notification.type === 'alert') {
               toast.warning(notification.title, { description: notification.message });
             }
@@ -88,19 +87,19 @@ export function useNotifications() {
         }
       };
 
-      socket.onerror = (err) => {
+      socketRef.current.onerror = (err) => {
         console.warn('[Notifications] WebSocket error', err);
       };
     } catch (err) {
       console.warn('[Notifications] WebSocket init failed', err);
-      socket = null;
+      socketRef.current = null;
     }
 
     return () => {
-      try { socket?.close(); } catch (e) {}
-      socket = null;
+      try { socketRef.current?.close(); } catch (e) {}
+      socketRef.current = null;
     };
-  }, [isAuthenticated, queryClient, notifications?.unread, setUnreadNotifications, currentUser]);
+  }, [isAuthenticated, queryClient, incrementUnread, currentUser]);
 
   // Update unread count
   useEffect(() => {
@@ -118,7 +117,7 @@ export function useNotifications() {
   });
 
   const markAllAsRead = useMutation({
-    mutationFn: () => apiClient.post('/notifications/read-all'),
+    mutationFn: () => apiClient.post('/notifications/mark-all-read'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
       setUnreadNotifications(0);
@@ -127,7 +126,7 @@ export function useNotifications() {
 
   const emitEvent = useCallback((event: string, data?: unknown) => {
     try {
-      socket?.send(JSON.stringify({ event, data }));
+      socketRef.current?.send(JSON.stringify({ event, data }));
     } catch (e) {
       // ignore
     }

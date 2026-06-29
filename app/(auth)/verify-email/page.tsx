@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
@@ -48,7 +48,7 @@ function GoldSpinner() {
   );
 }
 
-export default function VerifyEmailPage() {
+function VerifyEmailInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
@@ -284,5 +284,17 @@ export default function VerifyEmailPage() {
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center py-8">
+        <GoldSpinner />
+      </div>
+    }>
+      <VerifyEmailInner />
+    </Suspense>
   );
 }

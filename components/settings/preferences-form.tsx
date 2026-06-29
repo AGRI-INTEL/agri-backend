@@ -71,6 +71,12 @@ export function PreferencesForm() {
     if (serverPrefs.time_format) {
       setGeneralPreferences((prev) => ({ ...prev, time_format: serverPrefs.time_format! }));
     }
+    if (serverPrefs.default_view) {
+      setGeneralPreferences((prev) => ({ ...prev, default_view: serverPrefs.default_view! }));
+    }
+    if (typeof serverPrefs.enable_shortcuts !== 'undefined') {
+      setGeneralPreferences((prev) => ({ ...prev, enable_shortcuts: !!serverPrefs.enable_shortcuts }));
+    }
   }, [serverPrefs]);
 
   const saveTheme = (t: 'light' | 'dark' | 'system') => {

@@ -134,29 +134,8 @@ export function useAuth() {
     onError: (error: { message: string }) => toast.error(error.message),
   });
 
-  const resendVerificationMutation = useMutation({
-    mutationFn: () => apiClient.post('/auth/resend-verification'),
-    onSuccess: () => {
-      toast.success('Email de vérification renvoyé !');
-    },
-    onError: (error: { message: string }) => {
-      toast.error(error.message || "Erreur lors de l'envoi");
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-    },
-  });
-
-  const verifyEmailMutation = useMutation({
-    mutationFn: (token: string) => apiClient.post('/auth/verify-email', { token }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      toast.success('Email vérifié avec succès !');
-    },
-    onError: (error: { message: string }) => {
-      toast.error(error.message || 'Échec de la vérification');
-    },
-  });
+  const resendVerificationMutation = useResendVerification();
+  const verifyEmailMutation = useVerifyEmail();
 
   const emailVerified = user?.email_verified ?? false;
 
@@ -228,6 +207,9 @@ export function useUpdateProfile() {
       language: string;
       timezone: string;
       theme: string;
+      job_title: string;
+      department: string;
+      gender: string;
     }>) => apiClient.put<Record<string, unknown>>('/auth/me', data),
     onSuccess: (raw) => {
       const mapped = mapBackendUser(raw);

@@ -497,7 +497,9 @@ export function mapBackendUserDetailed(raw: Record<string, unknown>): UserMappin
     bio: isNonEmptyString(raw.bio) ? raw.bio : undefined,
     short_bio: isNonEmptyString(raw.short_bio) ? raw.short_bio : undefined,
     avatar: isNonEmptyString(raw.avatar_url) ? raw.avatar_url : undefined,
-    cover_image: isNonEmptyString(raw.cover_image) ? raw.cover_image : undefined,
+    cover_image: isNonEmptyString(raw.cover_url as string ?? raw.cover_image as string)
+      ? ((raw.cover_url ?? raw.cover_image) as string)
+      : undefined,
     gender: normalizeGender(raw.gender),
     birth_date: normalizeDate(raw.birth_date),
     birth_year: typeof raw.birth_year === 'number' ? raw.birth_year : undefined,
@@ -551,7 +553,7 @@ export function mapBackendUserDetailed(raw: Record<string, unknown>): UserMappin
     two_factor_secret: undefined, // Jamais exposé au frontend
     password_changed_at: normalizeDate(raw.password_changed_at),
     password_expires_at: normalizeDate(raw.password_expires_at),
-    last_password_change: normalizeDate(raw.last_password_change),
+    last_password_change: normalizeDate(raw.last_password_change ?? raw.password_changed_at),
     security_questions: Array.isArray(raw.security_questions)
       ? raw.security_questions.map((q: unknown) => ({
           question: String((q as Record<string, unknown>)?.question || ''),

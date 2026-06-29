@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import type { ActorRow } from '@/components/actors/actor-card';
 import { formatNumber, getSectorEmoji, hexToRgba } from '@/lib/utils';
+import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -77,265 +78,78 @@ function getInitials(name: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// West Africa simplified outline — [lon, lat] pairs per country polygon
-// Viewport: lon -18..15, lat 4..21
-// We'll project linearly onto an SVG canvas
+// MapLibre GL actor map
 // ---------------------------------------------------------------------------
 
-const WEST_AFRICA_BOUNDS = {
-  lonMin: -18,
-  lonMax: 16,
-  latMin: 3.5,
-  latMax: 21,
-};
+const DEFAULT_CENTER: [number, number] = [-14, 14];
+const DEFAULT_ZOOM = 5;
 
-const SENEGAL_OUTLINE: [number, number][] = [
-  [-16.7, 13.1], [-15.6, 13.6], [-14.3, 14.0], [-13.8, 14.9],
-  [-13.0, 15.5], [-12.0, 15.6], [-11.4, 15.9], [-11.3, 16.6],
-  [-12.2, 16.7], [-13.0, 16.5], [-14.5, 16.5], [-15.0, 16.8],
-  [-15.6, 16.5], [-16.3, 16.2], [-16.5, 15.4], [-17.1, 14.7],
-  [-17.5, 14.0], [-17.2, 13.6], [-16.7, 13.1],
-];
-
-const GAMBIA_OUTLINE: [number, number][] = [
-  [-16.8, 13.3], [-15.8, 13.1], [-14.4, 13.2], [-13.8, 13.6],
-  [-14.3, 13.8], [-15.6, 13.7], [-16.8, 13.5], [-16.8, 13.3],
-];
-
-const GUINEA_OUTLINE: [number, number][] = [
-  [-15.1, 11.5], [-14.1, 11.5], [-13.3, 11.7], [-12.4, 12.0],
-  [-11.3, 12.0], [-10.7, 11.5], [-10.2, 11.0], [-9.0, 10.1],
-  [-8.5, 9.3], [-8.3, 8.5], [-9.0, 8.3], [-10.1, 8.5],
-  [-10.8, 9.5], [-11.5, 10.0], [-12.3, 10.5], [-13.0, 10.8],
-  [-13.6, 11.0], [-14.4, 10.5], [-14.8, 11.0], [-15.1, 11.5],
-];
-
-const GUINEA_BISSAU_OUTLINE: [number, number][] = [
-  [-15.0, 12.0], [-14.4, 12.2], [-13.7, 12.0], [-13.3, 11.7],
-  [-14.1, 11.5], [-15.1, 11.5], [-15.4, 11.7], [-15.0, 12.0],
-];
-
-const MALI_OUTLINE: [number, number][] = [
-  [-4.2, 19.2], [-1.3, 20.4], [1.2, 20.8], [2.4, 20.1],
-  [4.1, 19.1], [4.3, 17.0], [2.8, 15.4], [2.0, 14.9],
-  [0.8, 14.9], [-0.2, 15.1], [-1.1, 14.8], [-2.1, 14.5],
-  [-3.5, 13.5], [-4.5, 13.0], [-5.5, 13.2], [-6.5, 13.5],
-  [-7.0, 13.1], [-8.0, 13.6], [-8.5, 14.0], [-7.5, 15.0],
-  [-5.6, 15.5], [-4.8, 16.6], [-4.2, 19.2],
-];
-
-const BURKINA_OUTLINE: [number, number][] = [
-  [-5.3, 15.2], [-4.8, 15.0], [-4.1, 15.2], [-2.1, 14.5],
-  [-1.1, 14.8], [-0.2, 15.1], [0.8, 14.9], [1.9, 14.5],
-  [2.0, 13.5], [1.6, 12.6], [0.9, 12.0], [0.1, 11.4],
-  [-0.7, 11.1], [-1.5, 11.0], [-2.8, 11.2], [-3.5, 11.8],
-  [-4.1, 12.0], [-5.0, 11.9], [-5.5, 12.6], [-6.0, 12.9],
-  [-5.3, 15.2],
-];
-
-const NIGER_OUTLINE: [number, number][] = [
-  [2.4, 20.1], [4.1, 19.1], [7.5, 20.7], [12.5, 22.5],
-  [14.9, 22.5], [15.6, 21.0], [14.5, 19.5], [13.5, 18.5],
-  [13.2, 17.2], [13.0, 16.0], [13.5, 15.5], [14.2, 15.2],
-  [14.8, 13.3], [13.5, 13.5], [13.0, 14.0], [12.5, 13.5],
-  [11.5, 13.3], [10.6, 13.4], [9.5, 13.2], [8.5, 13.3],
-  [7.5, 13.5], [6.5, 13.2], [4.3, 13.0], [4.3, 17.0],
-  [2.4, 20.1],
-];
-
-const SENEGAL_CAPITALS = [
-  { name: 'Dakar', lat: 14.69, lon: -17.44 },
-  { name: 'Thiès', lat: 14.79, lon: -16.93 },
-  { name: 'Kaolack', lat: 14.15, lon: -16.07 },
-  { name: 'Saint-Louis', lat: 16.03, lon: -16.5 },
-  { name: 'Ziguinchor', lat: 12.57, lon: -16.27 },
-  { name: 'Tambacounda', lat: 13.77, lon: -13.67 },
-  { name: 'Kolda', lat: 12.88, lon: -14.94 },
-  { name: 'Fatick', lat: 14.34, lon: -16.41 },
-];
-
-// ---------------------------------------------------------------------------
-// Canvas dot-map
-// ---------------------------------------------------------------------------
-
-function projectCoord(
-  lon: number,
-  lat: number,
-  width: number,
-  height: number,
-): { x: number; y: number } {
-  const { lonMin, lonMax, latMin, latMax } = WEST_AFRICA_BOUNDS;
-  const x = ((lon - lonMin) / (lonMax - lonMin)) * width;
-  // Invert y: higher lat = top
-  const y = ((latMax - lat) / (latMax - latMin)) * height;
-  return { x, y };
-}
-
-function drawOutline(
-  ctx: CanvasRenderingContext2D,
-  outline: [number, number][],
-  w: number,
-  h: number,
-  fillColor: string,
-  strokeColor: string,
-) {
-  if (outline.length < 2) return;
-  ctx.beginPath();
-  const first = projectCoord(outline[0][0], outline[0][1], w, h);
-  ctx.moveTo(first.x, first.y);
-  for (let i = 1; i < outline.length; i++) {
-    const pt = projectCoord(outline[i][0], outline[i][1], w, h);
-    ctx.lineTo(pt.x, pt.y);
-  }
-  ctx.closePath();
-  ctx.fillStyle = fillColor;
-  ctx.fill();
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = 1;
-  ctx.stroke();
-}
-
-// ---------------------------------------------------------------------------
-// West Africa Canvas Map component
-// ---------------------------------------------------------------------------
-
-interface DotMapProps {
+function ActorMapLibreMap({ actors, color, onTooltip }: {
   actors: GeoActor[];
   color: string;
   onTooltip: (state: TooltipState) => void;
-}
-
-function DotMap({ actors, color, onTooltip }: DotMapProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ w: 700, h: 380 });
-
-  const draw = useCallback(
-    (w: number, h: number) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      canvas.width = w;
-      canvas.height = h;
-
-      // Background
-      ctx.fillStyle = 'hsl(210 40% 97%)';
-      ctx.fillRect(0, 0, w, h);
-
-      // Ocean tint
-      ctx.fillStyle = 'hsl(210 60% 93%)';
-      ctx.fillRect(0, 0, w, h);
-
-      // Country fills
-      const countryFill = 'hsl(120 15% 88%)';
-      const countryStroke = 'hsl(120 12% 75%)';
-      const senegalFill = 'hsl(142 30% 85%)';
-
-      drawOutline(ctx, MALI_OUTLINE, w, h, countryFill, countryStroke);
-      drawOutline(ctx, NIGER_OUTLINE, w, h, countryFill, countryStroke);
-      drawOutline(ctx, BURKINA_OUTLINE, w, h, countryFill, countryStroke);
-      drawOutline(ctx, GUINEA_OUTLINE, w, h, countryFill, countryStroke);
-      drawOutline(ctx, GUINEA_BISSAU_OUTLINE, w, h, countryFill, countryStroke);
-      drawOutline(ctx, GAMBIA_OUTLINE, w, h, countryFill, countryStroke);
-      // Senegal on top with sector-tinted fill
-      drawOutline(ctx, SENEGAL_OUTLINE, w, h, senegalFill, 'hsl(142 35% 60%)');
-
-      // Reference city dots (light)
-      ctx.fillStyle = 'hsl(215 20% 65%)';
-      ctx.font = `${Math.max(9, w * 0.013)}px Inter, sans-serif`;
-      for (const city of SENEGAL_CAPITALS) {
-        const pt = projectCoord(city.lon, city.lat, w, h);
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
-        ctx.fillStyle = 'hsl(215 25% 60%)';
-        ctx.fill();
-        ctx.fillStyle = 'hsl(222 30% 35%)';
-        ctx.fillText(city.name, pt.x + 4, pt.y + 3);
-      }
-
-      // Actor dots
-      for (const actor of actors) {
-        const pt = projectCoord(actor.lon, actor.lat, w, h);
-
-        // Glow
-        const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, 14);
-        grad.addColorStop(0, hexToRgba(color, 0.35));
-        grad.addColorStop(1, hexToRgba(color, 0));
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 14, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        // Dot
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = color;
-        ctx.fill();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-      }
-    },
-    [actors, color],
-  );
+  const mapRef = useRef<MapLibreMap | null>(null);
+  const maplibreglRef = useRef<typeof import('maplibre-gl') | null>(null);
+  const markersRef = useRef<MapLibreMarker[]>([]);
+  const onTooltipRef = useRef(onTooltip);
+  onTooltipRef.current = onTooltip;
 
   useEffect(() => {
-    const obs = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const w = Math.floor(entry.contentRect.width);
-        const h = Math.round(w * 0.54);
-        setDimensions({ w, h });
-        draw(w, h);
-      }
+    if (!containerRef.current || mapRef.current) return;
+    let cancelled = false;
+    import('maplibre-gl').then((maplibregl) => {
+      if (cancelled || !containerRef.current) return;
+      const map = new maplibregl.Map({
+        container: containerRef.current,
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: DEFAULT_CENTER,
+        zoom: DEFAULT_ZOOM,
+      });
+      map.on('load', () => { if (!cancelled) map.resize(); });
+      mapRef.current = map;
+      maplibreglRef.current = maplibregl;
     });
-    if (containerRef.current) obs.observe(containerRef.current);
-    return () => obs.disconnect();
-  }, [draw]);
+    return () => { cancelled = true; markersRef.current.forEach((m) => m.remove());
+      markersRef.current = []; mapRef.current?.remove(); mapRef.current = null; };
+  }, []);
 
   useEffect(() => {
-    draw(dimensions.w, dimensions.h);
-  }, [draw, dimensions]);
+    const map = mapRef.current;
+    const maplibregl = maplibreglRef.current;
+    if (!map || !maplibregl) return;
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+    markersRef.current.forEach((m) => m.remove());
+    markersRef.current = [];
 
-      for (const actor of actors) {
-        const pt = projectCoord(actor.lon, actor.lat, dimensions.w, dimensions.h);
-        const dx = mx - pt.x;
-        const dy = my - pt.y;
-        if (Math.sqrt(dx * dx + dy * dy) < 10) {
-          onTooltip({ visible: true, x: e.clientX, y: e.clientY, name: actor.name, metric: actor.metric });
-          return;
-        }
-      }
-      onTooltip({ visible: false, x: 0, y: 0, name: '', metric: null });
-    },
-    [actors, dimensions, onTooltip],
-  );
+    for (const actor of actors) {
+      const el = document.createElement('div');
+      el.className = 'actor-marker';
+      el.innerHTML = `<div style="width:14px;height:14px;background:${color};border:2px solid white;border-radius:50%;box-shadow:0 1px 4px rgba(0,0,0,0.3);cursor:pointer;"></div>`;
 
-  const handleMouseLeave = useCallback(() => {
-    onTooltip({ visible: false, x: 0, y: 0, name: '', metric: null });
-  }, [onTooltip]);
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([actor.lon, actor.lat])
+        .addTo(map);
+      markersRef.current.push(marker);
+
+      el.addEventListener('mouseenter', () => {
+        onTooltipRef.current({ visible: true, x: 0, y: 0, name: actor.name, metric: actor.metric });
+      });
+      el.addEventListener('mouseleave', () => {
+        onTooltipRef.current({ visible: false, x: 0, y: 0, name: '', metric: null });
+      });
+    }
+
+    if (actors.length > 0) {
+      const bounds = new maplibregl.LngLatBounds();
+      actors.forEach((a) => bounds.extend([a.lon, a.lat]));
+      map.fitBounds(bounds, { padding: 60, maxZoom: 10 });
+    }
+  }, [actors, color]);
 
   return (
-    <div ref={containerRef} className="w-full">
-      <canvas
-        ref={canvasRef}
-        width={dimensions.w}
-        height={dimensions.h}
-        className="w-full rounded-lg cursor-crosshair"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        style={{ display: 'block' }}
-      />
-    </div>
+    <div ref={containerRef} className="w-full h-[400px] rounded-lg" />
   );
 }
 
@@ -404,29 +218,18 @@ export function SectorMapView({ actors, sector, color }: SectorMapViewProps) {
     return regionMatch && searchMatch;
   });
 
-  // ── Geo actors (those with lat/lon — using city as proxy if no explicit coords) ──
-  // In a real app, actor rows would carry lat/lon. We generate plausible
-  // Senegal bounding-box coords deterministically from the actor id so the
-  // map is always populated when actors exist.
+  // ── Geo actors (those with lat/lon from DB or synthetic fallback) ──
 
-  const geoActors: GeoActor[] = actors.map((a, idx) => {
-    // If the actor has explicit lat/lon fields (future-proof), use them.
-    // Otherwise derive a stable pseudo-location inside Senegal from the id.
-    const seed = (a.id || String(idx))
-      .split('')
-      .reduce((acc, c) => acc + c.charCodeAt(0), 0);
-
-    const lat = 12.5 + ((seed * 17 + idx * 31) % 1000) / 250;   // ~12.5–16.5
-    const lon = -16.8 + ((seed * 13 + idx * 7) % 1000) / 233;   // ~-16.8–-12.5
-
-    return {
+  const geoActors: GeoActor[] = actors
+    .filter((a) => a.latitude != null && a.longitude != null
+      && !isNaN(Number(a.latitude)) && !isNaN(Number(a.longitude)))
+    .map((a) => ({
       id: a.id,
       name: a.name,
-      lat: parseFloat(lat.toFixed(4)),
-      lon: parseFloat(lon.toFixed(4)),
+      lat: parseFloat(Number(a.latitude).toFixed(4)),
+      lon: parseFloat(Number(a.longitude).toFixed(4)),
       metric: getMetric(a),
-    };
-  });
+    }));
 
   // ── Geolocation ──────────────────────────────────────────────────────────
 
@@ -664,18 +467,20 @@ export function SectorMapView({ actors, sector, color }: SectorMapViewProps) {
                   className="inline-block h-2.5 w-2.5 rounded-full border-2 border-white shadow-sm"
                   style={{ backgroundColor: color }}
                 />
-                {geoActors.length} acteur{geoActors.length !== 1 ? 's' : ''}
-              </span>
-              <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                <span className="inline-block h-2.5 w-2.5 rounded-full bg-[hsl(215_25%_60%)]" />
-                Villes de référence
+                {geoActors.length} acteur{geoActors.length !== 1 ? 's' : ''} géolocalisé{geoActors.length !== 1 ? 's' : ''}
               </span>
             </div>
           </div>
         </CardHeader>
 
         <CardContent className="p-3 relative">
-          <DotMap actors={geoActors} color={color} onTooltip={handleTooltip} />
+          {geoActors.length > 0 ? (
+            <ActorMapLibreMap actors={geoActors} color={color} onTooltip={handleTooltip} />
+          ) : (
+            <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
+              Aucun acteur avec coordonnées géographiques.
+            </div>
+          )}
 
           {/* Map tooltip */}
           {tooltip.visible && (

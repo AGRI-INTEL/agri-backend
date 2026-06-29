@@ -1,3 +1,6 @@
+// NOTE: In static export mode (output: 'export'), Next.js middleware is ignored entirely.
+// These guards only apply during `next dev` / `next start`. In production, the SPA
+// handles auth checks client-side via Zustand + API client circuit breaker.
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
@@ -29,7 +32,7 @@ export function middleware(request: NextRequest) {
   // as an authenticated session is unsafe.
   const token = request.cookies.get('access_token')?.value;
   const authToken = request.cookies.get('auth_token')?.value;
-  const isAuthenticated = Boolean((token || authToken) && (token?.trim().length ?? 0) > 0 || (authToken?.trim().length ?? 0) > 0);
+  const isAuthenticated = Boolean(token || authToken) && Boolean(token?.trim().length || authToken?.trim().length);
 
   if (isAuthRoute(pathname) && isAuthenticated) {
     return NextResponse.redirect(new URL('/', request.url));

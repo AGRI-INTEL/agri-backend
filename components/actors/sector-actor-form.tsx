@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
-import { Navigation } from 'lucide-react';
+import { Crosshair } from 'lucide-react';
+import type { Map as MapLibreMap, Marker as MapLibreMarker } from 'maplibre-gl';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -310,204 +311,127 @@ const SECTOR_LABELS: Record<string, string> = {
 
 // ─── Location picker map ─────────────────────────────────────────────────────
 
-const MAP_BOUNDS = { lonMin: -18, lonMax: 16, latMin: 3.5, latMax: 21 };
-
-const SENEGAL_POLY: [number, number][] = [
-  [-16.7, 13.1], [-15.6, 13.6], [-14.3, 14.0], [-13.8, 14.9],
-  [-13.0, 15.5], [-12.0, 15.6], [-11.4, 15.9], [-11.3, 16.6],
-  [-12.2, 16.7], [-13.0, 16.5], [-14.5, 16.5], [-15.0, 16.8],
-  [-15.6, 16.5], [-16.3, 16.2], [-16.5, 15.4], [-17.1, 14.7],
-  [-17.5, 14.0], [-17.2, 13.6], [-16.7, 13.1],
-];
-
-const GAMBIA_POLY: [number, number][] = [
-  [-16.8, 13.3], [-15.8, 13.1], [-14.4, 13.2], [-13.8, 13.6],
-  [-14.3, 13.8], [-15.6, 13.7], [-16.8, 13.5], [-16.8, 13.3],
-];
-
-const MAP_CITIES = [
-  { name: 'Dakar', lat: 14.69, lon: -17.44 },
-  { name: 'Thiès', lat: 14.79, lon: -16.93 },
-  { name: 'Kaolack', lat: 14.15, lon: -16.07 },
-  { name: 'Saint-Louis', lat: 16.03, lon: -16.5 },
-  { name: 'Ziguinchor', lat: 12.57, lon: -16.27 },
-];
-
-function proj(lon: number, lat: number, w: number, h: number) {
-  const { lonMin, lonMax, latMin, latMax } = MAP_BOUNDS;
-  return {
-    x: ((lon - lonMin) / (lonMax - lonMin)) * w,
-    y: ((latMax - lat) / (latMax - latMin)) * h,
-  };
-}
-
-function unproj(px: number, py: number, w: number, h: number) {
-  const { lonMin, lonMax, latMin, latMax } = MAP_BOUNDS;
-  return {
-    lon: lonMin + (px / w) * (lonMax - lonMin),
-    lat: latMax - (py / h) * (latMax - latMin),
-  };
-}
-
-function drawPoly(
-  ctx: CanvasRenderingContext2D,
-  poly: [number, number][],
-  w: number, h: number,
-  fill: string, stroke: string,
-) {
-  if (poly.length < 2) return;
-  ctx.beginPath();
-  const f = proj(poly[0][0], poly[0][1], w, h);
-  ctx.moveTo(f.x, f.y);
-  for (let i = 1; i < poly.length; i++) {
-    const p = proj(poly[i][0], poly[i][1], w, h);
-    ctx.lineTo(p.x, p.y);
+async function reverseGeocode(lat: number, lon: number): Promise<{ city: string; region: string }> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=fr`,
+      { headers: { 'User-Agent': 'AgriIntel360/1.0' } },
+    );
+    if (!res.ok) return { city: '', region: '' };
+    const data = await res.json();
+    const addr = data.address || {};
+    return {
+      city: addr.city || addr.town || addr.village || addr.municipality || '',
+      region: addr.state || addr.region || '',
+    };
+  } catch {
+    return { city: '', region: '' };
   }
-  ctx.closePath();
-  ctx.fillStyle = fill;
-  ctx.fill();
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = 1;
-  ctx.stroke();
 }
 
 interface LocationPickerMapProps {
   lat: number | null;
   lon: number | null;
   onPick: (lat: number, lon: number) => void;
+  onLocationResolved?: (city: string, region: string) => void;
   color?: string;
 }
 
-function LocationPickerMap({ lat, lon, onPick, color = '#16A34A' }: LocationPickerMapProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [w, setW] = useState(460);
+function LocationPickerMap({ lat, lon, onPick, onLocationResolved, color = '#16A34A' }: LocationPickerMapProps) {
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<MapLibreMap | null>(null);
+  const markerRef = useRef<MapLibreMarker | null>(null);
+  const onPickRef = useRef(onPick);
+  const onLocationResolvedRef = useRef(onLocationResolved);
+  const initialCenterRef = useRef<[number, number]>([lon ?? -14, lat ?? 14]);
   const [geoLoading, setGeoLoading] = useState(false);
 
-  const h = Math.round(w * 0.46);
-
-  const draw = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    canvas.width = w;
-    canvas.height = h;
-
-    // Ocean background
-    ctx.fillStyle = 'hsl(210 60% 93%)';
-    ctx.fillRect(0, 0, w, h);
-
-    // Countries
-    drawPoly(ctx, SENEGAL_POLY, w, h, 'hsl(142 30% 85%)', 'hsl(142 35% 60%)');
-    drawPoly(ctx, GAMBIA_POLY, w, h, 'hsl(210 20% 80%)', 'hsl(210 20% 65%)');
-
-    // City dots + labels
-    ctx.font = `${Math.max(9, w * 0.022)}px Inter, sans-serif`;
-    for (const city of MAP_CITIES) {
-      const pt = proj(city.lon, city.lat, w, h);
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
-      ctx.fillStyle = 'hsl(215 25% 55%)';
-      ctx.fill();
-      ctx.fillStyle = 'hsl(222 30% 35%)';
-      ctx.fillText(city.name, pt.x + 4, pt.y + 3);
-    }
-
-    // Pin or hint
-    if (lat !== null && lon !== null && !isNaN(lat) && !isNaN(lon)) {
-      const pt = proj(lon, lat, w, h);
-
-      // Outer ring
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 14, 0, Math.PI * 2);
-      ctx.fillStyle = `${color}30`;
-      ctx.fill();
-
-      // Inner dot
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = color;
-      ctx.fill();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Coordinate label
-      ctx.fillStyle = 'hsl(222 30% 25%)';
-      ctx.font = `bold ${Math.max(8, w * 0.02)}px Inter, sans-serif`;
-      ctx.fillText(`${lat.toFixed(4)}, ${lon.toFixed(4)}`, pt.x + 12, pt.y - 6);
-    } else {
-      // Hint text centered
-      ctx.fillStyle = 'hsl(215 20% 50%)';
-      ctx.font = `${Math.max(10, w * 0.025)}px Inter, sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText('Cliquez sur la carte pour placer le marqueur', w / 2, h / 2);
-      ctx.textAlign = 'left';
-    }
-  }, [w, h, lat, lon, color]);
+  onPickRef.current = onPick;
+  onLocationResolvedRef.current = onLocationResolved;
 
   useEffect(() => {
-    const obs = new ResizeObserver((entries) => {
-      for (const e of entries) {
-        setW(Math.floor(e.contentRect.width));
-      }
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+    let cancelled = false;
+    import('maplibre-gl').then((maplibregl) => {
+      if (cancelled || !mapContainerRef.current) return;
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: 'https://tiles.openfreemap.org/styles/liberty',
+        center: initialCenterRef.current,
+        zoom: 5,
+      });
+      map.on('load', () => { if (!cancelled) map.resize(); });
+      map.on('click', (e: { lngLat: { lat: number; lng: number } }) => {
+        const { lat: clat, lng: clon } = e.lngLat;
+        const newLat = parseFloat(clat.toFixed(6));
+        const newLon = parseFloat(clon.toFixed(6));
+        onPickRef.current(newLat, newLon);
+        if (onLocationResolvedRef.current) {
+          reverseGeocode(newLat, newLon).then(({ city, region }) => {
+            if (city || region) onLocationResolvedRef.current!(city, region);
+          });
+        }
+      });
+      map.getContainer().style.cursor = 'crosshair';
+      mapInstanceRef.current = map;
     });
-    if (containerRef.current) obs.observe(containerRef.current);
-    return () => obs.disconnect();
+    return () => { cancelled = true; mapInstanceRef.current?.remove(); mapInstanceRef.current = null; };
   }, []);
 
-  useEffect(() => { draw(); }, [draw]);
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    if (lat != null && lon != null && !isNaN(lat) && !isNaN(lon)) {
+      mapInstanceRef.current.flyTo({ center: [lon, lat], zoom: 7 });
+      import('maplibre-gl').then((maplibregl) => {
+        if (markerRef.current) markerRef.current.remove();
+        const el = document.createElement('div');
+        el.innerHTML = `<div style="width:24px;height:24px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`;
+        markerRef.current = new maplibregl.Marker({ element: el })
+          .setLngLat([lon, lat])
+          .addTo(mapInstanceRef.current!);
+      });
+    } else {
+      if (markerRef.current) { markerRef.current.remove(); markerRef.current = null; }
+    }
+  }, [lat, lon, color]);
 
-  const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const px = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const py = (e.clientY - rect.top) * (canvas.height / rect.height);
-    const { lat: newLat, lon: newLon } = unproj(px, py, w, h);
-    onPick(parseFloat(newLat.toFixed(6)), parseFloat(newLon.toFixed(6)));
-  }, [w, h, onPick]);
+  useEffect(() => {
+    return () => { markerRef.current?.remove(); };
+  }, []);
 
-  function useGeo() {
+  function useGeoLocation() {
     if (!navigator.geolocation) return;
     setGeoLoading(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        onPick(
-          parseFloat(pos.coords.latitude.toFixed(6)),
-          parseFloat(pos.coords.longitude.toFixed(6)),
-        );
+        const newLat = parseFloat(pos.coords.latitude.toFixed(6));
+        const newLon = parseFloat(pos.coords.longitude.toFixed(6));
+        onPick(newLat, newLon);
+        if (onLocationResolved) {
+          reverseGeocode(newLat, newLon).then(({ city, region }) => {
+            if (city || region) onLocationResolved(city, region);
+          });
+        }
         setGeoLoading(false);
       },
       () => setGeoLoading(false),
-      { timeout: 8000 },
+      { enableHighAccuracy: true, timeout: 10000 },
     );
   }
 
   return (
     <div className="space-y-2">
-      <div ref={containerRef} className="w-full rounded-lg overflow-hidden border border-border/50">
-        <canvas
-          ref={canvasRef}
-          width={w}
-          height={h}
-          className="w-full block cursor-crosshair"
-          onClick={handleClick}
-          title="Cliquez pour placer le marqueur de position"
-        />
-      </div>
+      <div ref={mapContainerRef} className="w-full h-[300px] rounded-lg border border-border/50" />
       <Button
         type="button"
         variant="outline"
         size="sm"
         className="gap-1.5 text-xs"
-        onClick={useGeo}
+        onClick={useGeoLocation}
         disabled={geoLoading}
       >
-        <Navigation className="h-3.5 w-3.5" />
-        {geoLoading ? 'Localisation…' : 'Utiliser ma position GPS'}
+        <Crosshair className="h-3.5 w-3.5" />
+        {geoLoading ? 'Localisation…' : 'Récupérer ma position GPS'}
       </Button>
     </div>
   );
@@ -740,26 +664,8 @@ export function SectorActorForm({
                         {...register('city')}
                       />
                     </FieldGroup>
-                    <FieldRow>
-                      <FieldGroup label="Latitude">
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="Ex: 14.6928"
-                          {...register('latitude')}
-                        />
-                      </FieldGroup>
-                      <FieldGroup label="Longitude">
-                        <Input
-                          type="number"
-                          step="any"
-                          placeholder="Ex: -17.4467"
-                          {...register('longitude')}
-                        />
-                      </FieldGroup>
-                    </FieldRow>
 
-                    {/* Interactive location picker map */}
+                    {/* Interactive location picker map — remplace les champs Latitude/Longitude */}
                     <div>
                       <p className="text-xs text-muted-foreground mb-2">
                         Cliquez sur la carte pour définir la position géographique de l&apos;acteur.
@@ -771,8 +677,17 @@ export function SectorActorForm({
                           setValue('latitude', String(newLat));
                           setValue('longitude', String(newLon));
                         }}
+                        onLocationResolved={(city, region) => {
+                          if (city) setValue('city', city);
+                          if (region) setValue('region', region);
+                        }}
                         color={color}
                       />
+                      {latVal && lonVal && (
+                        <p className="text-xs text-muted-foreground mt-1.5">
+                          Position sélectionnée : {latVal}, {lonVal}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

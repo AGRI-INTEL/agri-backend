@@ -100,7 +100,7 @@ interface UIState {
   removeToast: (id: string) => void;
   
   // ── Actions responsive ──
-  setViewportSize: (width: number, height: number) => void;
+  setViewportSize: (width: number) => void;
   setTouchDevice: (isTouch: boolean) => void;
   
   // ── Actions scroll ──
@@ -288,7 +288,7 @@ export const useUIStore = create<UIState>()(
         })),
 
         // ── Responsive ──
-        setViewportSize: (width, height) => {
+        setViewportSize: (width) => {
           const isMobile = width < 768;
           const isTablet = width >= 768 && width < 1024;
           set({ isMobile, isTablet });
@@ -505,7 +505,7 @@ export function useAccessibility(): {
  */
 export function initResponsive(): () => void {
   const handleResize = () => {
-    useUIStore.getState().setViewportSize(window.innerWidth, window.innerHeight);
+    useUIStore.getState().setViewportSize(window.innerWidth);
   };
   
   const handleTouch = () => {

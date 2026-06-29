@@ -895,6 +895,10 @@ export function isAdmin(user: User): boolean {
   return ['super_admin', 'admin'].includes(user.role);
 }
 
+export function isOwner(user: User): boolean {
+  return user.role === 'super_admin';
+}
+
 /**
  * Check if user is moderator.
  */
