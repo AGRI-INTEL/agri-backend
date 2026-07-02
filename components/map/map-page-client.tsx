@@ -1,21 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { InteractiveMap } from './interactive-map';
+import { DynamicMap } from './dynamic-map-wrapper';
 import { MapSidebar } from './map-sidebar';
 import { MapToolbar } from './map-toolbar';
 import { useMapStore, selectLayers } from '@/stores/map-store';
 import { useMapMarkers } from '@/hooks/use-geolocation';
-import { Map, Layers, MapPin, Activity, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Map, Layers, MapPin, Activity, PanelLeftClose, PanelLeftOpen, Sprout, ShoppingBag, AlertTriangle, X } from 'lucide-react';
 import { motion } from '@/lib/motion';
+import { cn } from '@/lib/utils';
 
 export function MapPageClient() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'markers' | 'layers' | 'filters'>('layers');
   const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
+  const [showLayerPanel, setShowLayerPanel] = useState(false);
 
   const layers = useMapStore(selectLayers);
+  const toggleLayer = useMapStore((s) => s.toggleLayer);
   const { data: markers } = useMapMarkers();
 
   const activeLayers = layers.filter((l) => l.visible).length;
@@ -119,7 +122,56 @@ export function MapPageClient() {
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           />
           <div className="flex-1 overflow-hidden relative">
-            <InteractiveMap className="h-full w-full" />
+            <DynamicMap className="h-full w-full" />
+
+            {/* Floating layers toggle button */}
+            <button
+              onClick={() => setShowLayerPanel(!showLayerPanel)}
+              className={cn(
+                'absolute top-3 left-3 z-20 p-2.5 rounded-xl border shadow-lg transition-all duration-150',
+                showLayerPanel
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card/95 backdrop-blur-sm border-border text-muted-foreground hover:text-foreground hover:bg-muted'
+              )}
+              title="Couches"
+            >
+              <Layers className="h-4 w-4" />
+            </button>
+
+            {/* Floating layers panel */}
+            {showLayerPanel && (
+              <div className="absolute top-14 left-3 z-20 bg-card border border-border rounded-xl shadow-xl p-3 min-w-48 space-y-1">
+                <div className="flex items-center justify-between mb-2 pb-2 border-b border-border">
+                  <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Couches</h3>
+                  <button onClick={() => setShowLayerPanel(false)} className="text-muted-foreground hover:text-foreground">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                {[
+                  { id: 'vegetal', label: 'Zones de production', icon: Sprout, color: '#22C55E' },
+                  { id: 'market', label: 'Marchés', icon: ShoppingBag, color: '#F59E0B' },
+                  { id: 'alerts', label: 'Alertes', icon: AlertTriangle, color: '#EF4444' },
+                ].map(({ id, label, icon: Icon, color }) => {
+                  const active = layers.find((l) => l.id === id)?.visible ?? true;
+                  return (
+                    <label
+                      key={id}
+                      className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-muted cursor-pointer transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        onChange={() => toggleLayer(id)}
+                        className="rounded w-3.5 h-3.5 cursor-pointer"
+                        style={{ accentColor: color }}
+                      />
+                      <Icon className="h-3.5 w-3.5" style={{ color }} />
+                      <span className="text-xs font-medium text-foreground">{label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Status bar */}

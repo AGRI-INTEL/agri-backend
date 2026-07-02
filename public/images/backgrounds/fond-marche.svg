@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF7ED"/>
+      <stop offset="100%" stop-color="#FFEDD5"/>
+    </linearGradient>
+    <linearGradient id="bar" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0.07"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <!-- Bar chart silhouettes -->
+  <g>
+    <rect x="80" y="420" width="40" height="120" rx="4" fill="url(#bar)"/>
+    <rect x="140" y="360" width="40" height="180" rx="4" fill="url(#bar)"/>
+    <rect x="200" y="300" width="40" height="240" rx="4" fill="url(#bar)"/>
+    <rect x="260" y="380" width="40" height="160" rx="4" fill="url(#bar)"/>
+    <rect x="320" y="250" width="40" height="290" rx="4" fill="url(#bar)"/>
+    <rect x="380" y="340" width="40" height="200" rx="4" fill="url(#bar)"/>
+    <rect x="440" y="280" width="40" height="260" rx="4" fill="url(#bar)"/>
+    <rect x="500" y="350" width="40" height="190" rx="4" fill="url(#bar)"/>
+    <rect x="560" y="220" width="40" height="320" rx="4" fill="url(#bar)"/>
+    <rect x="620" y="310" width="40" height="230" rx="4" fill="url(#bar)"/>
+    <rect x="680" y="260" width="40" height="280" rx="4" fill="url(#bar)"/>
+  </g>
+  <!-- Trend line -->
+  <polyline points="80,460 140,400 200,340 260,370 320,290 380,360 440,310 500,370 560,260 620,330 680,300" fill="none" stroke="#F59E0B" stroke-opacity="0.08" stroke-width="2"/>
+  <!-- Grid lines -->
+  <g stroke="#F59E0B" stroke-opacity="0.03" stroke-width="0.5">
+    <line x1="60" y1="500" x2="740" y2="500"/>
+    <line x1="60" y1="400" x2="740" y2="400"/>
+    <line x1="60" y1="300" x2="740" y2="300"/>
+    <line x1="60" y1="200" x2="740" y2="200"/>
+  </g>
+</svg>

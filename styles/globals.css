@@ -29,25 +29,25 @@
   }
 
   .dark {
-    --background: 222 47% 11%;       /* #0F172A */
-    --foreground: 210 40% 98%;       /* #F8FAFC */
-    --card: 217 33% 17%;             /* #1E293B */
-    --card-foreground: 210 40% 98%;
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 142 76% 36%;
+    --background: 150 28% 5%;       /* #0C1810 - AgriIntel ground */
+    --foreground: 42 30% 86%;       /* #E4DBC8 - warm cream */
+    --card: 150 22% 10%;            /* #152219 - card surface */
+    --card-foreground: 42 30% 86%;
+    --popover: 150 22% 10%;
+    --popover-foreground: 42 30% 86%;
+    --primary: 142 76% 36%;         /* #16A34A - green */
     --primary-foreground: 0 0% 100%;
-    --secondary: 38 92% 50%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 197 71% 37%;
-    --accent-foreground: 0 0% 100%;
+    --secondary: 38 92% 50%;        /* #C4923A - gold */
+    --secondary-foreground: 150 28% 5%;
+    --muted: 150 15% 12%;
+    --muted-foreground: 150 15% 46%; /* #6B8A72 - improved contrast */
+    --accent: 38 60% 55%;           /* warm gold accent */
+    --accent-foreground: 150 28% 5%;
     --destructive: 0 62% 30%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 217 33% 25%;
-    --input: 217 33% 25%;
-    --ring: 142 76% 36%;
+    --destructive-foreground: 42 30% 86%;
+    --border: 150 15% 18%;          /* subtle borders */
+    --input: 150 15% 18%;
+    --ring: 38 60% 55%;             /* gold focus ring */
   }
 }
 
@@ -115,9 +115,9 @@
 
   /* Focus visible */
   :focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--ring));
+    outline: 2px solid #C4923A;
     outline-offset: 2px;
+    border-radius: 4px;
   }
 
   /* Scrollbar */

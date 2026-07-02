@@ -5,6 +5,8 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Toaster } from 'sonner';
 import { queryClient } from '@/lib/query-client';
 import { AuthHydrator } from '@/components/auth/auth-hydrator';
+import { ServiceWorkerRegister } from '@/components/shared/service-worker-register';
+import { CommandPalette } from '@/components/shared/command-palette';
 import { useUIStore } from '@/stores/ui-store';
 import { useEffect } from 'react';
 
@@ -70,6 +72,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ProductionConsoleGuard>
         <ThemeProvider>
           <AuthHydrator />
+          <ServiceWorkerRegister />
+          <CommandPalette />
           {children}
           <Toaster
             position="top-right"

@@ -37,6 +37,7 @@ interface SectorStatsGridProps {
   sector: string;
   actors: ActorRow[];
   color?: string;
+  backgroundImage?: string;
 }
 
 // ============================================================================
@@ -341,9 +342,10 @@ function computeFallbackStats(actors: ActorRow[]): StatCard[] {
 interface StatCardProps {
   stat: StatCard;
   borderColor: string;
+  backgroundImage?: string;
 }
 
-function StatCardItem({ stat, borderColor }: StatCardProps) {
+function StatCardItem({ stat, borderColor, backgroundImage }: StatCardProps) {
   const Icon = stat.icon;
 
   return (
@@ -351,6 +353,13 @@ function StatCardItem({ stat, borderColor }: StatCardProps) {
       className="relative overflow-hidden border-border/40"
       style={{ borderLeftWidth: '4px', borderLeftColor: borderColor }}
     >
+      {backgroundImage && (
+        <div
+          className="absolute inset-0 opacity-[0.04] bg-cover bg-center pointer-events-none"
+          style={{ backgroundImage: `url(${backgroundImage})` }}
+          aria-hidden
+        />
+      )}
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
@@ -390,7 +399,7 @@ function StatCardItem({ stat, borderColor }: StatCardProps) {
 // MAIN COMPONENT
 // ============================================================================
 
-export function SectorStatsGrid({ sector, actors, color = '#16A34A' }: SectorStatsGridProps) {
+export function SectorStatsGrid({ sector, actors, color = '#16A34A', backgroundImage }: SectorStatsGridProps) {
   const stats = useMemo<StatCard[]>(() => {
     switch (sector) {
       case 'vegetal':
@@ -409,7 +418,7 @@ export function SectorStatsGrid({ sector, actors, color = '#16A34A' }: SectorSta
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {stats.map((stat, idx) => (
-        <StatCardItem key={idx} stat={stat} borderColor={color} />
+        <StatCardItem key={idx} stat={stat} borderColor={color} backgroundImage={backgroundImage} />
       ))}
     </div>
   );

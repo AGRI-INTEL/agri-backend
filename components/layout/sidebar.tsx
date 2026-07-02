@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from '@/lib/motion';
 import {
   LayoutDashboard, Sprout, Beef, Fish, TreePine, Users,
-  BarChart3, Brain, CloudSun, TrendingUp, Bell, MessageSquare,
+  BarChart3, Brain, CloudSun, TrendingUp, Bell, Bot, MessageSquare,
   Map, FolderOpen, Settings, Shield, ChevronLeft, ChevronRight,
   LogOut,
 } from 'lucide-react';
@@ -41,7 +41,7 @@ const navItems: NavItem[] = [
   { href: '/alerts', icon: Bell, label: 'Alertes', badgeKey: 'alerts' },
   { href: '/map', icon: Map, label: 'Carte' },
   { type: 'separator' as const },
-  { href: '/chatbot', icon: MessageSquare, label: 'AgriBot IA' },
+  { href: '/chatbot', icon: Bot, label: 'AgriBot IA' },
   { href: '/messages', icon: MessageSquare, label: 'Messages', badgeKey: 'messages' },
   { href: '/community', icon: Users, label: 'Communauté' },
   { href: '/files', icon: FolderOpen, label: 'Fichiers' },
@@ -50,16 +50,6 @@ const navItems: NavItem[] = [
 const adminItems: NavItem[] = [
   { href: '/admin', icon: Shield, label: 'Administration' },
 ];
-
-const GROUND = '#0C1810';
-const CARD = '#152219';
-const TEXT = '#E8E0CC';
-const MUTED = '#7D9486';
-const GOLD = '#C4923A';
-const DIM = '#4A6050';
-const SEPARATOR = 'rgba(196,146,58,0.12)';
-const ACTIVE_BG = 'rgba(196,146,58,0.10)';
-const HOVER_BG = 'rgba(196,146,58,0.06)';
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -79,28 +69,16 @@ export function Sidebar() {
       <motion.aside
         animate={{ width: sidebarCollapsed ? 64 : 240 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
-        className="fixed left-0 top-0 h-full z-30 flex flex-col overflow-hidden"
-        style={{
-          background: GROUND,
-          borderRight: `1px solid ${SEPARATOR}`,
-        }}
+        className="fixed left-0 top-0 h-full z-30 flex flex-col overflow-hidden bg-background border-r border-border"
         aria-label="Navigation principale"
       >
         {/* Logo */}
         <div
-          className="flex items-center px-3 shrink-0"
-          style={{ height: '64px', borderBottom: `1px solid ${SEPARATOR}` }}
+          className="flex items-center px-3 shrink-0 h-16 border-b border-border"
         >
           <Link href="/" className="flex items-center gap-3 min-w-0 w-full">
             <div
-              className="relative flex items-center justify-center shrink-0 rounded-xl overflow-hidden"
-              style={{
-                height: '36px',
-                width: '36px',
-                background: 'rgba(196,146,58,0.12)',
-                border: '1px solid rgba(196,146,58,0.28)',
-                boxShadow: '0 0 20px rgba(196,146,58,0.12)',
-              }}
+              className="relative flex items-center justify-center shrink-0 rounded-xl overflow-hidden h-9 w-9 bg-secondary/10 border border-secondary/30 shadow-[0_0_20px_rgba(196,146,58,0.12)]"
             >
               <Image src="/logo.png" alt="" fill className="object-contain p-1.5" sizes="36px" />
             </div>
@@ -113,14 +91,12 @@ export function Sidebar() {
                   className="min-w-0 overflow-hidden"
                 >
                   <span
-                    className="text-[0.9375rem] font-black tracking-tight leading-none block whitespace-nowrap"
-                    style={{ color: TEXT }}
+                    className="text-[0.9375rem] font-black tracking-tight leading-none block whitespace-nowrap text-foreground"
                   >
-                    AgriIntel<span style={{ color: GOLD }}>360</span>
+                    AgriIntel<span className="text-secondary">360</span>
                   </span>
                   <span
-                    className="text-[0.5625rem] font-bold uppercase tracking-[0.16em] mt-0.5 block whitespace-nowrap"
-                    style={{ color: DIM }}
+                    className="text-[0.5625rem] font-bold uppercase tracking-[0.16em] mt-0.5 block whitespace-nowrap text-muted-foreground/70"
                   >
                     Intelligence Agricole
                   </span>
@@ -141,8 +117,7 @@ export function Sidebar() {
               return (
                 <div
                   key={i}
-                  className="my-1.5 mx-1"
-                  style={{ height: '1px', background: SEPARATOR }}
+                  className="my-1.5 mx-1 border-t border-border"
                 />
               );
             }
@@ -157,32 +132,14 @@ export function Sidebar() {
             const linkContent = (
               <Link
                 href={item.href!}
-                className="flex items-center gap-3 px-2.5 py-2 rounded-xl text-sm font-medium transition-all duration-150 relative"
-                style={{
-                  background: active ? ACTIVE_BG : 'transparent',
-                  color: active ? GOLD : MUTED,
-                  borderLeft: active ? `2px solid ${GOLD}` : '2px solid transparent',
-                }}
+                className={`flex items-center gap-3 px-2.5 py-2 rounded-xl text-sm font-medium transition-all duration-150 relative border-l-2 ${active ? 'text-secondary bg-secondary/10 border-l-secondary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground border-l-transparent'}`}
                 aria-current={active ? 'page' : undefined}
-                onMouseEnter={e => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.background = HOVER_BG;
-                    (e.currentTarget as HTMLElement).style.color = TEXT;
-                  }
-                }}
-                onMouseLeave={e => {
-                  if (!active) {
-                    (e.currentTarget as HTMLElement).style.background = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = MUTED;
-                  }
-                }}
               >
                 <div className="relative shrink-0">
                   <Icon className="h-4 w-4" />
                   {showBadge && (
                     <span
-                      className="absolute -top-1 -right-1 h-2 w-2 rounded-full"
-                      style={{ background: '#ef4444' }}
+                      className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-destructive"
                     />
                   )}
                 </div>
@@ -200,8 +157,7 @@ export function Sidebar() {
                 </AnimatePresence>
                 {!sidebarCollapsed && showBadge && (
                   <span
-                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                    style={{ background: '#ef4444', color: 'white' }}
+                    className="text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 bg-destructive text-destructive-foreground"
                   >
                     {badgeCount > 99 ? '99+' : badgeCount}
                   </span>
@@ -215,7 +171,7 @@ export function Sidebar() {
                   <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                   <TooltipContent
                     side="right"
-                    style={{ background: CARD, color: TEXT, border: `1px solid ${SEPARATOR}` }}
+                    className="bg-card text-foreground border-border"
                   >
                     {item.label}
                   </TooltipContent>
@@ -229,31 +185,14 @@ export function Sidebar() {
           {/* Admin */}
           {user?.role === 'admin' && (
             <>
-              <div className="my-1.5 mx-1" style={{ height: '1px', background: SEPARATOR }} />
+              <div className="my-1.5 mx-1 border-t border-border" />
               {adminItems.map((item) => {
                 const Icon = item.icon!;
                 const active = isActive(item.href!);
                 const linkContent = (
                   <Link
                     href={item.href!}
-                    className="flex items-center gap-3 px-2.5 py-2 rounded-xl text-sm font-medium transition-all duration-150"
-                    style={{
-                      background: active ? 'rgba(248,113,113,0.10)' : 'transparent',
-                      color: active ? '#f87171' : MUTED,
-                      borderLeft: active ? '2px solid #f87171' : '2px solid transparent',
-                    }}
-                    onMouseEnter={e => {
-                      if (!active) {
-                        (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.06)';
-                        (e.currentTarget as HTMLElement).style.color = '#f87171';
-                      }
-                    }}
-                    onMouseLeave={e => {
-                      if (!active) {
-                        (e.currentTarget as HTMLElement).style.background = 'transparent';
-                        (e.currentTarget as HTMLElement).style.color = MUTED;
-                      }
-                    }}
+                    className={`flex items-center gap-3 px-2.5 py-2 rounded-xl text-sm font-medium transition-all duration-150 border-l-2 ${active ? 'bg-destructive/10 text-destructive border-l-destructive' : 'text-muted-foreground hover:bg-destructive/10 hover:text-destructive border-l-transparent'}`}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     {!sidebarCollapsed && <span>{item.label}</span>}
@@ -263,7 +202,7 @@ export function Sidebar() {
                   return (
                     <Tooltip key={item.href}>
                       <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-                      <TooltipContent side="right" style={{ background: CARD, color: TEXT, border: `1px solid ${SEPARATOR}` }}>
+                      <TooltipContent side="right" className="bg-card text-foreground border-border">
                         {item.label}
                       </TooltipContent>
                     </Tooltip>
@@ -277,24 +216,24 @@ export function Sidebar() {
 
         {/* User section */}
         {user && (
-          <div className="shrink-0 px-2 py-2" style={{ borderTop: `1px solid ${SEPARATOR}` }}>
+          <div className="shrink-0 px-2 py-2 border-t border-border">
             {!sidebarCollapsed ? (
               <div>
                 <div
-                  className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl mb-1"
-                  style={{ background: CARD }}
+                  className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-xl mb-1 bg-card"
                 >
-                  <div
-                    className="h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                    style={{ background: GOLD, color: '#1A1000' }}
-                  >
-                    {(user.name || user.email || 'U')[0].toUpperCase()}
+                  <div className={`h-7 w-7 rounded-full shrink-0 overflow-hidden flex items-center justify-center text-xs font-bold ${!user.avatar ? 'bg-secondary text-secondary-foreground' : ''}`}>
+                    {user.avatar ? (
+                      <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      (user.name || user.email || 'U')[0].toUpperCase()
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold truncate" style={{ color: TEXT }}>
+                    <p className="text-xs font-semibold truncate text-foreground">
                       {user.name || user.email?.split('@')[0] || 'Utilisateur'}
                     </p>
-                    <p className="text-[10px] truncate" style={{ color: DIM }}>
+                    <p className="text-[10px] truncate text-muted-foreground/70">
                       {user.email}
                     </p>
                   </div>
@@ -302,32 +241,14 @@ export function Sidebar() {
                 <div className="flex gap-1">
                   <Link
                     href="/settings/profile"
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-                    style={{ color: MUTED }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.background = HOVER_BG;
-                      (e.currentTarget as HTMLElement).style.color = TEXT;
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.background = 'transparent';
-                      (e.currentTarget as HTMLElement).style.color = MUTED;
-                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   >
                     <Settings className="h-3 w-3" />
                     Paramètres
                   </Link>
                   <button
                     onClick={() => logout()}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150"
-                    style={{ color: MUTED }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.06)';
-                      (e.currentTarget as HTMLElement).style.color = '#f87171';
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLElement).style.background = 'transparent';
-                      (e.currentTarget as HTMLElement).style.color = MUTED;
-                    }}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                   >
                     <LogOut className="h-3 w-3" />
                     Déco.
@@ -340,21 +261,12 @@ export function Sidebar() {
                   <TooltipTrigger asChild>
                     <Link
                       href="/settings/profile"
-                      className="flex items-center justify-center p-2 rounded-xl transition-all duration-150 w-full"
-                      style={{ color: MUTED }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.background = HOVER_BG;
-                        (e.currentTarget as HTMLElement).style.color = TEXT;
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLElement).style.background = 'transparent';
-                        (e.currentTarget as HTMLElement).style.color = MUTED;
-                      }}
+                      className="flex items-center justify-center p-2 rounded-xl transition-all duration-150 w-full text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                     >
                       <Settings className="h-4 w-4" />
                     </Link>
                   </TooltipTrigger>
-                  <TooltipContent side="right" style={{ background: CARD, color: TEXT, border: `1px solid ${SEPARATOR}` }}>
+                  <TooltipContent side="right" className="bg-card text-foreground border-border">
                     Paramètres
                   </TooltipContent>
                 </Tooltip>
@@ -364,20 +276,11 @@ export function Sidebar() {
         )}
 
         {/* Collapse toggle */}
-        <div className="p-2 shrink-0" style={{ borderTop: `1px solid ${SEPARATOR}` }}>
+        <div className="p-2 shrink-0 border-t border-border">
           <button
             onClick={toggleSidebar}
-            className="w-full flex items-center justify-center h-8 rounded-xl text-sm font-medium transition-all duration-150"
-            style={{ color: MUTED }}
+            className="w-full flex items-center justify-center h-8 rounded-xl text-sm font-medium transition-all duration-150 text-muted-foreground hover:bg-muted/50 hover:text-secondary"
             aria-label={sidebarCollapsed ? 'Étendre la sidebar' : 'Réduire la sidebar'}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLElement).style.background = HOVER_BG;
-              (e.currentTarget as HTMLElement).style.color = GOLD;
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLElement).style.background = 'transparent';
-              (e.currentTarget as HTMLElement).style.color = MUTED;
-            }}
           >
             {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>

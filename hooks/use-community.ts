@@ -20,9 +20,11 @@ function mapBackendGroup(g: any): Group {
     members_count: g.members_count ?? g.member_count ?? 0,
     posts_count: g.posts_count ?? g.post_count ?? 0,
     is_member: g.is_member ?? false,
-    membership_status: g.membership_status || (g.is_member ? 'member' : 'none'),
+    membership_status: (g.user_role as any) || g.membership_status || (g.is_member ? 'member' : 'none'),
+    user_role: (g.user_role as any),
     requires_approval: g.requires_approval ?? false,
     moderated: g.moderated ?? false,
+    settings: g.settings,
     created_at: g.created_at,
     created_by: g.created_by,
     updated_at: g.updated_at,
@@ -65,7 +67,8 @@ function mapBackendPost(p: any): Post {
     views_count: p.views_count ?? p.view_count ?? 0,
     is_bookmarked: p.is_bookmarked ?? false,
     is_pinned: p.is_pinned ?? false,
-    status: p.status ?? (p.is_published ? 'published' : 'draft'),
+    is_locked: p.is_locked ?? false,
+    status: p.is_locked ? 'locked' : (p.status ?? (p.is_published ? 'published' : 'draft')),
     created_at: p.created_at ?? new Date().toISOString(),
     updated_at: p.updated_at ?? new Date().toISOString(),
     group: p.group_name ? {
@@ -554,6 +557,145 @@ export function useReportMember() {
       }),
     onSuccess: () => {
       toast.success('Signalement envoyé aux administrateurs');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+// ── Nouveaux hooks: Paramètres, Transfert, Archivage ─────────────────────────
+
+export function useUpdateGroupSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, settings }: { groupId: string; settings: Record<string, boolean> }) =>
+      apiClient.put(`/community/groups/${groupId}/settings`, settings),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      toast.success('Paramètres mis à jour');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useToggleMessaging() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      const res = await apiClient.post<any>(`/community/groups/${groupId}/toggle-messaging`);
+      return res as { messaging_blocked: boolean };
+    },
+    onSuccess: (data, groupId) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      toast.success(data.messaging_blocked ? 'Messagerie désactivée' : 'Messagerie réactivée');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useArchiveGroup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (groupId: string) => {
+      const res = await apiClient.post<any>(`/community/groups/${groupId}/archive`);
+      return res as { is_archived: boolean };
+    },
+    onSuccess: (data, groupId) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      toast.success(data.is_archived ? 'Groupe archivé' : 'Groupe désarchivé');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useTransferOwnership() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, userId }: { groupId: string; userId: string }) =>
+      apiClient.post(`/community/groups/${groupId}/transfer-ownership`, { user_id: userId }),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'members'] });
+      toast.success('Propriété transférée avec succès');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+// ── Demandes d'adhésion ─────────────────────────────────────────────────────
+
+export function useJoinRequests(groupId: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ['groups', groupId, 'join-requests'],
+    queryFn: async () => {
+      try {
+        return await apiClient.get<any[]>(`/community/groups/${groupId}/join-requests`);
+      } catch {
+        return [];
+      }
+    },
+    enabled: !!groupId && enabled,
+    refetchInterval: false,
+    retry: false,
+    staleTime: 30_000,
+  });
+}
+
+export function useApproveJoinRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, requestId }: { groupId: string; requestId: string }) =>
+      apiClient.post(`/community/groups/${groupId}/join-requests/${requestId}/approve`),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'join-requests'] });
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'members'] });
+      qc.invalidateQueries({ queryKey: ['groups', groupId] });
+      toast.success('Demande approuvée');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useRejectJoinRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, requestId }: { groupId: string; requestId: string }) =>
+      apiClient.post(`/community/groups/${groupId}/join-requests/${requestId}/reject`),
+    onSuccess: (_, { groupId }) => {
+      qc.invalidateQueries({ queryKey: ['groups', groupId, 'join-requests'] });
+      toast.success('Demande rejetée');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+// ── Épingler / Verrouiller ──────────────────────────────────────────────────
+
+export function usePinPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: string) =>
+      apiClient.post(`/community/posts/${postId}/pin`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      qc.invalidateQueries({ queryKey: ['community'] });
+      toast.success('Publication mise à jour');
+    },
+    onError: (e: { message: string }) => toast.error(e.message),
+  });
+}
+
+export function useLockPost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: string) =>
+      apiClient.post(`/community/posts/${postId}/lock`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      qc.invalidateQueries({ queryKey: ['community'] });
+      toast.success('Publication mise à jour');
     },
     onError: (e: { message: string }) => toast.error(e.message),
   });

@@ -44,10 +44,10 @@ export function WeatherForecastPanel({ city, days = 7 }: WeatherForecastPanelPro
             const Icon = icons[day.condition as LocalWeatherCondition] || Cloud;
             const date = new Date(day.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' });
             return (
-              <div key={day.date} className="bg-muted/40 rounded-lg p-3 text-center">
+              <div key={day.date} className="bg-muted/40 dark:bg-muted/20 rounded-lg p-3 text-center border border-border/30">
                 <p className="text-xs text-muted-foreground capitalize mb-2">{date}</p>
                 <Icon className={cn('h-8 w-8 mx-auto mb-2', day.condition === 'rainy' ? 'text-blue-500' : 'text-yellow-500')} />
-                <p className="text-sm font-data font-semibold">{day.temperature_max}° / {day.temperature_min}°</p>
+                <p className="text-sm font-data font-semibold text-foreground">{day.temperature_max}° / {day.temperature_min}°</p>
                 <div className="flex items-center justify-center gap-1 mt-1 text-xs text-muted-foreground">
                   <Droplets className="h-3 w-3" />
                   {day.precipitation_probability}%

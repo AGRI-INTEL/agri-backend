@@ -10,6 +10,7 @@ export default function AnimalPage() {
       description="Éleveurs, cheptel et production animale"
       icon={Beef}
       color="#D97706"
+      backgroundImage="/images/sectors/animal.jpg"
     />
   );
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { User, Sliders, Lock, Shield } from 'lucide-react';
+import { User, Sliders, Lock, Bell, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 
@@ -24,6 +24,12 @@ const tabs = [
     label: 'Sécurité', 
     icon: Lock,
     description: 'Mot de passe et authentification'
+  },
+  { 
+    href: '/settings/alerts', 
+    label: 'Alertes de prix', 
+    icon: Bell,
+    description: 'Seuils et notifications de prix'
   },
 ];
 

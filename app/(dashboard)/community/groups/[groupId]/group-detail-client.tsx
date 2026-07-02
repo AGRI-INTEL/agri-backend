@@ -7,7 +7,8 @@ import {
   Users, UserPlus, UserMinus, MessageSquare, FileText,
   Settings, Bell, BellOff, Share2, ChevronLeft, Hash,
   Shield, ShieldCheck, Crown, LogOut, Calendar, MapPin,
-  Clock, ExternalLink, Trash2
+  Clock, ExternalLink, Trash2, Archive, MessageSquareOff,
+  CheckCircle, XCircle, UserCheck,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -38,8 +39,9 @@ import { EmptyState } from '@/components/shared/empty-state';
 import { GroupSettingsDialog } from '@/components/community/group-settings-dialog';
 import {
   useGroup, useGroupPosts, useGroupMembers, useGroupMeetups, useCreateMeetup,
-  useJoinGroup, useLeaveGroup,
+  useJoinGroup, useLeaveGroup, usePinPost, useLockPost,
   useRemoveGroupMember, useUpdateMemberRole,
+  useJoinRequests, useApproveJoinRequest, useRejectJoinRequest,
 } from '@/hooks/use-community';
 import { useCreateConversation } from '@/hooks/use-messaging';
 import { GroupThread } from '@/components/community/group-thread';
@@ -49,7 +51,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 
-type Tab = 'posts' | 'chat' | 'events' | 'members' | 'about';
+type Tab = 'posts' | 'chat' | 'join-requests' | 'events' | 'members' | 'about';
+
+interface JoinRequest {
+  id: string;
+  user_id: string;
+  username: string;
+  full_name: string;
+  avatar_url?: string;
+  message?: string;
+  status: string;
+  created_at: string;
+}
 
 const ROLE_LABELS: Record<string, string> = {
   owner: 'Fondateur',
@@ -92,10 +105,22 @@ export default function GroupDetailClient() {
   const { data: postsData, isLoading: postsLoading, fetchNextPage, hasNextPage } = useGroupPosts(groupId);
   const { data: members } = useGroupMembers(groupId);
   const { data: meetups } = useGroupMeetups(groupId);
+
+  const userRole = group?.user_role as string | undefined;
+  const membershipStatus = group?.membership_status as string | undefined;
+  const isMember = membershipStatus === 'member' || membershipStatus === 'admin' || membershipStatus === 'owner' || userRole === 'admin' || userRole === 'owner';
+  const isAdmin = membershipStatus === 'admin' || membershipStatus === 'owner' || userRole === 'admin' || userRole === 'owner';
+  const isOwner = membershipStatus === 'owner' || userRole === 'owner';
+
   const join = useJoinGroup();
   const leave = useLeaveGroup();
   const removeMember = useRemoveGroupMember();
   const updateRole = useUpdateMemberRole();
+  const pinPost = usePinPost();
+  const lockPost = useLockPost();
+  const { data: joinRequests } = useJoinRequests(groupId, isAdmin);
+  const approveRequest = useApproveJoinRequest();
+  const rejectRequest = useRejectJoinRequest();
   const createConversation = useCreateConversation();
   const [showRemoveConfirm, setShowRemoveConfirm] = useState<string | null>(null);
   const [showDeleteGroupConfirm, setShowDeleteGroupConfirm] = useState(false);
@@ -103,15 +128,17 @@ export default function GroupDetailClient() {
   const [reportReason, setReportReason] = useState('');
 
   const posts = postsData?.pages.flatMap(p => p.data) ?? [];
-  const isMember = group?.membership_status === 'member' || group?.membership_status === 'admin' || group?.membership_status === 'owner';
-  const isAdmin = group?.membership_status === 'admin' || group?.membership_status === 'owner';
-  const isOwner = group?.membership_status === 'owner';
   const sectorKey = (group?.sector ?? 'general') as keyof typeof SECTOR_COLORS;
   const gradientClass = SECTOR_COLORS[sectorKey] ?? SECTOR_COLORS.general;
+
+  const isMessagingBlocked = group?.settings?.messaging_blocked ?? false;
+  const isArchived = group?.settings?.is_archived ?? false;
+  const pendingRequestsCount = (joinRequests || []).length;
 
   const TABS: { id: Tab; label: string; icon: React.ElementType; count?: number }[] = [
     { id: 'posts',   label: 'Publications', icon: FileText,      count: posts.length || undefined },
     { id: 'chat',    label: 'Chat',          icon: MessageSquare },
+    ...(isAdmin && pendingRequestsCount > 0 ? [{ id: 'join-requests' as Tab, label: 'Demandes', icon: UserCheck, count: pendingRequestsCount }] : []),
     { id: 'events',  label: 'Événements',    icon: Calendar,      count: meetups?.length },
     { id: 'members', label: 'Membres',       icon: Users,         count: group?.members_count },
     { id: 'about',   label: 'À propos',      icon: Hash },
@@ -228,6 +255,18 @@ export default function GroupDetailClient() {
           <ChevronLeft className="h-4 w-4" />
           Communauté
         </Link>
+        <div className="absolute top-4 left-4 ml-28 flex gap-2">
+          {isArchived && (
+            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-amber-500/80 text-white backdrop-blur-sm">
+              <Archive className="h-3 w-3" /> Archivé
+            </span>
+          )}
+          {isMessagingBlocked && (
+            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-red-500/80 text-white backdrop-blur-sm">
+              <MessageSquareOff className="h-3 w-3" /> Chat désactivé
+            </span>
+          )}
+        </div>
         <div className="absolute top-4 right-4 flex gap-2">
           <button onClick={() => setMuted(!muted)} className="h-8 w-8 flex items-center justify-center bg-black/30 hover:bg-black/50 text-white rounded-full backdrop-blur-sm transition-colors">
             {muted ? <BellOff className="h-4 w-4" /> : <Bell className="h-4 w-4" />}
@@ -360,7 +399,13 @@ export default function GroupDetailClient() {
             ) : (
               posts.map(post => (
                 <div key={post.id} className="space-y-3">
-                  <PostCard post={post} onComment={() => setExpandedPost(expandedPost === post.id ? null : post.id)} />
+                  <PostCard
+                    post={post}
+                    isAdmin={isAdmin}
+                    onPin={(id) => pinPost.mutate(id)}
+                    onLock={(id) => lockPost.mutate(id)}
+                    onComment={() => setExpandedPost(expandedPost === post.id ? null : post.id)}
+                  />
                   {expandedPost === post.id && (
                     <div className="ml-4 pl-4 border-l-2 border-border">
                       <CommentThread postId={post.id} />
@@ -376,7 +421,67 @@ export default function GroupDetailClient() {
         )}
 
         {/* Chat */}
-        {tab === 'chat' && <GroupThread groupId={groupId} />}
+        {tab === 'chat' && (
+          <>
+            {isMessagingBlocked && !isAdmin && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <div className="h-14 w-14 rounded-2xl bg-red-50 dark:bg-red-950/20 flex items-center justify-center mb-4">
+                  <MessageSquareOff className="h-7 w-7 text-red-500" />
+                </div>
+                <h3 className="text-lg font-bold mb-1">Messagerie désactivée</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  La messagerie a été désactivée par les administrateurs du groupe.
+                </p>
+              </div>
+            )}
+            {(!isMessagingBlocked || isAdmin) && <GroupThread groupId={groupId} />}
+          </>
+        )}
+
+        {/* Join Requests */}
+        {tab === 'join-requests' && isAdmin && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-bold">Demandes d'adhésion en attente</h3>
+              <span className="text-xs text-muted-foreground">{pendingRequestsCount} demande(s)</span>
+            </div>
+            {pendingRequestsCount === 0 ? (
+              <EmptyState icon="📋" title="Aucune demande" description="Aucune demande d'adhésion en attente." />
+            ) : (
+              (joinRequests as JoinRequest[])?.map((req) => (
+                <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card">
+                  <UserAvatar src={req.avatar_url} name={req.full_name || req.username} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{req.full_name || req.username}</p>
+                    {req.message && <p className="text-xs text-muted-foreground truncate">"{req.message}"</p>}
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Demandé le {new Date(req.created_at).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <Button
+                      size="sm"
+                      className="h-8 gap-1 bg-green-600 hover:bg-green-700 text-xs"
+                      onClick={() => approveRequest.mutate({ groupId, requestId: req.id })}
+                      disabled={approveRequest.isPending}
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" /> Approuver
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1 border-red-200 text-red-600 hover:bg-red-50 text-xs"
+                      onClick={() => rejectRequest.mutate({ groupId, requestId: req.id })}
+                      disabled={rejectRequest.isPending}
+                    >
+                      <XCircle className="h-3.5 w-3.5" /> Rejeter
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         {/* Événements */}
         {tab === 'events' && (

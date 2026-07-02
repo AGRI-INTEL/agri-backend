@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <rect x="40" y="50" width="120" height="100" rx="8" stroke="#5E7A68" stroke-width="2" fill="#152219" fill-opacity="0.5"/>
+  <path d="M100 40L125 85L100 75L75 85L100 40Z" stroke="#F87171" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="#F87171" fill-opacity="0.1"/>
+  <path d="M100 75V110" stroke="#F87171" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+  <circle cx="100" cy="118" r="2.5" fill="#F87171" opacity="0.6"/>
+  <line x1="75" y1="85" x2="50" y2="60" stroke="#F87171" stroke-width="2.5" stroke-linecap="round" opacity="0.35"/>
+  <line x1="65" y1="55" x2="55" y2="70" stroke="#F87171" stroke-width="2.5" stroke-linecap="round" opacity="0.2"/>
+  <text x="100" y="175" text-anchor="middle" fill="#5E7A68" font-size="10" font-family="sans-serif">Aucune alerte pour le moment</text>
+</svg>

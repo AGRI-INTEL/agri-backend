@@ -1,12 +1,18 @@
 {
-  "name": "AgriIntel360",
+  "name": "AgriIntel360 — Intelligence Agricole pour l'Afrique",
   "short_name": "AgriIntel360",
-  "description": "Intelligence agricole pour l'Afrique",
+  "description": "Plateforme intelligente de décision agricole pour l'Afrique. IA prédictive, données temps réel, alertes et communauté.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#F8FAFC",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#0A2E1A",
   "theme_color": "#16A34A",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["agriculture", "productivity", "utilities", "business"],
+  "lang": "fr",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/images/icon-192.png",
@@ -21,7 +27,33 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["agriculture", "productivity", "utilities"],
-  "lang": "fr",
-  "dir": "ltr"
+  "screenshots": [
+    {
+      "src": "/images/og-default.svg",
+      "sizes": "1200x630",
+      "type": "image/svg+xml",
+      "form_factor": "wide",
+      "label": "AgriIntel360 — Vue d'ensemble du tableau de bord"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Tableau de bord",
+      "short_name": "Dashboard",
+      "description": "Accéder au tableau de bord",
+      "url": "/dashboard"
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "Messagerie privée",
+      "url": "/dashboard/messages"
+    },
+    {
+      "name": "Alertes",
+      "short_name": "Alertes",
+      "description": "Voir les alertes",
+      "url": "/dashboard/alerts"
+    }
+  ]
 }

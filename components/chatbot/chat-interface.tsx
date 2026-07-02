@@ -4,12 +4,13 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { Conversation } from '@/types/chatbot';
 import Image from 'next/image';
 import { motion } from '@/lib/motion';
-import { Send, Paperclip, Camera, Plus, Bot } from 'lucide-react';
+import { Send, Paperclip, Camera, Plus, Bot, Sparkles, TrendingUp, Cloud, DollarSign, Calendar, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { MessageBubble } from './message-bubble';
 import { SuggestionChips } from './suggestion-chips';
 import { ProviderSwitcher } from './provider-switcher';
+import { AgriBotAvatar } from '@/components/shared/agribot-avatar';
 import { VoiceRecorder } from '@/components/media/voice-recorder';
 import { UploadProgressList } from '@/components/media/upload-progress';
 import { useChatbot } from '@/hooks/use-chatbot';
@@ -41,7 +42,7 @@ export function ChatInterface() {
 
   const { uploads, removeUpload } = useMediaUpload({ endpoint: '/chatbot/upload' });
 
-  const messages = useMemo(() => activeConversation?.messages || [], [activeConversation]);
+  const messages = useMemo(() => Array.isArray(activeConversation?.messages) ? activeConversation.messages : [], [activeConversation]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -135,43 +136,73 @@ export function ChatInterface() {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4" role="log" aria-live="polite" aria-label="Messages">
           {messages.length === 0 ? (
-            /* Empty state */
             <div className="flex flex-col items-center justify-center min-h-full text-center py-12 px-4 max-w-4xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5 }}
               >
-                <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary via-primary/80 to-accent flex items-center justify-center mb-8 shadow-lg shadow-primary/20 relative">
-                  <Bot className="h-12 w-12 text-white" />
-                  <motion.div 
-                    className="absolute -inset-1 rounded-3xl bg-primary/20 -z-10"
-                    animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.2, 0.5] }}
-                    transition={{ repeat: Infinity, duration: 4 }}
-                  />
+                <div className="mb-8">
+                  <AgriBotAvatar size={96} className="mx-auto shadow-lg shadow-primary/20" />
                 </div>
               </motion.div>
 
-              <motion.h2 
-                className="text-3xl font-extrabold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent"
+              <motion.h2
+                className="text-2xl sm:text-3xl font-extrabold mb-3 text-foreground"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                Bonjour ! Je suis AgriBot
+                Bonjour, je suis <span className="bg-gradient-to-r from-green-400 to-amber-400 bg-clip-text text-transparent">AgriBot</span>
               </motion.h2>
-              
-              <motion.p 
+
+              <motion.p
                 className="text-muted-foreground text-base max-w-lg mb-10"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                Votre assistant agricole intelligent. Posez-moi des questions, envoyez des photos ou partagez des fichiers pour obtenir des analyses précises.
+                Votre assistant agricole intelligent. Posez-moi des questions sur la météo, les prix du marché, les prévisions de récolte et bien plus encore.
               </motion.p>
 
+              {/* Suggestion chips */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="flex flex-wrap gap-2 justify-center max-w-xl mb-12"
+              >
+                {[
+                  { icon: Cloud, label: 'Météo de la semaine' },
+                  { icon: DollarSign, label: 'Prix du maïs' },
+                  { icon: TrendingUp, label: 'Prévisions récolte' },
+                  { icon: Sparkles, label: 'Cultures recommandées' },
+                  { icon: Calendar, label: 'Actualités agricoles' },
+                  { icon: HelpCircle, label: 'Aide' },
+                ].map(({ icon: Icon, label }, i) => (
+                  <motion.button
+                    key={label}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 + i * 0.08 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => { setInput(label); textareaRef.current?.focus(); }}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium border border-border bg-card/80 hover:bg-card hover:border-primary/40 hover:text-primary transition-all shadow-sm"
+                  >
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                    {label}
+                  </motion.button>
+                ))}
+              </motion.div>
+
               {/* Capability Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12 w-full">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full"
+              >
                 {[
                   { icon: '📝', label: 'Texte', desc: 'Questions & analyses', color: 'bg-blue-500/10 text-blue-500' },
                   { icon: '📷', label: 'Photo', desc: 'Diagnostic & visuel', color: 'bg-green-500/10 text-green-500' },
@@ -182,7 +213,7 @@ export function ChatInterface() {
                     key={item.label}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 + i * 0.1 }}
+                    transition={{ delay: 0.9 + i * 0.08 }}
                     whileHover={{ y: -5, transition: { duration: 0.2 } }}
                     onClick={() => {
                       if (item.label === 'Photo') photoInputRef.current?.click();
@@ -195,25 +226,11 @@ export function ChatInterface() {
                       {item.icon}
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold">{item.label}</h3>
+                      <h3 className="text-sm font-bold text-foreground">{item.label}</h3>
                       <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider">{item.desc}</p>
                     </div>
                   </motion.button>
                 ))}
-              </div>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="w-full"
-              >
-                <div className="flex items-center gap-2 mb-4 justify-center">
-                  <div className="h-px w-8 bg-border" />
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Suggestions populaires</span>
-                  <div className="h-px w-8 bg-border" />
-                </div>
-                <SuggestionChips onSelect={(text) => { setInput(text); textareaRef.current?.focus(); }} />
               </motion.div>
             </div>
           ) : (

@@ -56,6 +56,7 @@ export type PostStatus =
   | 'draft'      // Brouillon (auteur uniquement)
   | 'pending'    // En attente de modération
   | 'archived'   // Archivé
+  | 'locked'     // Verrouillé (plus de commentaires)
   | 'pinned';    // Épinglé en haut du groupe
 
 /**
@@ -74,6 +75,31 @@ export type GroupSector =
 // ============================================================================
 // SECTION 2: GROUP ENTITY
 // ============================================================================
+
+/**
+ * Paramètres avancés du groupe
+ */
+export interface GroupSettings {
+  messaging_blocked: boolean;
+  members_can_post: boolean;
+  members_can_comment: boolean;
+  members_can_invite: boolean;
+  members_can_upload: boolean;
+  hidden_members: boolean;
+  is_archived: boolean;
+  mute_notifications: boolean;
+}
+
+export const DEFAULT_GROUP_SETTINGS: GroupSettings = {
+  messaging_blocked: false,
+  members_can_post: true,
+  members_can_comment: true,
+  members_can_invite: true,
+  members_can_upload: true,
+  hidden_members: false,
+  is_archived: false,
+  mute_notifications: false,
+};
 
 /**
  * A community group / discussion group.
@@ -129,6 +155,10 @@ export interface Group {
   creator?: PostAuthor;
   /** Last activity timestamp */
   updated_at?: string;
+  /** Current user's role in the group */
+  user_role?: MembershipStatus;
+  /** Advanced group settings */
+  settings?: GroupSettings;
   /** Rules / guidelines (markdown) */
   rules?: string;
   /** Pinned post IDs */
@@ -346,6 +376,8 @@ export interface Post {
   status: PostStatus;
   /** Whether post is pinned in the group */
   is_pinned: boolean;
+  /** Whether post is locked (no more comments) */
+  is_locked?: boolean;
   /** Whether post is highlighted/featured */
   is_featured?: boolean;
   /** Creation timestamp */
@@ -963,6 +995,7 @@ export function createEmptyPost(groupId: string, author: PostAuthor): Post {
     is_bookmarked: false,
     status: 'published',
     is_pinned: false,
+    is_locked: false,
     created_at: now,
     updated_at: now,
   };

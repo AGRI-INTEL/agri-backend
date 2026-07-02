@@ -7,9 +7,16 @@
  * specifies the project palette and the dark ground reads more premium.
  */
 
+import { useState } from 'react';
 import { motion } from '@/lib/motion';
-import { Check } from 'lucide-react';
+import { Check, Loader2, Send } from 'lucide-react';
 import Link from 'next/link';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 interface PricingPlanLocal {
   id: string;
@@ -79,6 +86,31 @@ const PLANS: PricingPlanLocal[] = [
 ];
 
 export function PricingCards() {
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: '', email: '', organization: '', message: '' });
+  const [contactSending, setContactSending] = useState(false);
+  const [contactSent, setContactSent] = useState(false);
+  const [contactError, setContactError] = useState('');
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setContactSending(true);
+    setContactError('');
+    try {
+      const res = await fetch('/api/v1/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
+      });
+      if (!res.ok) throw new Error('Erreur lors de l\'envoi');
+      setContactSent(true);
+    } catch {
+      setContactError('Une erreur est survenue. Veuillez réessayer.');
+    } finally {
+      setContactSending(false);
+    }
+  };
+
   return (
     <section
       className="py-24 px-4 scroll-mt-20 relative overflow-hidden"
@@ -281,6 +313,23 @@ export function PricingCards() {
                   >
                     {plan.cta}
                   </Link>
+                ) : plan.id === 'institution' ? (
+                  <button
+                    onClick={() => setContactOpen(true)}
+                    className="block w-full rounded-xl py-3.5 text-center text-sm font-medium transition-all duration-200"
+                    style={{
+                      color: '#5E7A68',
+                      background: 'transparent',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.color = '#E4DBC8';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.color = '#5E7A68';
+                    }}
+                  >
+                    {plan.cta} →
+                  </button>
                 ) : (
                   <Link
                     href={plan.ctaHref}
@@ -304,6 +353,110 @@ export function PricingCards() {
           ))}
         </div>
       </div>
+
+      {/* ── Contact Modal ── */}
+      <Dialog open={contactOpen} onOpenChange={(open) => { if (!open) { setContactOpen(false); setContactSent(false); setContactError(''); } }}>
+        <DialogContent
+          className="sm:max-w-md"
+          style={{
+            background: '#111D14',
+            border: '1px solid rgba(196,146,58,0.2)',
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle style={{ color: '#E4DBC8' }}>Contacter l'équipe</DialogTitle>
+            <DialogDescription style={{ color: '#5E7A68' }}>
+              Plan Institution — notre équipe vous répond sous 24h.
+            </DialogDescription>
+          </DialogHeader>
+
+          {contactSent ? (
+            <div className="text-center py-8 space-y-3">
+              <div
+                className="h-14 w-14 rounded-full flex items-center justify-center mx-auto"
+                style={{ background: 'rgba(196,146,58,0.14)' }}
+              >
+                <Send className="h-6 w-6" style={{ color: '#C4923A' }} />
+              </div>
+              <p className="text-lg font-semibold" style={{ color: '#E4DBC8' }}>Message envoyé</p>
+              <p className="text-sm" style={{ color: '#5E7A68' }}>
+                Merci ! Nous vous recontacterons rapidement.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleContactSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: '#E4DBC8' }}>Nom complet</label>
+                <Input
+                  required
+                  value={contactForm.name}
+                  onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                  placeholder="Votre nom"
+                  className="border-border/40"
+                  style={{ background: '#0C1810', color: '#E4DBC8' }}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: '#E4DBC8' }}>Email</label>
+                <Input
+                  required
+                  type="email"
+                  value={contactForm.email}
+                  onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                  placeholder="vous@exemple.com"
+                  className="border-border/40"
+                  style={{ background: '#0C1810', color: '#E4DBC8' }}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: '#E4DBC8' }}>Organisation</label>
+                <Input
+                  value={contactForm.organization}
+                  onChange={(e) => setContactForm({ ...contactForm, organization: e.target.value })}
+                  placeholder="Nom de votre organisation"
+                  className="border-border/40"
+                  style={{ background: '#0C1810', color: '#E4DBC8' }}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: '#E4DBC8' }}>Message</label>
+                <Textarea
+                  required
+                  rows={4}
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                  placeholder="Décrivez vos besoins..."
+                  className="border-border/40 resize-none"
+                  style={{ background: '#0C1810', color: '#E4DBC8' }}
+                />
+              </div>
+
+              {contactError && (
+                <p className="text-sm" style={{ color: '#F87171' }}>{contactError}</p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={contactSending}
+                className="w-full rounded-xl py-2.5 text-sm font-black uppercase tracking-[0.06em] transition-all duration-200"
+                style={{
+                  background: 'linear-gradient(135deg, #C4923A 0%, #b07928 100%)',
+                  color: '#07100A',
+                }}
+              >
+                {contactSending ? (
+                  <span className="flex items-center gap-2 justify-center">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Envoi...
+                  </span>
+                ) : (
+                  'Envoyer la demande'
+                )}
+              </Button>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

@@ -264,6 +264,40 @@ export default function AlertsPage() {
           </div>
         )}
 
+        {/* ── Severity filter chips ── */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { id: 'all', label: 'Toutes', color: 'bg-primary/10 text-primary border-primary/20' },
+            { id: 'critical', label: 'Critique', color: 'bg-red-100 dark:bg-red-950/20 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800' },
+            { id: 'warning', label: 'Important', color: 'bg-yellow-100 dark:bg-yellow-950/20 text-yellow-700 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800' },
+            { id: 'info', label: 'Info', color: 'bg-blue-100 dark:bg-blue-950/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800' },
+          ].map((chip) => (
+            <button
+              key={chip.id}
+              onClick={() => {
+                if (chip.id === 'all') {
+                  setFilters({ ...filters, severity: undefined });
+                } else {
+                  setFilters({ ...filters, severity: chip.id as typeof filters.severity });
+                }
+              }}
+              className={cn(
+                'px-4 py-2 rounded-full text-xs font-semibold border transition-all duration-150',
+                filters.severity === chip.id || (chip.id === 'all' && !filters.severity)
+                  ? `${chip.color} ring-2 ring-offset-1 ring-offset-background`
+                  : 'bg-muted/50 text-muted-foreground border-border/40 hover:bg-muted'
+              )}
+            >
+              {chip.label}
+              {chip.id !== 'all' && (
+                <span className="ml-1.5 opacity-70">
+                  {allAlerts.filter((a) => a.severity === chip.id).length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* ── View tabs ── */}
         <div className="flex flex-col gap-3">
           <div className="flex gap-1 border-b border-border">

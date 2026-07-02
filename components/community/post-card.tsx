@@ -2,9 +2,15 @@
 
 import { useState, useRef } from 'react';
 import Image from 'next/image';
-import { MessageCircle, Share2, Bookmark, MoreHorizontal, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { MessageCircle, Share2, Bookmark, MoreHorizontal, ChevronDown, ChevronUp, ExternalLink, Pin, Lock, Unlock, ShieldCheck } from 'lucide-react';
 import { UserAvatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { MediaGrid } from '@/components/media/media-grid';
 import { useReactToPost } from '@/hooks/use-community';
 import { formatRelativeDate, cn } from '@/lib/utils';
@@ -26,9 +32,12 @@ const REACTION_EMOJI: Record<ReactionType, string> = {
 interface PostCardProps {
   post: Post;
   onComment?: () => void;
+  isAdmin?: boolean;
+  onPin?: (postId: string) => void;
+  onLock?: (postId: string) => void;
 }
 
-export function PostCard({ post, onComment }: PostCardProps) {
+export function PostCard({ post, onComment, isAdmin, onPin, onLock }: PostCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [bookmarked, setBookmarked] = useState(post.is_bookmarked ?? false);
@@ -69,11 +78,45 @@ export function PostCard({ post, onComment }: PostCardProps) {
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">{formatRelativeDate(post.created_at)}</p>
+            <div className="flex gap-1 mt-0.5">
+              {post.is_pinned && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded-full">
+                  <Pin className="h-2.5 w-2.5" /> Épinglé
+                </span>
+              )}
+              {post.is_locked && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-red-600 bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full">
+                  <Lock className="h-2.5 w-2.5" /> Verrouillé
+                </span>
+              )}
+            </div>
           </div>
         </div>
-        <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-muted-foreground">
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors text-muted-foreground">
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            {isAdmin && (
+              <>
+                <DropdownMenuItem onClick={() => onPin?.(post.id)} className="gap-2 text-sm">
+                  <Pin className="h-3.5 w-3.5" />
+                  {post.is_pinned ? 'Dépingler' : 'Épingler'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onLock?.(post.id)} className="gap-2 text-sm">
+                  {post.is_locked ? <Unlock className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+                  {post.is_locked ? 'Déverrouiller' : 'Verrouiller'}
+                </DropdownMenuItem>
+                <div className="h-px bg-border my-1" />
+              </>
+            )}
+            <DropdownMenuItem className="gap-2 text-sm text-red-600 focus:text-red-600">
+              <ShieldCheck className="h-3.5 w-3.5" /> Signaler
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Content */}

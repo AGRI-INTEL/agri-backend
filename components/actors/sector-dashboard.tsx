@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import {
   Plus,
   Pencil,
@@ -16,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PageWrapper } from '@/components/layout/page-wrapper';
+import { Breadcrumb } from '@/components/layout/breadcrumb';
 import { ActorCard, ActorRow } from '@/components/actors/actor-card';
 import { ActorFiltersBar } from '@/components/actors/actor-filters';
 import { SectorActorForm } from '@/components/actors/sector-actor-form';
@@ -38,6 +40,7 @@ interface SectorDashboardProps {
   description: string;
   icon: React.ElementType;
   color: string;
+  backgroundImage?: string;
 }
 
 type ViewMode = 'grid' | 'list' | 'table';
@@ -378,6 +381,7 @@ export function SectorDashboard({
   description,
   icon: _SectorIcon,
   color,
+  backgroundImage,
 }: SectorDashboardProps) {
   // --- Form state ---
   const [formOpen,   setFormOpen]   = useState(false);
@@ -556,37 +560,70 @@ export function SectorDashboard({
   // JSX
   // ---------------------------------------------------------------------------
 
+  const actionsEl = (
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-9 gap-1.5 hidden sm:flex"
+        title="Exporter"
+      >
+        <Download className="h-3.5 w-3.5" />
+        Exporter
+      </Button>
+      <Button
+        size="sm"
+        className="h-9 gap-1.5"
+        onClick={handleOpenCreate}
+        style={{ backgroundColor: color, borderColor: color }}
+      >
+        <Plus className="h-4 w-4" />
+        Ajouter
+      </Button>
+    </div>
+  );
+
   return (
     <>
       <PageWrapper
-        title={title}
-        description={description}
-        actions={
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 hidden sm:flex"
-              title="Exporter"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Exporter
-            </Button>
-            <Button
-              size="sm"
-              className="h-9 gap-1.5"
-              onClick={handleOpenCreate}
-              style={{ backgroundColor: color, borderColor: color }}
-            >
-              <Plus className="h-4 w-4" />
-              Ajouter
-            </Button>
-          </div>
-        }
+        title={backgroundImage ? undefined : title}
+        description={backgroundImage ? undefined : description}
+        actions={backgroundImage ? undefined : actionsEl}
       >
+        {/* Hero banner when sector image is available */}
+        {backgroundImage && (
+          <div className="relative overflow-hidden rounded-xl mb-8" style={{ minHeight: '200px' }}>
+            <div className="absolute inset-0 z-0">
+              <Image
+                src={backgroundImage}
+                alt=""
+                fill
+                priority
+                className="object-cover"
+                style={{ opacity: 0.4, objectPosition: 'center 30%' }}
+                sizes="100vw"
+              />
+            </div>
+            <div
+              className="absolute inset-0 z-[1] pointer-events-none bg-gradient-to-b from-background/90 via-transparent via-40% to-background/80"
+              aria-hidden
+            />
+            <div className="relative z-[2] p-6 sm:p-8">
+              <Breadcrumb className="mb-3 [&>*]:text-white/70 [&>*]:hover:text-white" />
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white">{title}</h1>
+                  <p className="text-sm text-white/80 mt-1 max-w-xl">{description}</p>
+                </div>
+                {actionsEl}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats strip — always visible */}
         <div className="mb-6">
-          <SectorStatsGrid sector={sector} actors={actors} color={color} />
+          <SectorStatsGrid sector={sector} actors={actors} color={color} backgroundImage={backgroundImage} />
         </div>
 
         {/* Tabs */}

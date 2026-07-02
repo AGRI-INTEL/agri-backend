@@ -103,7 +103,7 @@ export interface ApiError {
   message: string;
   code?: string;
   /** Alias FastAPI / Django REST (champ `detail`) */
-  detail?: string | string[] | Record<string, unknown>;
+  detail?: string | string[] | Record<string, unknown> | Array<Record<string, unknown>>;
   details?: Record<string, string[]>;
   status: number;
   request_id?: string;

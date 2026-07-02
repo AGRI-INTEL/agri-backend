@@ -143,7 +143,7 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
  */
 class ApiException extends Error implements ApiError {
   code?: string;
-  detail?: string | string[] | Record<string, unknown>;
+  detail?: string | string[] | Record<string, unknown> | Array<Record<string, unknown>>;
   details?: Record<string, string[]>;
   status: number;
   request_id?: string;
@@ -188,6 +188,25 @@ class ApiException extends Error implements ApiError {
   }
 }
 
+/**
+ * Format FastAPI validation error detail (array of {loc, msg, type} objects)
+ * into a human-readable string.
+ */
+function formatDetailMessages(detail: unknown): string | undefined {
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    const msgs = detail
+      .map((d) => {
+        if (typeof d === 'string') return d;
+        if (d && typeof d === 'object' && 'msg' in d) return d.msg;
+        return null;
+      })
+      .filter(Boolean);
+    return msgs.length ? msgs.join('; ') : undefined;
+  }
+  return undefined;
+}
+
 function createApiError(error: unknown, status?: number): ApiException {
   // If already an ApiException, return as-is
   if (error instanceof ApiException) return error;
@@ -203,10 +222,8 @@ function createApiError(error: unknown, status?: number): ApiException {
       message = String(rawMessage);
     } else if (rawMessage) {
       message = rawMessage;
-    } else if (Array.isArray(rawDetail)) {
-      message = String(rawDetail);
     } else if (rawDetail) {
-      message = rawDetail;
+      message = formatDetailMessages(rawDetail) ?? String(rawDetail);
     } else {
       message = `Erreur ${status || e.status || 'inconnue'}`;
     }
@@ -507,12 +524,7 @@ class ApiClient {
           // JSON parse failed, use status text
         }
 
-        const detailMessage =
-          typeof errorData.detail === 'string'
-            ? errorData.detail
-            : Array.isArray(errorData.detail)
-              ? errorData.detail.join(', ')
-              : undefined;
+        const detailMessage = formatDetailMessages(errorData.detail);
 
         const errorMessage =
           typeof errorData.message === 'string'
@@ -664,7 +676,7 @@ class ApiClient {
           try {
             const data = JSON.parse(xhr.responseText);
             error = {
-              message: data.detail || data.message || 'Upload échoué',
+              message: formatDetailMessages(data.detail) || data.message || 'Upload échoué',
               code: data.code,
               status: xhr.status,
             };

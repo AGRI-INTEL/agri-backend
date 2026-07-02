@@ -43,19 +43,13 @@ function WavyUnderline() {
   return (
     <svg
       aria-hidden
-      style={{
-        position: 'absolute',
-        bottom: '-4px',
-        left: 0,
-        width: '100%',
-        overflow: 'visible',
-      }}
+      className="absolute -bottom-1 left-0 w-full overflow-visible text-secondary"
       height="8"
       preserveAspectRatio="none"
     >
       <path
         d="M0,4 Q25%,0 50%,4 T100%,4"
-        stroke="#C4923A"
+        stroke="currentColor"
         strokeWidth="2.5"
         fill="none"
         strokeDasharray="200"
@@ -94,12 +88,8 @@ const HEADLINE_WORDS = [
 export function HeroSection() {
   return (
     <section
-      className="relative flex flex-col justify-center overflow-hidden"
+      className="relative flex flex-col justify-center overflow-hidden min-h-screen bg-background"
       aria-label="Section héros"
-      style={{
-        minHeight: '100vh',
-        background: '#07100A',
-      }}
     >
       {/* ── keyframes injected inline ── */}
       <style>{`
@@ -130,23 +120,13 @@ export function HeroSection() {
 
       {/* ── Directional overlay ── */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          zIndex: 1,
-          background:
-            'linear-gradient(180deg, #07100A 0%, transparent 45%, rgba(20,12,3,0.80) 65%, #07100A 100%)',
-        }}
+        className="absolute inset-0 pointer-events-none z-[1] bg-gradient-to-b from-background via-transparent via-45% to-[rgba(20,12,3,0.80)] to-65% to-background"
         aria-hidden
       />
 
       {/* ── Gold radial glow ── */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          zIndex: 2,
-          background:
-            'radial-gradient(ellipse 60% 50% at 50% 55%, rgba(196,146,58,0.18) 0%, transparent 70%)',
-        }}
+        className="absolute inset-0 pointer-events-none z-[2] bg-[radial-gradient(ellipse_60%_50%_at_50%_55%,rgba(196,146,58,0.18)_0%,transparent_70%)]"
         aria-hidden
       />
 
@@ -157,47 +137,18 @@ export function HeroSection() {
       >
         {/* Badge */}
         <div
-          style={{
-            animation: 'fadeDown 0.55s 0s ease both',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            borderRadius: '9999px',
-            padding: '8px 20px',
-            background: 'rgba(196,146,58,0.10)',
-            border: '1px solid rgba(196,146,58,0.28)',
-            color: '#DDA85A',
-            fontSize: '0.8125rem',
-            fontWeight: 600,
-            letterSpacing: '0.01em',
-            marginBottom: '2.25rem',
-          }}
+          className="animate-[fadeDown_0.55s_0s_ease_both] inline-flex items-center gap-2 rounded-full px-5 py-2 bg-secondary/10 border border-secondary/30 text-[#DDA85A] text-[0.8125rem] font-semibold tracking-[0.01em] mb-9"
         >
           <span
             aria-hidden
-            style={{
-              width: '6px',
-              height: '6px',
-              borderRadius: '50%',
-              background: '#C4923A',
-              flexShrink: 0,
-              display: 'inline-block',
-            }}
+            className="h-1.5 w-1.5 rounded-full bg-secondary shrink-0 inline-block"
           />
           🌾 Plateforme agricole n°1 en Afrique de l&apos;Ouest
         </div>
 
         {/* Headline */}
         <h1
-          className="font-display font-bold italic"
-          style={{
-            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-            lineHeight: 1.1,
-            letterSpacing: '-0.02em',
-            color: '#E4DBC8',
-            marginBottom: '1.5rem',
-            maxWidth: '720px',
-          }}
+          className="font-display font-bold italic text-[clamp(2.5rem,5vw,4rem)] leading-[1.1] tracking-[-0.02em] text-foreground mb-6 max-w-[720px]"
         >
           {HEADLINE_WORDS.map((word, i) => {
             const isUnderlined = word.underline;
@@ -211,12 +162,7 @@ export function HeroSection() {
                   delay: i * 0.05,
                   ease: [0.25, 0.46, 0.45, 0.94],
                 }}
-                style={{
-                  display: 'inline-block',
-                  marginRight: i < HEADLINE_WORDS.length - 1 ? '0.28em' : 0,
-                  color: word.highlight ? '#C4923A' : '#E4DBC8',
-                  position: isUnderlined ? 'relative' : undefined,
-                }}
+                className={`inline-block ${i < HEADLINE_WORDS.length - 1 ? 'mr-[0.28em]' : ''} ${word.highlight ? 'text-secondary' : 'text-foreground'} ${isUnderlined ? 'relative' : ''}`}
               >
                 {word.text}
                 {isUnderlined && <WavyUnderline />}
@@ -230,13 +176,7 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-          style={{
-            fontSize: '1.125rem',
-            lineHeight: 1.75,
-            color: '#5E7A68',
-            maxWidth: '560px',
-            marginBottom: '2.5rem',
-          }}
+          className="text-lg leading-[1.75] text-muted-foreground max-w-[560px] mb-10"
         >
           Données en temps réel, IA prédictive, alertes et communauté — tout ce dont les
           professionnels agricoles ont besoin pour décider mieux.
@@ -247,37 +187,11 @@ export function HeroSection() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.55, ease: [0.25, 0.46, 0.45, 0.94] }}
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            gap: '12px',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            marginBottom: '3rem',
-          }}
+          className="flex flex-row gap-3 flex-wrap justify-center mb-12"
         >
           <Link
             href="/register"
-            className="group inline-flex items-center justify-center gap-2"
-            style={{
-              background: 'linear-gradient(135deg, #C4923A 0%, #b07928 100%)',
-              color: '#07100A',
-              fontWeight: 700,
-              fontSize: '0.9375rem',
-              padding: '13px 28px',
-              borderRadius: '9999px',
-              boxShadow: '0 4px 20px rgba(196,146,58,0.28)',
-              transition: 'filter 0.2s ease, transform 0.2s ease',
-              textDecoration: 'none',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.filter = 'brightness(1.1)';
-              (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.filter = 'brightness(1)';
-              (e.currentTarget as HTMLElement).style.transform = 'translateY(0)';
-            }}
+            className="group inline-flex items-center justify-center gap-2 bg-gradient-to-br from-secondary to-[#b07928] text-background font-bold text-[0.9375rem] px-7 py-[13px] rounded-full shadow-[0_4px_20px_rgba(196,146,58,0.28)] transition-all duration-200 hover:brightness-110 hover:-translate-y-0.5 no-underline"
           >
             Commencer gratuitement
             <ArrowRight
@@ -289,28 +203,9 @@ export function HeroSection() {
 
           <Link
             href="#demo"
-            className="inline-flex items-center justify-center gap-2"
-            style={{
-              background: 'transparent',
-              color: '#E4DBC8',
-              fontWeight: 600,
-              fontSize: '0.9375rem',
-              padding: '13px 28px',
-              borderRadius: '9999px',
-              border: '1px solid rgba(196,146,58,0.40)',
-              transition: 'border-color 0.2s ease, background 0.2s ease',
-              textDecoration: 'none',
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = '#C4923A';
-              (e.currentTarget as HTMLElement).style.background = 'rgba(196,146,58,0.08)';
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.borderColor = 'rgba(196,146,58,0.40)';
-              (e.currentTarget as HTMLElement).style.background = 'transparent';
-            }}
+            className="inline-flex items-center justify-center gap-2 bg-transparent text-foreground font-semibold text-[0.9375rem] px-7 py-[13px] rounded-full border border-secondary/40 transition-all duration-200 hover:border-secondary hover:bg-secondary/10 no-underline"
           >
-            <Play size={14} style={{ color: '#C4923A' }} />
+            <Play size={14} className="text-secondary" />
             Voir la démo
           </Link>
         </motion.div>
@@ -320,14 +215,7 @@ export function HeroSection() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0',
-            rowGap: '10px',
-          }}
+          className="flex flex-wrap items-center justify-center gap-0 gap-y-2.5"
           role="list"
           aria-label="Chiffres clés"
         >
@@ -335,29 +223,16 @@ export function HeroSection() {
             <span
               key={stat.label}
               role="listitem"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: i < STAT_DISPLAY.length - 1 ? '0' : '0',
-              }}
+              className="inline-flex items-center"
             >
-              <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px' }}>
+              <span className="inline-flex items-baseline gap-1">
                 <span
-                  style={{
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    color: '#E4DBC8',
-                  }}
+                  className="font-mono font-bold text-base text-foreground"
                 >
                   <AnimatedCounter target={stat.target} suffix={stat.suffix} />
                 </span>
                 <span
-                  style={{
-                    fontSize: '0.75rem',
-                    color: '#5E7A68',
-                    letterSpacing: '0.02em',
-                  }}
+                  className="text-xs text-muted-foreground tracking-[0.02em]"
                 >
                   {stat.label}
                 </span>
@@ -367,15 +242,7 @@ export function HeroSection() {
               {i < STAT_DISPLAY.length - 1 && (
                 <span
                   aria-hidden
-                  style={{
-                    display: 'inline-block',
-                    width: '4px',
-                    height: '4px',
-                    borderRadius: '50%',
-                    background: '#C4923A',
-                    margin: '0 14px',
-                    flexShrink: 0,
-                  }}
+                  className="inline-block w-1 h-1 rounded-full bg-secondary mx-3.5 shrink-0"
                 />
               )}
             </span>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import {
   Folder, FolderOpen, Image as ImageIcon, Film, Music, FileText, Archive,
-  Grid, List, Upload, FolderPlus, MoreHorizontal, Download, Trash2, Move,
+  Grid, List, Upload, FolderPlus, MoreHorizontal, Download, Trash2, Move, X,
 } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
@@ -60,25 +60,85 @@ export function FileExplorer() {
 
   const currentFolderData = foldersList?.find((f) => f.id === currentFolder);
 
-  const renderPreview = () => {
-    if (!previewFile) return null;
-    if (previewFile.type === 'image') {
-      return (
-        <ImageViewer
-          images={[{ src: previewFile.url, alt: previewFile.name }]}
-          open={!!previewFile}
-          onClose={() => setPreviewFile(null)}
-        />
-      );
-    }
+  const selectedFileData = previewFile;
+
+  const renderInlinePreview = () => {
+    if (!selectedFileData) return null;
+    const isImage = selectedFileData.type === 'image';
+    const isPdf = selectedFileData.name?.toLowerCase().endsWith('.pdf');
+    const isVideo = selectedFileData.type === 'video';
+    const isAudio = selectedFileData.type === 'audio';
+
     return (
-      <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader><DialogTitle>{previewFile.name}</DialogTitle></DialogHeader>
-          {previewFile.type === 'video' && <VideoPlayer src={previewFile.url} poster={previewFile.thumbnail} />}
-          {previewFile.type === 'audio' && <AudioPlayer src={previewFile.url} />}
-        </DialogContent>
-      </Dialog>
+      <div className="w-80 shrink-0 border-l border-border bg-card flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-semibold truncate">{selectedFileData.name}</h3>
+          <button
+            onClick={() => setPreviewFile(null)}
+            className="h-7 w-7 flex items-center justify-center rounded-button text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-auto">
+          {isImage ? (
+            <div className="relative w-full aspect-square bg-black/5">
+              <Image
+                src={selectedFileData.url}
+                alt={selectedFileData.name}
+                fill
+                unoptimized
+                className="object-contain"
+                sizes="320px"
+              />
+            </div>
+          ) : isPdf ? (
+            <iframe
+              src={selectedFileData.url}
+              className="w-full h-full min-h-[400px]"
+              title={selectedFileData.name}
+            />
+          ) : isVideo ? (
+            <video
+              src={selectedFileData.url}
+              controls
+              className="w-full"
+              poster={selectedFileData.thumbnail}
+            />
+          ) : isAudio ? (
+            <div className="p-6 flex flex-col items-center gap-4">
+              <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center">
+                <Music className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <audio src={selectedFileData.url} controls className="w-full" />
+            </div>
+          ) : (
+            <div className="p-4 space-y-4">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+                <FileText className="h-8 w-8 text-muted-foreground" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{selectedFileData.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatFileSize(selectedFileData.size)}</p>
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type</span>
+                  <span className="font-medium">{selectedFileData.mime_type || selectedFileData.type || '—'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Date</span>
+                  <span className="font-medium">{formatRelativeDate(selectedFileData.created_at)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Taille</span>
+                  <span className="font-medium">{formatFileSize(selectedFileData.size)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     );
   };
 
@@ -246,7 +306,7 @@ export function FileExplorer() {
         )}
       </div>
 
-      {renderPreview()}
+      {renderInlinePreview()}
     </div>
   );
 }

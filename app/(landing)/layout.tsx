@@ -1,5 +1,6 @@
 import { NavbarLanding } from '@/components/landing/navbar-landing';
 import { FooterLanding } from '@/components/landing/footer-landing';
+import { CommandPalette } from '@/components/shared/command-palette';
 
 export default function LandingLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ export default function LandingLayout({ children }: { children: React.ReactNode 
         <main id="main-content" className="pt-[68px]">{children}</main>
         <FooterLanding />
       </div>
+      <CommandPalette />
     </div>
   );
 }

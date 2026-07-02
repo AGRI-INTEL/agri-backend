@@ -15,7 +15,7 @@ const inter = localFont({
   ],
   variable: '--font-inter',
   display: 'swap',
-  preload: false,
+  preload: true,
 });
 
 const playfair = localFont({
@@ -27,7 +27,7 @@ const playfair = localFont({
   ],
   variable: '--font-display',
   display: 'swap',
-  preload: false,
+  preload: true,
 });
 
 const mono = localFont({

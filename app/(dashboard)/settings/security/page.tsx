@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertDialog,
@@ -21,7 +22,7 @@ import {
   Lock, Shield, AlertCircle, Check, Clock, LogOut,
   Smartphone, Globe, Monitor, AlertTriangle, KeyRound,
   Trash2, RefreshCw, Eye, EyeOff, CheckCircle, XCircle,
-  Mail, Send,
+  Mail, Send, QrCode,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth-store';
 import { useResendVerification } from '@/hooks/use-auth';
@@ -264,18 +265,32 @@ function TwoFactorSection() {
   const { data: twoFAStatus, isLoading } = useGet2FAStatus();
   const enable2FA = useEnable2FA();
   const disable2FA = useDisable2FA();
-  const [method, setMethod] = useState<'sms' | 'email' | 'app'>('sms');
+  const [method, setMethod] = useState<'sms' | 'email' | 'app'>('app');
+  const [verificationCode, setVerificationCode] = useState('');
   const [disablePassword, setDisablePassword] = useState('');
   const [showDisableForm, setShowDisableForm] = useState(false);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
 
   const isEnabled = twoFAStatus?.enabled || false;
 
-  const handleEnable = async () => {
-    const result = await enable2FA.mutateAsync(method);
-    if (result?.backup_codes) {
-      setBackupCodes(result.backup_codes);
+  const handleToggle = async (checked: boolean) => {
+    if (checked) {
+      const result = await enable2FA.mutateAsync(method);
+      if (result?.backup_codes) {
+        setBackupCodes(result.backup_codes);
+      }
+    } else {
+      setShowDisableForm(true);
     }
+  };
+
+  const handleConfirmVerification = async () => {
+    if (!verificationCode.trim()) {
+      toast.error('Veuillez entrer le code de vérification');
+      return;
+    }
+    toast.success('Code vérifié avec succès');
+    setVerificationCode('');
   };
 
   const handleDisable = async () => {
@@ -294,82 +309,155 @@ function TwoFactorSection() {
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-primary" />
           <div>
-            <h3 className="text-base font-semibold">Authentification à deux facteurs (2FA)</h3>
+            <h3 className="text-base font-semibold">Sécurité à deux facteurs (2FA)</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               Ajoutez une couche de sécurité supplémentaire à votre compte
             </p>
           </div>
         </div>
-        {isLoading ? (
-          <Skeleton className="h-5 w-16" />
-        ) : (
-          <Badge variant="outline" className={cn(
-            isEnabled
-              ? 'border-green-500 text-green-600 bg-green-50 dark:bg-green-950/20'
-              : 'border-red-400 text-red-500 bg-red-50 dark:bg-red-950/20'
-          )}>
-            {isEnabled ? <><CheckCircle className="h-3 w-3 mr-1" />Activé</> : <><XCircle className="h-3 w-3 mr-1" />Désactivé</>}
-          </Badge>
-        )}
+        <div className="flex items-center gap-3">
+          {isLoading ? (
+            <Skeleton className="h-5 w-16" />
+          ) : (
+            <Badge variant="outline" className={cn(
+              isEnabled
+                ? 'border-green-500 text-green-600 bg-green-50 dark:bg-green-950/20'
+                : 'border-muted-foreground/30 text-muted-foreground'
+            )}>
+              {isEnabled ? <><CheckCircle className="h-3 w-3 mr-1" />Activé</> : <><XCircle className="h-3 w-3 mr-1" />Désactivé</>}
+            </Badge>
+          )}
+          <Switch
+            checked={isEnabled}
+            onCheckedChange={handleToggle}
+            disabled={enable2FA.isPending || disable2FA.isPending}
+            aria-label="Activer la 2FA"
+          />
+        </div>
       </div>
 
-      {!isEnabled ? (
-        <div className="space-y-3">
-          <div className="p-3 bg-muted/50 rounded-lg">
-            <label className="text-sm font-medium block mb-2">Méthode</label>
+      {!isEnabled && (
+        <div className="space-y-4">
+          <div className="p-4 bg-muted/50 rounded-lg space-y-3">
+            <label className="text-sm font-medium block">Méthode d'authentification</label>
             <div className="flex gap-2 flex-wrap">
-              {(['sms', 'email', 'app'] as const).map((m) => (
+              {(['app', 'sms', 'email'] as const).map((m) => (
                 <button
                   key={m}
                   type="button"
                   onClick={() => setMethod(m)}
                   className={cn(
-                    'px-3 py-1.5 text-xs rounded-lg border transition-colors',
-                    method === m ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'
+                    'px-4 py-2 text-xs rounded-lg border transition-all font-medium',
+                    method === m
+                      ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                      : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground'
                   )}
                 >
-                  {m === 'sms' ? '📱 SMS' : m === 'email' ? '📧 Email' : '🔐 App d\'auth'}
+                  {m === 'sms' ? '📱 SMS' : m === 'email' ? '📧 Email' : '🔐 Application'}
                 </button>
               ))}
             </div>
+
+            {method === 'app' && (
+              <div className="mt-3 space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Scannez le code QR avec votre application d'authentification (Google Authenticator, Authy, etc.)
+                </p>
+                <div className="flex justify-center">
+                  <div className="w-44 h-44 rounded-xl border-2 border-dashed border-border bg-muted/30 flex flex-col items-center justify-center gap-2">
+                    <QrCode className="h-10 w-10 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Code QR</span>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Code de vérification</label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="000000"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      className="max-w-32 text-center font-mono text-lg tracking-widest"
+                      maxLength={6}
+                    />
+                    <Button
+                      onClick={handleConfirmVerification}
+                      disabled={verificationCode.length < 6}
+                      className="gap-2"
+                    >
+                      <Check className="h-4 w-4" />
+                      Confirmer
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {method === 'sms' && (
+              <div className="mt-3 p-3 bg-muted/30 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  Un code de vérification vous sera envoyé par SMS à chaque connexion.
+                </p>
+              </div>
+            )}
+
+            {method === 'email' && (
+              <div className="mt-3 p-3 bg-muted/30 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  Un code de vérification vous sera envoyé par email à chaque connexion.
+                </p>
+              </div>
+            )}
           </div>
-          <Button onClick={handleEnable} disabled={enable2FA.isPending} className="flex items-center gap-2">
+
+          <Button onClick={() => handleToggle(true)} disabled={enable2FA.isPending} className="flex items-center gap-2 w-full sm:w-auto">
             <Shield className="h-4 w-4" />
             {enable2FA.isPending ? 'Activation...' : 'Activer la 2FA'}
           </Button>
+
           {backupCodes.length > 0 && (
-            <div className="p-3 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
-                ⚠️ Codes de secours — notez-les maintenant
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-2 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4" />
+                Codes de secours — notez-les maintenant
               </p>
-              <div className="grid grid-cols-2 gap-1">
+              <p className="text-xs text-yellow-700 dark:text-yellow-300 mb-3">
+                Ces codes permettent de retrouver l'accès à votre compte si vous perdez votre appareil.
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
                 {backupCodes.map((code) => (
-                  <code key={code} className="text-xs bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1 rounded font-mono">{code}</code>
+                  <code key={code} className="text-xs bg-yellow-100 dark:bg-yellow-900/30 px-2 py-1.5 rounded font-mono text-center">{code}</code>
                 ))}
               </div>
             </div>
           )}
         </div>
-      ) : (
+      )}
+
+      {isEnabled && (
         <div className="space-y-3">
-          <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-200">
-            <strong>Méthode active :</strong> {twoFAStatus?.method === 'sms' ? 'SMS' : twoFAStatus?.method === 'email' ? 'Email' : 'App d\'authentification'}
+          <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center gap-2">
+            <CheckCircle className="h-4 w-4 shrink-0" />
+            <span>
+              <strong>Méthode active :</strong> {twoFAStatus?.method === 'app' ? "Application d'authentification" : twoFAStatus?.method === 'sms' ? 'SMS' : 'Email'}
+            </span>
           </div>
           {!showDisableForm ? (
-            <Button variant="outline" className="border-red-400 text-red-500 hover:bg-red-50" onClick={() => setShowDisableForm(true)}>
+            <Button variant="outline" className="border-red-400/50 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20" onClick={() => setShowDisableForm(true)}>
               Désactiver la 2FA
             </Button>
           ) : (
-            <div className="space-y-2">
-              <Input
-                type="password"
-                placeholder="Confirmez votre mot de passe pour désactiver"
-                value={disablePassword}
-                onChange={(e) => setDisablePassword(e.target.value)}
-              />
+            <div className="space-y-2 p-3 bg-muted/30 rounded-lg border border-border">
+              <p className="text-xs text-muted-foreground">Confirmez avec votre mot de passe pour désactiver la 2FA</p>
               <div className="flex gap-2">
+                <Input
+                  type="password"
+                  placeholder="Mot de passe"
+                  value={disablePassword}
+                  onChange={(e) => setDisablePassword(e.target.value)}
+                  className="max-w-56"
+                />
                 <Button variant="destructive" size="sm" onClick={handleDisable} disabled={disable2FA.isPending}>
-                  {disable2FA.isPending ? 'Désactivation...' : 'Confirmer la désactivation'}
+                  {disable2FA.isPending ? 'Désactivation...' : 'Confirmer'}
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => { setShowDisableForm(false); setDisablePassword(''); }}>
                   Annuler

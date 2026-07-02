@@ -10,6 +10,7 @@ export default function ForestierPage() {
       description="Exploitants forestiers, concessions et produits forestiers"
       icon={TreePine}
       color="#92400E"
+      backgroundImage="/images/sectors/forestier.jpg"
     />
   );
 }

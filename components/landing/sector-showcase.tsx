@@ -57,7 +57,7 @@ const SECTORS: SectorData[] = [
       { label: 'Alertes épizooties', value: 'Actif', trend: 'neutral' },
     ],
     chartValues: [60, 58, 63, 57, 65, 70, 68, 73, 75, 71, 78, 82],
-    href: '/elevage',
+    href: '/animal',
   },
   {
     id: 'halieutique',

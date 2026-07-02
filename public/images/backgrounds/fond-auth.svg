@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FEF7E6"/>
+      <stop offset="100%" stop-color="#F5E6C8"/>
+    </linearGradient>
+    <pattern id="fields" x="0" y="0" width="120" height="60" patternUnits="userSpaceOnUse">
+      <path d="M0 30 Q30 20 60 30 Q90 40 120 30" fill="none" stroke="#C4923A" stroke-opacity="0.08" stroke-width="1.5"/>
+      <path d="M0 45 Q30 35 60 45 Q90 55 120 45" fill="none" stroke="#C4923A" stroke-opacity="0.05" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <rect width="800" height="600" fill="url(#fields)"/>
+  <!-- Leaf silhouettes -->
+  <g fill="#C4923A" fill-opacity="0.04">
+    <path d="M50 500 Q60 470 80 460 Q100 470 110 500 Q100 520 80 530 Q60 520 50 500z"/>
+    <path d="M150 520 Q160 490 180 480 Q200 490 210 520 Q200 540 180 550 Q160 540 150 520z" transform="rotate(-15 180 515)"/>
+    <path d="M680 400 Q690 370 710 360 Q730 370 740 400 Q730 420 710 430 Q690 420 680 400z" transform="rotate(25 710 395)"/>
+    <path d="M720 480 Q730 450 750 440 Q770 450 780 480 Q770 500 750 510 Q730 500 720 480z"/>
+  </g>
+  <!-- Subtle line pattern -->
+  <g stroke="#C4923A" stroke-opacity="0.04" stroke-width="0.5">
+    <line x1="0" y1="0" x2="800" y2="600"/>
+    <line x1="100" y1="0" x2="800" y2="525"/>
+    <line x1="200" y1="0" x2="800" y2="450"/>
+    <line x1="0" y1="100" x2="700" y2="600"/>
+    <line x1="0" y1="200" x2="600" y2="600"/>
+    <line x1="0" y1="300" x2="500" y2="600"/>
+  </g>
+</svg>

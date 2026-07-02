@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from '@/lib/motion';
 import {
   BarChart3, TrendingUp, CloudSun, Globe, Upload,
   Wheat, DollarSign, Thermometer, Droplets, AlertTriangle,

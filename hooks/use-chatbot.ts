@@ -39,10 +39,10 @@ export function useChatbot() {
 
   const { data: activeConversation, isLoading: convLoading } = useQuery({
     queryKey: ['chatbot', 'conversations', activeConversationId],
-    queryFn: () => apiClient.get<Message[]>(`/chatbot/conversations/${activeConversationId}`).then(msgs => ({
-      id: activeConversationId!,
-      messages: msgs,
-    } as unknown as Conversation)).catch(() => undefined),
+    queryFn: () => apiClient.get<{ id: string; messages?: Message[] }>(`/chatbot/conversations/${activeConversationId}`).then(conv => ({
+      id: conv?.id || activeConversationId!,
+      messages: Array.isArray(conv?.messages) ? conv.messages : [],
+    } as Conversation)).catch(() => undefined),
     enabled: !!activeConversationId,
     retry: 1,
   });

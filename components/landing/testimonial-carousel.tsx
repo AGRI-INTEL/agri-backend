@@ -81,7 +81,7 @@ function StarRow({ rating }: { rating: number }) {
           height="14"
           viewBox="0 0 20 20"
           aria-hidden="true"
-          style={{ fill: i < rating ? '#C4923A' : 'rgba(196,146,58,0.15)' }}
+          className={i < rating ? 'fill-secondary' : 'fill-secondary/15'}
         >
           <path d="M10 1l2.66 5.38 5.94.86-4.3 4.19 1.01 5.91L10 14.74l-5.31 2.6 1.01-5.91L1.4 7.24l5.94-.86z" />
         </svg>
@@ -93,22 +93,13 @@ function StarRow({ rating }: { rating: number }) {
 export function TestimonialCarousel() {
   return (
     <section
-      className="py-24 px-4 scroll-mt-20 relative overflow-hidden"
+      className="py-24 px-4 scroll-mt-20 relative overflow-hidden bg-background border-t border-b border-border/20"
       id="temoignages"
       aria-labelledby="testimonials-heading"
-      style={{
-        background: '#0D1A10',
-        borderTop: '1px solid rgba(196,146,58,0.13)',
-        borderBottom: '1px solid rgba(196,146,58,0.08)',
-      }}
     >
       {/* Subtle ambient bloom */}
       <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 70% 50% at 50% 100%, rgba(30,107,62,0.07) 0%, transparent 70%)',
-        }}
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_100%,rgba(30,107,62,0.07)_0%,transparent_70%)]"
         aria-hidden="true"
       />
 
@@ -116,8 +107,7 @@ export function TestimonialCarousel() {
         {/* Section header */}
         <div className="mb-14">
           <motion.p
-            className="text-[0.6875rem] font-bold uppercase tracking-[0.24em] mb-3"
-            style={{ color: '#C4923A' }}
+            className="text-[0.6875rem] font-bold uppercase tracking-[0.24em] mb-3 text-secondary"
             initial={{ opacity: 0, y: 8 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -127,8 +117,7 @@ export function TestimonialCarousel() {
           </motion.p>
           <motion.h2
             id="testimonials-heading"
-            className="font-display text-[clamp(1.75rem,3.2vw,2.625rem)] font-bold italic tracking-[-0.02em] leading-[1.18]"
-            style={{ color: '#E4DBC8' }}
+            className="font-display text-[clamp(1.75rem,3.2vw,2.625rem)] font-bold italic tracking-[-0.02em] leading-[1.18] text-foreground"
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -161,13 +150,7 @@ export function TestimonialCarousel() {
                 }}
               >
                 <article
-                  className="relative h-full flex overflow-hidden"
-                  style={{
-                    background: 'rgba(17,29,20,0.72)',
-                    border: '1px solid rgba(196,146,58,0.14)',
-                    borderRadius: '1.25rem',
-                    backdropFilter: 'blur(8px)',
-                  }}
+                  className="relative h-full flex overflow-hidden bg-card/70 backdrop-blur-sm border border-border/20 rounded-[1.25rem]"
                 >
                   {/* Soil stripe — the aesthetic risk: a left border in sector colour */}
                   <div
@@ -181,18 +164,17 @@ export function TestimonialCarousel() {
                     <StarRow rating={t.rating} />
 
                     {/* Quote */}
-                    <blockquote className="flex-1 font-display text-[1.0625rem] font-bold italic leading-[1.58]" style={{ color: '#E4DBC8' }}>
+                    <blockquote className="flex-1 font-display text-[1.0625rem] font-bold italic leading-[1.58] text-foreground">
                       &ldquo;{t.quote}&rdquo;
                     </blockquote>
 
                     {/* Author row */}
-                    <footer className="flex items-center gap-3 pt-1" style={{ borderTop: '1px solid rgba(196,146,58,0.10)' }}>
+                    <footer className="flex items-center gap-3 pt-1 border-t border-border/10">
                       {/* Monogram avatar */}
                       <div
-                        className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg text-sm font-black select-none"
+                        className="shrink-0 flex h-10 w-10 items-center justify-center rounded-lg text-sm font-black select-none text-foreground"
                         style={{
                           background: `linear-gradient(135deg, ${stripeColor} 0%, #0a120c 100%)`,
-                          color: '#E4DBC8',
                           boxShadow: `0 2px 12px ${stripeColor}44`,
                         }}
                         aria-hidden="true"
@@ -201,23 +183,19 @@ export function TestimonialCarousel() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold truncate" style={{ color: '#E4DBC8' }}>
+                        <p className="text-sm font-bold truncate text-foreground">
                           {t.name}
                         </p>
-                        <p className="text-xs mt-0.5 truncate" style={{ color: '#5E7A68' }}>
+                        <p className="text-xs mt-0.5 truncate text-muted-foreground">
                           {t.role}
-                          <span className="mx-1.5" style={{ color: '#2E4A36' }} aria-hidden="true">·</span>
+                          <span className="mx-1.5 text-muted-foreground/30" aria-hidden="true">·</span>
                           {flag} {t.country}
                         </p>
                       </div>
 
                       {/* Sector badge */}
                       <div
-                        className="shrink-0 flex items-center justify-center rounded-md h-8 w-8 text-base"
-                        style={{
-                          background: 'rgba(196,146,58,0.07)',
-                          border: '1px solid rgba(196,146,58,0.13)',
-                        }}
+                        className="shrink-0 flex items-center justify-center rounded-md h-8 w-8 text-base bg-secondary/10 border border-secondary/20"
                         aria-label={`Filière ${t.sector}`}
                       >
                         {sectorEmoji}
