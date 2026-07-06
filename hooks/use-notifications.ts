@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { useUIStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { getStoredAccessToken } from '@/lib/auth-session';
 import type { Notification } from '@/types/api';
 import { toast } from 'sonner';
 
@@ -64,7 +65,9 @@ export function useNotifications() {
       // Backend websocket endpoint is mounted under the API prefix: /api/v1/ws/{user_id}
       // Ensure we use the correct host (strip port 8001 if present, use 8000 or the configured host)
       const finalHost = host.includes(':8001') ? host.replace(':8001', ':8000') : host;
-      socketRef.current = new WebSocket(`${proto}://${finalHost}${apiPrefix}/ws/${userId}`);
+      const token = getStoredAccessToken();
+      if (!token) { console.warn('[Notifications] No token available for WS'); return; }
+      socketRef.current = new WebSocket(`${proto}://${finalHost}${apiPrefix}/ws?token=${encodeURIComponent(token)}`);
 
       socketRef.current.onopen = () => {
         // Optionally subscribe to topics

@@ -434,7 +434,7 @@ export function AuthShell({ children }: AuthShellProps) {
         {/* Mobile: landscape image band instead of left panel */}
         <div className="relative w-full h-40 shrink-0 overflow-hidden lg:hidden">
           <Image
-            src="/fond-landscape.jpg"
+            src="/fond-landscape.webp"
             alt=""
             aria-hidden
             fill

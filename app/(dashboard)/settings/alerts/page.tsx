@@ -37,8 +37,6 @@ import {
   TrendingDown,
   MapPin,
   Wheat,
-  CheckCircle,
-  XCircle,
 } from 'lucide-react';
 import {
   usePriceAlerts,

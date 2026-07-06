@@ -7,7 +7,7 @@ export default function NotFound() {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background">
       <div
         className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-[0.03]"
-        style={{ backgroundImage: 'url(/fond-landscape.jpg)' }}
+        style={{ backgroundImage: 'url(/fond-landscape.webp)' }}
       />
       <div className="relative z-10 mx-auto max-w-lg px-6 text-center">
         <h1 className="text-[12rem] font-bold leading-none tracking-tighter text-secondary">

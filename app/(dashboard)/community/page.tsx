@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from '@/lib/motion';
 import {
   Plus, TrendingUp, Users, MessageSquare, Flame, Search,
-  Filter, Globe, ArrowRight, LayoutGrid, List, BookOpen,
+  Filter, Globe, ArrowRight, LayoutGrid, List, BookOpen, Settings,
 } from 'lucide-react';
 import { GroupCard } from '@/components/community/group-card';
 import { PostCard } from '@/components/community/post-card';
 import { CreateGroupDialog } from '@/components/community/create-group-dialog';
+import { CommunitySettingsDialog } from '@/components/community/community-settings-dialog';
 import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import {
   useGroups, useCommunityStats, useTrendingGroups, useTrendingPosts, usePublicPosts,
 } from '@/hooks/use-community';
 import { useDebounce } from '@/hooks/use-debounce';
+import { useGetPreferences } from '@/hooks/use-settings';
 import { cn } from '@/lib/utils';
 import { GROUP_SECTOR_COLORS } from '@/types/community';
 
@@ -47,10 +49,22 @@ export default function CommunityPage() {
   const [sortBy, setSortBy] = useState('recent');
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [showCreate, setShowCreate] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [mainTab, setMainTab] = useState<MainTab>('groups');
   const [discSearch, setDiscSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
   const debouncedDiscSearch = useDebounce(discSearch, 300);
+
+  // Applique les préférences communauté (tri/vue par défaut) une seule fois au chargement
+  const { data: userPrefs } = useGetPreferences();
+  const [prefsApplied, setPrefsApplied] = useState(false);
+  useEffect(() => {
+    if (!prefsApplied && userPrefs?.community) {
+      if (userPrefs.community.default_sort) setSortBy(userPrefs.community.default_sort);
+      if (userPrefs.community.default_view) setView(userPrefs.community.default_view);
+      setPrefsApplied(true);
+    }
+  }, [prefsApplied, userPrefs?.community]);
 
   const { data, isLoading } = useGroups({
     search: debouncedSearch || undefined,
@@ -108,7 +122,16 @@ export default function CommunityPage() {
               <h1 className="text-3xl font-black tracking-tight text-white leading-none">Communauté AgriIntel</h1>
               <p className="text-white/60 text-sm mt-2 max-w-sm">Échangez avec des agriculteurs, partagez vos pratiques et apprenez ensemble.</p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.35, delay: 0.1 }} className="sm:pt-1">
+            <motion.div initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.35, delay: 0.1 }} className="sm:pt-1 flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                title="Paramètres de la communauté"
+                className="border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                onClick={() => setShowSettings(true)}
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
               <Button className="bg-[#D97706] hover:bg-[#b45309] text-white font-semibold shadow-lg border-0" onClick={() => setShowCreate(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Créer un groupe
@@ -138,6 +161,7 @@ export default function CommunityPage() {
       {/* ── Page Content ────────────────────────────────────────────────── */}
       <div className="p-6">
         <CreateGroupDialog open={showCreate} onOpenChange={setShowCreate} />
+        <CommunitySettingsDialog open={showSettings} onOpenChange={setShowSettings} />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* ── Sidebar ── */}

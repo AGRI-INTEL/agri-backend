@@ -197,15 +197,16 @@ export default function WeatherPage() {
                 </div>
               )}
               <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-white border border-white/20 hover:bg-white/10 hover:text-white"
-                  onClick={() => refetch()}
-                >
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                  Actualiser
-                </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white border border-white/20 hover:bg-white/10 hover:text-white"
+                    onClick={() => refetch()}
+                    aria-label="Actualiser les données météo"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                    Actualiser
+                  </Button>
               </div>
             </motion.div>
           </div>
@@ -213,6 +214,8 @@ export default function WeatherPage() {
           {/* City selector strip */}
           <motion.div
             className="flex gap-2 flex-wrap"
+            role="radiogroup"
+            aria-label="Sélectionner une ville"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.15 }}
@@ -220,6 +223,8 @@ export default function WeatherPage() {
             {CITIES.map((c) => (
               <button
                 key={c}
+                role="radio"
+                aria-checked={city === c}
                 onClick={() => setCity(c)}
                 className={cn(
                   'px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
@@ -348,6 +353,8 @@ export default function WeatherPage() {
                         return (
                           <div
                             key={day.date}
+                            role="article"
+                            aria-label={`Prévision ${isToday ? 'aujourd\'hui' : date.toLocaleDateString('fr-FR', { weekday: 'long' })}: ${day.temperature_max}°C max, ${day.temperature_min}°C min, ${day.precipitation_probability}% précipitations`}
                             className={cn(
                               'text-center p-2 rounded-xl border transition-all hover:shadow-md',
                               isToday
@@ -410,10 +417,12 @@ export default function WeatherPage() {
                   <Thermometer className="h-5 w-5 text-orange-500" />
                   Historique des températures
                 </CardTitle>
-                <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5">
+                <div className="flex gap-1 bg-muted/50 rounded-lg p-0.5" role="radiogroup" aria-label="Période historique">
                   {[7, 14, 30].map((d) => (
                     <button
                       key={d}
+                      role="radio"
+                      aria-checked={historyDays === d}
                       onClick={() => setHistoryDays(d)}
                       className={cn(
                         'px-3 h-7 text-xs font-medium rounded-md transition-colors',

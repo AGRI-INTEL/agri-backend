@@ -168,7 +168,8 @@ export function useExportPredictions() {
     mutationFn: (ids: string[]) =>
       apiClient.post<{ format: string; data: string; count: number }>(
         '/predictions/export',
-        { ids }
+        // Le backend attend une liste JSON brute (ids: list[str]), pas un objet enveloppé
+        ids
       ),
     onError: handleError,
   });

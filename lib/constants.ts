@@ -276,10 +276,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const LLM_PROVIDERS = [
   { id: 'kimi', name: 'Kimi', emoji: '🧠', description: 'Kimi K2.6 - Moonshot AI', max_tokens: 200000 },
   { id: 'deepseek', name: 'DeepSeek', emoji: '🧠', description: 'DeepSeek V3', max_tokens: 64000 },
-  { id: 'gpt4', name: 'GPT-4', emoji: '🧠', description: 'GPT-4o - OpenAI', max_tokens: 128000 },
-  { id: 'claude', name: 'Claude', emoji: '🧠', description: 'Claude 3.5 Sonnet', max_tokens: 200000 },
-  { id: 'gemini', name: 'Gemini', emoji: '🧠', description: 'Gemini 2.5 Pro', max_tokens: 1000000 },
-  { id: 'demo', name: 'Demo', emoji: '🎮', description: 'Mode démonstration', max_tokens: 4000 },
+  { id: 'openai', name: 'GPT-4o', emoji: '🧠', description: 'GPT-4o - OpenAI', max_tokens: 128000 },
 ] as const;
 
 export type LLMProvider = (typeof LLM_PROVIDERS)[number]['id'];
@@ -551,7 +548,7 @@ export const SECTOR_SHOWCASE: SectorShowcase[] = [
       'Recommandations engrais',
     ],
     color: '#16A34A',
-    image: '/images/sectors/vegetal.jpg',
+    image: '/images/sectors/vegetal.webp',
   },
   {
     id: 'animal',
@@ -568,7 +565,7 @@ export const SECTOR_SHOWCASE: SectorShowcase[] = [
       'Traçabilité complète',
     ],
     color: '#D97706',
-    image: '/images/sectors/animal.jpg',
+    image: '/images/sectors/animal.webp',
   },
   {
     id: 'halieutique',
@@ -585,7 +582,7 @@ export const SECTOR_SHOWCASE: SectorShowcase[] = [
       'Traçabilité lots',
     ],
     color: '#0891B2',
-    image: '/images/sectors/halieutique.jpg',
+    image: '/images/sectors/halieutique.webp',
   },
   {
     id: 'forestier',
@@ -602,7 +599,7 @@ export const SECTOR_SHOWCASE: SectorShowcase[] = [
       'Reboisement & carbone',
     ],
     color: '#92400E',
-    image: '/images/sectors/forestier.jpg',
+    image: '/images/sectors/forestier.webp',
   },
   {
     id: 'minier',
@@ -618,7 +615,7 @@ export const SECTOR_SHOWCASE: SectorShowcase[] = [
       'Conflits usage terres',
     ],
     color: '#6B7280',
-    image: '/images/sectors/minier.jpg',
+    image: '/images/sectors/minier.webp',
   },
   {
     id: 'industriel',
@@ -634,7 +631,7 @@ export const SECTOR_SHOWCASE: SectorShowcase[] = [
       'Marchés export',
     ],
     color: '#4F46E5',
-    image: '/images/sectors/industriel.jpg',
+    image: '/images/sectors/industriel.webp',
   },
 ];
 

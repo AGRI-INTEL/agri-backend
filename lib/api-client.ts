@@ -1,4 +1,5 @@
 import type { ApiError } from '@/types/api';
+import { getStoredAccessToken } from '@/lib/auth-session';
 
 // ============================================================================
 // SECTION 1: TYPES & INTERFACES
@@ -285,7 +286,7 @@ function delay(ms: number): Promise<void> {
 // SECTION 4: API CLIENT CLASS
 // ============================================================================
 
-class ApiClient {
+export class ApiClient {
   private config: Required<ApiClientConfig>;
   private requestInterceptors: RequestInterceptor[] = [];
   private responseInterceptors: ResponseInterceptor<unknown>[] = [];
@@ -367,7 +368,10 @@ class ApiClient {
 
   private getAuthToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('auth_token');
+    const fromSession = sessionStorage.getItem('session_token');
+    if (fromSession) return fromSession;
+    const match = document.cookie.match(/access_token=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
   }
 
   private getLanguage(): string | null {
@@ -640,6 +644,8 @@ class ApiClient {
       xhr.withCredentials = true;
 
       // Headers (without Content-Type — browser sets it with boundary)
+      // X-Requested-With est requis par le middleware CSRF (même bypass que les mutations JSON)
+      xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
       const csrfToken = this.getCsrfToken();
       if (csrfToken) xhr.setRequestHeader('X-CSRF-Token', csrfToken);
 
@@ -805,7 +811,7 @@ export const uploadApi = createApiClient({
  * Request interceptor that adds auth token from localStorage.
  */
 export const authRequestInterceptor: RequestInterceptor = (config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token = typeof window !== 'undefined' ? getStoredAccessToken() : null;
   if (token) {
     config.headers = {
       ...config.headers,
@@ -821,10 +827,9 @@ export const authRequestInterceptor: RequestInterceptor = (config) => {
 export const authResponseInterceptor: ResponseInterceptor<unknown> = (response) => {
   if (response.status === 401) {
     if (typeof window !== 'undefined') {
-      // Clear both localStorage token and the access_token cookie
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
+      sessionStorage.removeItem('session_token');
       document.cookie = 'access_token=; max-age=0; path=/';
+      document.cookie = 'refresh_token=; max-age=0; path=/';
       const authPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
       const currentPath = window.location.pathname;
       const isAuthPage = authPaths.some((path) => currentPath.startsWith(path));

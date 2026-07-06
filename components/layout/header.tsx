@@ -83,6 +83,7 @@ export function Header({ className }: HeaderProps) {
             >
               <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 overflow-hidden ${!user.avatar ? 'bg-secondary text-secondary-foreground' : ''}`}>
                 {user.avatar ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img src={user.avatar} alt="" className="h-full w-full object-cover" />
                 ) : (
                   (user.name || user.email || 'U')[0].toUpperCase()

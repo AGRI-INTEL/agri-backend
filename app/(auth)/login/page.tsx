@@ -552,6 +552,8 @@ function LoginForm() {
       </form>
 
       {/* ── Divider ── */}
+      {process.env.NEXT_PUBLIC_OAUTH_ENABLED === 'true' && (
+        <>
       <motion.div
         custom={5}
         variants={itemVariants}
@@ -589,7 +591,7 @@ function LoginForm() {
         />
       </motion.div>
 
-      {/* ── Social Login Buttons ── */}
+      
       <motion.div
         custom={6}
         variants={itemVariants}
@@ -677,6 +679,8 @@ function LoginForm() {
           <span>Microsoft</span>
         </button>
       </motion.div>
+      </>
+      )}
 
       {/* ── Register link ── */}
       <motion.div

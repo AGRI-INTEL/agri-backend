@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 import { toast } from 'sonner';
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -60,7 +61,7 @@ export function usePriceAlerts(status?: string) {
     queryFn: () => {
       const params: Record<string, string | number | boolean | undefined | null> = {};
       if (status) params.status = status;
-      return apiClient.get<PriceAlert[]>('/price-alerts', { params });
+      return apiClient.get<unknown>('/price-alerts', { params }).then((r) => ensureArray<PriceAlert>(r, 'alerts'));
     },
     staleTime: 10_000,
   });

@@ -2,113 +2,219 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, isBackendDown } from '@/lib/api-client';
+import { apiClient } from '@/lib/api-client';
 import type { Conversation, Message, LLMProvider } from '@/types/chatbot';
 import { toast } from 'sonner';
 
-const DEMO_RESPONSES: Record<string, string> = {
-  bonjour: 'Bonjour ! Je suis AgriBot, votre assistant agricole intelligent. Comment puis-je vous aider aujourd\'hui ?',
-  salut: 'Salut ! Comment puis-je vous aider ?',
-  météo: 'Pour consulter la météo agricole, rendez-vous dans la section Météo du tableau de bord.',
-  prix: 'Les prix des cultures varient selon les marchés. Consultez la section Indicateurs pour les données actualisées.',
-  culture: 'Je peux vous conseiller sur les cultures adaptées à votre région. De quelle culture souhaitez-vous parler ?',
-  engrais: 'Le choix d\'engrais dépend de votre sol et de votre culture. Je recommande une analyse de sol d\'abord.',
-  irrigation: 'L\'irrigation goutte-à-goutte est généralement la plus efficace pour les cultures maraîchères.',
-  default: 'Je suis votre assistant IA pour l\'agriculture intelligente. Posez-moi des questions sur la météo, les cultures, les prix, les engrais, l\'irrigation et plus encore !',
-};
+interface ChatResponse {
+  type: string;
+  message: string;
+  sql_query?: string | null;
+  data?: Record<string, unknown>[] | null;
+  provider?: string | null;
+  timestamp: string;
+  error: boolean;
+}
 
-const PROVIDER_ENDPOINTS: Record<string, string> = {
-  openai: '/chatbot/providers/openai',
-  openrouter: '/chatbot/providers/openrouter',
-  deepseek: '/chatbot/providers/deepseek',
-  demo: '/chatbot/messages',
-};
+function msgId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function userMsg(content: string, convId: string): Message {
+  return {
+    id: msgId(),
+    conversation_id: convId,
+    role: 'user',
+    content,
+    media_type: 'text',
+    status: 'sent',
+    created_at: new Date().toISOString(),
+  };
+}
+
+function asstMsg(r: ChatResponse, convId: string): Message {
+  return {
+    id: msgId(),
+    conversation_id: convId,
+    role: 'assistant',
+    content: r.message,
+    media_type: 'text',
+    status: 'read',
+    created_at: r.timestamp || new Date().toISOString(),
+    sql_query: r.sql_query || undefined,
+  };
+}
+
+function pendingMsg(convId: string): Message {
+  return {
+    id: `pending-${msgId()}`,
+    conversation_id: convId,
+    role: 'assistant',
+    content: '',
+    media_type: 'text',
+    status: 'streaming',
+    created_at: new Date().toISOString(),
+  };
+}
 
 export function useChatbot() {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [provider, setProviderState] = useState<LLMProvider>('demo');
-  const [isDemoMode, setIsDemoMode] = useState(true);
+  const [provider, setProviderState] = useState<LLMProvider>('kimi');
   const qc = useQueryClient();
   const abortRef = useRef<AbortController | null>(null);
 
+  const { data: providerStatus } = useQuery({
+    queryKey: ['chatbot', 'status'],
+    queryFn: () =>
+      apiClient
+        .get<{
+          ai_enabled: boolean;
+          provider: string;
+          kimi_configured: boolean;
+          deepseek_configured: boolean;
+          openai_configured: boolean;
+        }>('/chatbot/status')
+        .catch(() => undefined),
+    retry: 1,
+    staleTime: 120_000,
+  });
+
   const { data: conversations } = useQuery({
     queryKey: ['chatbot', 'conversations'],
-    queryFn: () => apiClient.get<Conversation[]>('/chatbot/conversations').catch(() => []),
+    queryFn: () =>
+      apiClient.get<Conversation[]>('/chatbot/conversations').catch(() => []),
     retry: 1,
   });
 
   const { data: activeConversation, isLoading: convLoading } = useQuery({
     queryKey: ['chatbot', 'conversations', activeConversationId],
-    queryFn: () => apiClient.get<{ id: string; messages?: Message[] }>(`/chatbot/conversations/${activeConversationId}`).then(conv => ({
-      id: conv?.id || activeConversationId!,
-      messages: Array.isArray(conv?.messages) ? conv.messages : [],
-    } as Conversation)).catch(() => undefined),
+    queryFn: () =>
+      apiClient
+        .get<Conversation>(`/chatbot/conversations/${activeConversationId}`)
+        .then((c) => ({
+          ...c,
+          messages: Array.isArray(c?.messages) ? c.messages : [],
+        }))
+        .catch(() => undefined),
     enabled: !!activeConversationId,
     retry: 1,
   });
 
   const createConversation = useMutation({
-    mutationFn: () =>
-      apiClient.post<{ id: string }>('/chatbot/conversations').catch(() => ({
-        id: `demo-${Date.now()}`,
-      })),
+    mutationFn: () => apiClient.post<{ id: string }>('/chatbot/conversations'),
     onSuccess: (conv) => {
       qc.invalidateQueries({ queryKey: ['chatbot', 'conversations'] });
       setActiveConversationId(conv.id);
     },
+    onError: () => toast.error('Impossible de créer une nouvelle conversation'),
   });
 
   const sendMessage = useMutation({
-    mutationFn: async ({ content: msgContent, convId }: { content: string; convId: string }) => {
-      if (isBackendDown() || isDemoMode) {
-        await new Promise((r) => setTimeout(r, 800));
-        const lower = msgContent.toLowerCase();
-        let reply = DEMO_RESPONSES.default;
-        for (const [key, val] of Object.entries(DEMO_RESPONSES)) {
-          if (lower.includes(key)) { reply = val; break; }
-        }
-        return { id: `msg-${Date.now()}`, content: reply, role: 'assistant', created_at: new Date().toISOString() } as unknown as Message;
-      }
-
+    mutationFn: async ({
+      content,
+      convId,
+    }: {
+      content: string;
+      convId: string;
+    }) => {
       abortRef.current?.abort();
       abortRef.current = new AbortController();
 
-      const endpoint = isDemoMode ? '/chatbot/messages' : PROVIDER_ENDPOINTS[provider] || '/chatbot/messages';
-      return apiClient.post<Message>(endpoint, {
-        content: msgContent,
-        conversation_id: convId,
-        provider: isDemoMode ? 'demo' : provider,
-      }, { signal: abortRef.current.signal }).catch((err) => {
-        if (err.name === 'AbortError') throw err;
-        const lower = msgContent.toLowerCase();
-        let reply = DEMO_RESPONSES.default;
-        for (const [key, val] of Object.entries(DEMO_RESPONSES)) {
-          if (lower.includes(key)) { reply = val; break; }
-        }
-        return { id: `msg-${Date.now()}`, content: reply, role: 'assistant', created_at: new Date().toISOString() } as unknown as Message;
-      });
+      const response = await apiClient.post<ChatResponse>(
+        '/chatbot/messages',
+        { content, conversation_id: convId, provider },
+        { signal: abortRef.current.signal },
+      );
+
+      if (!response || response.error) {
+        throw new Error(response?.message || 'Erreur de réponse du chatbot');
+      }
+      return { response, convId, content };
     },
-    onSuccess: (_, { convId }) => {
-      qc.invalidateQueries({ queryKey: ['chatbot', 'conversations', convId] });
+
+    onMutate: async ({ content, convId }) => {
+      await qc.cancelQueries({
+        queryKey: ['chatbot', 'conversations', convId],
+      });
+      const prev = qc.getQueryData<Conversation>([
+        'chatbot',
+        'conversations',
+        convId,
+      ]);
+
+      qc.setQueryData<Conversation>(
+        ['chatbot', 'conversations', convId],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            messages: [
+              ...old.messages,
+              userMsg(content, convId),
+              pendingMsg(convId),
+            ],
+            message_count: old.messages.length + 2,
+            updated_at: new Date().toISOString(),
+          };
+        },
+      );
+
+      return { prev };
+    },
+
+    onSuccess: ({ response, convId, content }, _vars, ctx) => {
+      const prev = ctx?.prev;
+      qc.setQueryData<Conversation>(
+        ['chatbot', 'conversations', convId],
+        (old) => {
+          if (!old) return old;
+          const withoutPending = old.messages.filter(
+            (m) => !m.id.startsWith('pending-'),
+          );
+          const assistant = asstMsg(response, convId);
+          const user = userMsg(content, convId);
+          return {
+            ...old,
+            messages: [...withoutPending, user, assistant],
+            message_count: withoutPending.length + 2,
+            updated_at: response.timestamp,
+          };
+        },
+      );
       qc.invalidateQueries({ queryKey: ['chatbot', 'conversations'] });
     },
-    onError: (e: Error) => {
-      if (e.name !== 'AbortError') toast.error('Erreur lors de l\'envoi du message');
+
+    onError: (e: Error, { convId }, ctx) => {
+      if (e.name === 'AbortError') return;
+      if (ctx?.prev) {
+        qc.setQueryData(['chatbot', 'conversations', convId], ctx.prev);
+      }
+      const msg =
+        e.message.includes('503') || e.message.includes('temporairement')
+          ? 'Le service est momentanément indisponible. Réessayez dans quelques instants.'
+          : e.message.includes('timeout')
+            ? 'Le délai d\'attente est dépassé. Vérifiez votre connexion.'
+            : e.message;
+      toast.error(msg);
     },
   });
 
   const sendTextMessage = useCallback(
     async (content: string) => {
-      const convId = activeConversationId ?? (await createConversation.mutateAsync()).id;
-      return sendMessage.mutateAsync({ content, convId });
+      const convId =
+        activeConversationId ??
+        (await createConversation.mutateAsync()).id;
+      await sendMessage.mutateAsync({ content, convId });
     },
     [activeConversationId, createConversation, sendMessage],
   );
 
   const sendMediaMessage = useCallback(
     async (content: string, _files: File[]) => {
-      const convId = activeConversationId ?? (await createConversation.mutateAsync()).id;
-      return sendMessage.mutateAsync({ content, convId });
+      const convId =
+        activeConversationId ??
+        (await createConversation.mutateAsync()).id;
+      await sendMessage.mutateAsync({ content, convId });
     },
     [activeConversationId, createConversation, sendMessage],
   );
@@ -118,24 +224,25 @@ export function useChatbot() {
     createConversation.mutate();
   }, [createConversation]);
 
-  const setProvider = useCallback((p: LLMProvider) => {
-    setProviderState(p);
-    setIsDemoMode(p === 'demo');
-  }, []);
+  const hasPending = (activeConversation?.messages ?? []).some((m) =>
+    m.id.startsWith('pending-'),
+  );
 
   return {
     conversations: conversations || [],
     activeConversation,
     activeConversationId,
     provider,
-    isDemoMode,
     isLoading: sendMessage.isPending || convLoading,
+    hasPending,
+    providerStatus,
     setActiveConversationId,
-    setProvider,
-    setIsDemoMode,
+    setProvider: setProviderState,
     sendTextMessage,
     sendMediaMessage,
     newConversation,
-    cancel: () => { abortRef.current?.abort(); },
+    cancel: () => {
+      abortRef.current?.abort();
+    },
   };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import {
   Users, UserCheck, Shield, Activity, Clock,
@@ -125,12 +125,17 @@ export function AdminDashboard({ activeSection }: AdminDashboardProps) {
   });
 
   // Debounce search
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
-    const timer = setTimeout(() => setDebouncedSearch(value), 400);
-    return () => clearTimeout(timer);
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(value), 400);
   };
+
+  useEffect(() => {
+    return () => clearTimeout(debounceTimer.current);
+  }, []);
 
   const handleFilterChange = (type: 'role' | 'status', value: string) => {
     if (type === 'role') setRoleFilter(value);

@@ -22,7 +22,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
-import { cn, formatRelativeDate } from '@/lib/utils';
+import { cn, formatRelativeDate, ensureArray } from '@/lib/utils';
 import { isBackendDown } from '@/lib/api-client';
 import EmojiPicker from 'emoji-picker-react';
 import {
@@ -330,7 +330,7 @@ function NewConversationDialog({ open, onOpenChange }: { open: boolean; onOpenCh
     timerRef.current = setTimeout(async () => {
       try {
         const { apiClient } = await import('@/lib/api-client');
-        const data = await apiClient.get<SearchUserResult[]>(`/messaging/users/search?q=${encodeURIComponent(query)}`);
+        const data = await apiClient.get<unknown>(`/messaging/users/search?q=${encodeURIComponent(query)}`).then((r) => ensureArray<SearchUserResult>(r, 'users'));
         setResults(data.filter((u) => u.id !== user?.id));
       } catch { setResults([]); }
       setLoading(false);

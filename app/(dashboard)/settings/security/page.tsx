@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -195,14 +195,20 @@ function EmailVerificationSection() {
   const { user } = useAuthStore();
   const resend = useResendVerification();
   const [countdown, setCountdown] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
+
+  useEffect(() => {
+    return () => clearInterval(countdownRef.current);
+  }, []);
 
   const handleResend = () => {
     resend.mutate();
     setCountdown(60);
-    const timer = setInterval(() => {
+    clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          clearInterval(timer);
+          clearInterval(countdownRef.current);
           return 0;
         }
         return prev - 1;

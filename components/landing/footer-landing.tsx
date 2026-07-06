@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Facebook, Twitter, Linkedin, Youtube, Mail, Phone, MapPin, ArrowUpRight } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
@@ -45,6 +46,13 @@ const SOCIAL_LINKS = [
   { label: 'LinkedIn', href: '#', icon: Linkedin },
   { label: 'YouTube', href: '#', icon: Youtube },
 ];
+
+/** Année courante côté client — évite l'année figée au build en static export. */
+function CurrentYear() {
+  const [year, setYear] = useState(2026);
+  useEffect(() => setYear(new Date().getFullYear()), []);
+  return <>{year}</>;
+}
 
 export function FooterLanding() {
   return (
@@ -163,7 +171,7 @@ export function FooterLanding() {
         <Separator className="my-10" style={{ background: 'rgba(232,224,204,0.07)' }} />
 
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between text-sm" style={{ color: '#4A6050' }}>
-          <p>© {new Date().getFullYear()} AgriIntel360. Tous droits réservés.</p>
+          <p>© <CurrentYear /> AgriIntel360. Tous droits réservés.</p>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             {/* Social links */}

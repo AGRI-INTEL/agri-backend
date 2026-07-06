@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/stores/auth-store';
 import { mapBackendUser } from '@/lib/user-mapper';
@@ -117,7 +118,7 @@ export function useVerify2FA() {
 export function useActiveSessions() {
   return useQuery({
     queryKey: ['auth', 'sessions'],
-    queryFn: () => apiClient.get<ActiveSession[]>('/auth/sessions'),
+    queryFn: () => apiClient.get<unknown>('/auth/sessions').then((r) => ensureArray<ActiveSession>(r, 'sessions')),
     staleTime: 30_000,
     throwOnError: false,
   });
@@ -255,6 +256,21 @@ export interface PreferencesData {
     show_email?: boolean;
     show_phone?: boolean;
   };
+
+  // Community
+  community?: CommunityPreferences;
+}
+
+export interface CommunityPreferences {
+  default_sort?: 'recent' | 'popular';
+  default_view?: 'grid' | 'list';
+  notify_new_posts?: boolean;
+  notify_comments?: boolean;
+  notify_mentions?: boolean;
+  notify_join_requests?: boolean;
+  notify_events?: boolean;
+  show_profile?: boolean;
+  allow_group_invites?: boolean;
 }
 
 export function useUpdatePreferences() {

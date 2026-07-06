@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 import type { Indicator, IndicatorHistory } from '@/types/indicator';
 import type { Sector } from '@/types/actor';
 
@@ -34,9 +35,9 @@ export function useIndicators(sector?: Sector, category?: string) {
   return useQuery({
     queryKey: ['indicators', sector, category],
     queryFn: () =>
-      apiClient.get<Indicator[]>('/indicators', {
+      apiClient.get<unknown>('/indicators', {
         params: { sector, category } as Record<string, string>,
-      }),
+      }).then((r) => ensureArray<Indicator>(r, 'indicators')),
     retry: false,
   });
 }
@@ -52,9 +53,9 @@ export function useIndicator(id: string) {
 export function useIndicatorHistory(id: string, period: 'monthly' | 'quarterly' | 'annual' = 'monthly') {
   return useQuery({
     queryKey: ['indicators', id, 'history', period],
-    queryFn: () => apiClient.get<IndicatorHistory[]>(`/indicators/${id}/history`, {
+    queryFn: () => apiClient.get<unknown>(`/indicators/${id}/history`, {
       params: { period },
-    }),
+    }).then((r) => ensureArray<IndicatorHistory>(r, 'history')),
     enabled: !!id,
   });
 }

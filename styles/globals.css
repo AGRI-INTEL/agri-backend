@@ -204,26 +204,42 @@
     color: #92400E;
   }
 
-  /* Severity colors */
+  /* Severity colors — dark-mode aware */
   .severity-info {
     border-left-width: 4px;
     border-left-color: #3B82F6;
     background-color: #EFF6FF;
+  }
+  .dark .severity-info {
+    background-color: hsl(217 91% 60% / 0.12);
+    border-left-color: hsl(217 91% 60%);
   }
   .severity-warning {
     border-left-width: 4px;
     border-left-color: #F59E0B;
     background-color: #FEF3C7;
   }
+  .dark .severity-warning {
+    background-color: hsl(38 92% 50% / 0.12);
+    border-left-color: hsl(38 92% 50%);
+  }
   .severity-critical {
     border-left-width: 4px;
     border-left-color: #F97316;
     background-color: #FFF7ED;
   }
+  .dark .severity-critical {
+    background-color: hsl(25 95% 53% / 0.12);
+    border-left-color: hsl(25 95% 53%);
+  }
   .severity-emergency {
     border-left-width: 4px;
     border-left-color: #DC2626;
     background-color: #FEE2E2;
+  }
+  .dark .severity-emergency {
+    background-color: hsl(0 72% 51% / 0.12);
+    border-left-color: hsl(0 72% 51%);
   }
 
   /* Gradient backgrounds */
@@ -291,12 +307,42 @@
     background-color: hsl(var(--border));
   }
 
-  /* Reduced motion */
+  /* Reduced motion — respect user OS setting */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* High contrast mode — WCAG 2.2 Level AAA */
+  @media (prefers-contrast: more) {
+    :root, .dark {
+      --border: var(--foreground);
+      --ring: var(--foreground);
+      --muted-foreground: var(--foreground);
+    }
+    .card-base {
+      border-width: 2px;
+    }
+    .focus-visible,
+    :focus-visible {
+      outline-width: 3px;
+      outline-offset: 3px;
+    }
+  }
+
+  /* Forced colors mode (Windows High Contrast) */
+  @media (forced-colors: active) {
+    .card-base,
+    .landing-card,
+    .landing-feature-card {
+      border: 2px solid CanvasText;
+    }
+    button:focus-visible,
+    a:focus-visible {
+      outline: 3px solid Highlight;
     }
   }
 

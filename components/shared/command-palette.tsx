@@ -87,6 +87,7 @@ export function CommandPalette() {
       setQuery('');
       setSearchResults([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   useEffect(() => {
@@ -181,6 +182,7 @@ export function CommandPalette() {
         navigate(searchResult.href);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [navigate, searchResults]
   );
 

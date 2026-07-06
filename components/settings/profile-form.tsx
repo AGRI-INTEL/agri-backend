@@ -8,10 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore, useAuthHydrated } from '@/stores/auth-store';
-import { mapBackendUser } from '@/lib/user-mapper';
 import { useUpdateProfile } from '@/hooks/use-auth';
+import { useUploadAvatar, useUploadCover } from '@/hooks/use-settings';
 import { CountrySelector } from '@/components/shared/country-selector';
-import { apiClient } from '@/lib/api-client';
 import Image from 'next/image';
 import { Camera, Upload, Check, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -29,15 +28,17 @@ interface ProfileFormValues {
 }
 
 export function ProfileForm() {
-  const { user, updateUser } = useAuthStore();
+  const { user } = useAuthStore();
   const hydrated = useAuthHydrated();
   const updateProfile = useUpdateProfile();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isUploadingCover, setIsUploadingCover] = useState(false);
+  const uploadAvatar = useUploadAvatar();
+  const uploadCover = useUploadCover();
+  const isUploadingAvatar = uploadAvatar.isPending;
+  const isUploadingCover = uploadCover.isPending;
 
   const { register, handleSubmit, setValue, reset } = useForm<ProfileFormValues>({
     defaultValues: {
@@ -85,22 +86,8 @@ export function ProfileForm() {
     reader.onload = (event) => setAvatarPreview(event.target?.result as string);
     reader.readAsDataURL(file);
 
-    // Upload réel
-    try {
-      setIsUploadingAvatar(true);
-      const fd = new FormData();
-      fd.append('avatar', file);
-      const updated = await apiClient.upload('/auth/avatar', fd);
-      if (updated && typeof updated === 'object') {
-        updateUser(mapBackendUser(updated as Record<string, unknown>));
-      }
-      toast.success('Photo de profil mise à jour');
-    } catch (err: unknown) {
-      const e = err as { message?: string };
-      toast.error(e?.message || "Erreur lors de l'upload de la photo");
-    } finally {
-      setIsUploadingAvatar(false);
-    }
+    // Upload réel — mutation partagée (met à jour le store + toasts)
+    uploadAvatar.mutate(file);
   };
 
   const handleCoverSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,21 +107,7 @@ export function ProfileForm() {
     reader.onload = (event) => setCoverPreview(event.target?.result as string);
     reader.readAsDataURL(file);
 
-    try {
-      setIsUploadingCover(true);
-      const fd = new FormData();
-      fd.append('cover', file);
-      const updated = await apiClient.upload('/auth/cover', fd);
-      if (updated && typeof updated === 'object') {
-        updateUser(mapBackendUser(updated as Record<string, unknown>));
-      }
-      toast.success('Photo de couverture mise à jour');
-    } catch (err: unknown) {
-      const e = err as { message?: string };
-      toast.error(e?.message || "Erreur lors de l'upload de la couverture");
-    } finally {
-      setIsUploadingCover(false);
-    }
+    uploadCover.mutate(file);
   };
 
   const onSubmit = (data: ProfileFormValues) => {

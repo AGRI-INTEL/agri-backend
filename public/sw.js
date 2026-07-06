@@ -1,6 +1,7 @@
-const CACHE_NAME = 'agriintel360-v2';
+const CACHE_NAME = 'agriintel360-v3';
 const IMAGE_CACHE = 'agriintel360-images-v1';
-const STATIC_CACHE = 'agriintel360-static-v1';
+const STATIC_CACHE = 'agriintel360-static-v2';
+const API_CACHE = 'agriintel360-api-v1';
 
 const PRECACHE_ASSETS = [
   '/',
@@ -11,7 +12,7 @@ const PRECACHE_ASSETS = [
   '/offline',
   '/offline.html',
   '/manifest.json',
-  '/fond-landscape.jpg',
+  '/fond-landscape.webp',
   '/logo.png',
   '/images/icons/vegetal.svg',
   '/images/icons/animal.svg',
@@ -28,7 +29,7 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-  const allowedCaches = [CACHE_NAME, IMAGE_CACHE, STATIC_CACHE];
+  const allowedCaches = [CACHE_NAME, IMAGE_CACHE, STATIC_CACHE, API_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) =>
       Promise.all(
@@ -65,8 +66,10 @@ self.addEventListener('fetch', (event) => {
 
   if (url.origin !== self.location.origin) return;
 
-  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/api/v1/')) {
-    event.respondWith(networkFirstWithTimeout(request, 30000));
+  if (url.pathname.startsWith('/api/')) {
+    // Ne jamais intercepter les mutations (cache.put sur un POST lève une exception)
+    if (request.method !== 'GET') return;
+    event.respondWith(apiNetworkFirst(request, 30000));
     return;
   }
 
@@ -140,7 +143,7 @@ async function imageCacheFirst(request) {
   }
 }
 
-async function networkFirstWithTimeout(request, timeoutMs) {
+async function apiNetworkFirst(request, timeoutMs) {
   const timeoutPromise = new Promise((_, reject) =>
     setTimeout(() => reject(new Error('Network timeout')), timeoutMs)
   );
@@ -148,11 +151,13 @@ async function networkFirstWithTimeout(request, timeoutMs) {
     const response = await Promise.race([fetch(request), timeoutPromise]);
     if (response.ok) {
       const clone = response.clone();
-      const cache = await caches.open(CACHE_NAME);
+      const cache = await caches.open(API_CACHE);
       cache.put(request, clone);
+      limitCacheSize(cache, 30);
     }
     return response;
   } catch {
+    // Hors-ligne uniquement : on sert la dernière réponse connue
     const cached = await caches.match(request);
     return cached || caches.match('/offline.html');
   }
@@ -199,7 +204,7 @@ self.addEventListener('periodicsync', (event) => {
 
 async function refreshDashboardData() {
   try {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(API_CACHE);
     const urls = [
       '/api/v1/dashboard/kpis',
       '/api/v1/dashboard/production',
@@ -220,7 +225,7 @@ async function refreshDashboardData() {
 
 async function refreshNotifications() {
   try {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(API_CACHE);
     const res = await fetch('/api/v1/notifications');
     if (res.ok) cache.put('/api/v1/notifications', res);
   } catch {

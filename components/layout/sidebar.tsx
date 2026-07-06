@@ -224,6 +224,7 @@ export function Sidebar() {
                 >
                   <div className={`h-7 w-7 rounded-full shrink-0 overflow-hidden flex items-center justify-center text-xs font-bold ${!user.avatar ? 'bg-secondary text-secondary-foreground' : ''}`}>
                     {user.avatar ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={user.avatar} alt="" className="h-full w-full object-cover" />
                     ) : (
                       (user.name || user.email || 'U')[0].toUpperCase()

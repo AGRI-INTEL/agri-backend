@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 import type { WeatherCurrent, WeatherForecast } from '@/types/weather';
 
 export function useWeather(city?: string, lat?: number, lng?: number) {
@@ -55,8 +56,8 @@ export function useWeatherAlerts(city?: string) {
   return useQuery({
     queryKey: ['weather', 'alerts', city],
     queryFn: () =>
-      apiClient.get<
-        Array<{
+      apiClient.get<unknown>('/weather/alerts', { params: { city } }).then((r) =>
+        ensureArray<{
           id: string;
           type: string;
           severity: 'minor' | 'moderate' | 'severe' | 'extreme';
@@ -65,8 +66,8 @@ export function useWeatherAlerts(city?: string) {
           start_time: string;
           end_time: string;
           areas: string[];
-        }>
-      >('/weather/alerts', { params: { city } }),
+        }>(r, 'alerts')
+      ),
     enabled: !!city,
     refetchInterval: 15 * 60 * 1000,
   });
@@ -76,9 +77,9 @@ export function useMultiCityWeather(cities: string[]) {
   return useQuery({
     queryKey: ['weather', 'multi', cities],
     queryFn: () =>
-      apiClient.get<WeatherCurrent[]>('/weather/multi', {
+      apiClient.get<unknown>('/weather/multi', {
         params: { cities: cities.join(',') },
-      }),
+      }).then((r) => ensureArray<WeatherCurrent>(r, 'locations')),
     enabled: cities.length > 0,
     refetchInterval: 10 * 60 * 1000,
     staleTime: 5 * 60 * 1000,

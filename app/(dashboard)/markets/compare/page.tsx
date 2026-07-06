@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import {
-  ShoppingCart, TrendingUp, TrendingDown, RefreshCw, ArrowRight,
+  TrendingUp, TrendingDown, RefreshCw,
   AlertTriangle, CheckCircle2, DollarSign, Store, BarChart3,
 } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';

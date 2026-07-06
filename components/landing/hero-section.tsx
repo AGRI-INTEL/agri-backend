@@ -108,7 +108,7 @@ export function HeroSection() {
       {/* ── Background image ── */}
       <div className="absolute inset-0" style={{ zIndex: 0 }}>
         <Image
-          src="/fond-landscape.jpg"
+          src="/fond-landscape.webp"
           alt=""
           fill
           priority

@@ -1,12 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
+import { ensureArray } from '@/lib/utils';
 import type { Conversation, PrivateMessage, SearchUserResult, PollData } from '@/types/messaging';
 
 export function useConversations(opts: { enabled?: boolean; refetchInterval?: number } = {}) {
   return useQuery({
     queryKey: ['conversations'],
-    queryFn: () => apiClient.get<Conversation[]>('/messaging/conversations'),
+    queryFn: () => apiClient.get<unknown>('/messaging/conversations').then((r) => ensureArray<Conversation>(r, 'conversations')),
     enabled: opts.enabled !== false,
     refetchInterval: (query) => {
       if (query.state.error) return false;
@@ -26,7 +27,7 @@ export function useConversation(conversationId: string | null, opts: { enabled?:
 export function useMessages(conversationId: string | null, opts: { enabled?: boolean; refetchInterval?: number } = {}) {
   return useQuery({
     queryKey: ['conversations', conversationId, 'messages'],
-    queryFn: () => apiClient.get<PrivateMessage[]>(`/messaging/conversations/${conversationId}/messages`),
+    queryFn: () => apiClient.get<unknown>(`/messaging/conversations/${conversationId}/messages`).then((r) => ensureArray<PrivateMessage>(r, 'messages')),
     enabled: !!conversationId && opts.enabled !== false,
     refetchInterval: (query) => {
       if (query.state.error) return false;
@@ -161,7 +162,7 @@ export function useUserOnline(userId: string | null) {
 export function useSearchUsers() {
   return useQuery({
     queryKey: ['messaging', 'users', 'search'],
-    queryFn: () => apiClient.get<SearchUserResult[]>('/messaging/users/search'),
+    queryFn: () => apiClient.get<unknown>('/messaging/users/search').then((r) => ensureArray<SearchUserResult>(r, 'users')),
     enabled: false,
   });
 }

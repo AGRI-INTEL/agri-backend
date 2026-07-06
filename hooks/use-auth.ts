@@ -64,9 +64,16 @@ export function useAuth() {
       setUser(mapBackendUser(data.user));
       toast.success('Connexion réussie !');
       // Redirect to the originally requested page if any (e.g. /community/groups/UUID)
-      const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-      const next = params?.get('next');
-      router.push(next && next.startsWith('/') ? decodeURIComponent(next) : '/dashboard');
+      const next = typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('next')
+        : null;
+      const target = next && next.startsWith('/') ? decodeURIComponent(next) : '/dashboard';
+      // Use window.location for dynamic routes (static export can't resolve router.push for these)
+      if (target.startsWith('/community/') || target.startsWith('/actors/') || target.startsWith('/alerts/')) {
+        window.location.href = target;
+      } else {
+        router.push(target);
+      }
     },
     onError: (error: { message: string }) => {
       toast.error(error.message || 'Identifiants incorrects');

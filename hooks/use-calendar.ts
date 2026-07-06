@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 
 export interface CalendarEvent {
   id: string;
@@ -45,9 +46,9 @@ export function useCalendarMonthData(crop: string, country: string, year: number
   return useQuery({
     queryKey: ['calendar', crop, country, year, month],
     queryFn: () =>
-      apiClient.get<CalendarEvent[]>(`/calendar/${crop}/${country}/${year}`, {
+      apiClient.get<unknown>(`/calendar/${crop}/${country}/${year}`, {
         params: month ? { month } : undefined,
-      }),
+      }).then((r) => ensureArray<CalendarEvent>(r, 'events')),
     enabled: !!crop && !!country && !!year,
     staleTime: 5 * 60 * 1000,
   });

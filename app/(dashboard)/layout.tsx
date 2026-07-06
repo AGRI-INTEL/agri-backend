@@ -23,7 +23,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [isAuthenticated, isLoading, router, pathname]);
 
-  if (isLoading || !isAuthenticated) return null;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0C1810' }}>
+        <div className="flex flex-col items-center gap-3" role="status" aria-live="polite">
+          <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) return null;
 
   return (
     <NotificationsProvider>
@@ -34,6 +45,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           '--sidebar-width': sidebarCollapsed ? '64px' : '240px',
         } as React.CSSProperties}
       >
+        {/* Skip-to-content for keyboard users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none"
+        >
+          Aller au contenu principal
+        </a>
+
         {/* Sidebar — desktop */}
         <div className="hidden lg:block">
           <Sidebar />
@@ -52,6 +71,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             'lg:pl-[var(--sidebar-width)]'
           )}
           id="main-content"
+          tabIndex={-1}
         >
           {children}
         </main>

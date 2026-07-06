@@ -981,6 +981,22 @@ export function getCountriesByRegionSorted(region: AfricanRegion): Country[] {
 // ============================================================================
 
 /**
+ * Garantit un tableau à partir d'une réponse API : accepte un tableau brut
+ * ou un objet enveloppé ({ items }, { data }, { results }, ou clés fournies).
+ * Retourne [] pour toute autre forme — élimine les crashs `.slice/.map is not a function`.
+ */
+export function ensureArray<T>(raw: unknown, ...keys: string[]): T[] {
+  if (Array.isArray(raw)) return raw as T[];
+  if (raw && typeof raw === 'object') {
+    for (const k of [...keys, 'items', 'data', 'results']) {
+      const v = (raw as Record<string, unknown>)[k];
+      if (Array.isArray(v)) return v as T[];
+    }
+  }
+  return [];
+}
+
+/**
  * Group an array of objects by a key.
  */
 export function groupBy<T>(array: T[], key: keyof T): Record<string, T[]> {

@@ -11,12 +11,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAlert, useMarkAlertRead } from '@/hooks/use-alerts';
 import { getAlertAge, getAlertTypeLabel } from '@/types/alert';
+import DOMPurify from 'dompurify';
 
 export default function AlertDetailClient({ params: _params }: { params: Promise<{ id: string }> }) {
   const pathname = usePathname();
   const id = pathname.split('/').pop() || '';
   const { data: alert, isLoading } = useAlert(id);
   const markRead = useMarkAlertRead();
+
+  const sanitizedBody = typeof window !== 'undefined' && alert?.body
+    ? DOMPurify.sanitize(alert.body, { ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre', 'code', 'hr', 'span', 'div', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'img', 'figure', 'figcaption'] })
+    : null;
 
   if (isLoading) {
     return (
@@ -55,7 +60,7 @@ export default function AlertDetailClient({ params: _params }: { params: Promise
             {alert.sector && <SectorBadge sector={alert.sector} />}
           </div>
           <p className="text-muted-foreground leading-relaxed">{alert.description}</p>
-          {alert.body && <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: alert.body }} />}
+          {sanitizedBody && <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: sanitizedBody }} />}
           <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
             <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{getAlertAge(alert)}</span>
             {(alert.city || alert.country) && (

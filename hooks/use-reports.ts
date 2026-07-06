@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export interface Report {
@@ -30,7 +31,7 @@ export interface ReportGenerateInput {
 export function useReports() {
   return useQuery({
     queryKey: ['reports'],
-    queryFn: () => apiClient.get<Report[]>('/reports'),
+    queryFn: () => apiClient.get<unknown>('/reports').then((r) => ensureArray<Report>(r, 'reports')),
     refetchInterval: (query) => {
       const hasPending = (query.state.data ?? []).some(
         (r: Report) => r.status === 'queued' || r.status === 'processing'

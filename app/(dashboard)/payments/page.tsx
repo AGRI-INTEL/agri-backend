@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import {
   CreditCard, CheckCircle2, XCircle, RefreshCw, Download, Plus,
-  Shield, Zap, Globe, Crown, ChevronRight, Clock,
-  Banknote, Phone, Building2, FileText,
+  Phone, Building2, FileText,
 } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -22,19 +21,6 @@ import {
 } from '@/hooks/use-payments';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-
-const FEATURE_ICONS: Record<string, React.ElementType> = {
-  shield: Shield,
-  zap: Zap,
-  globe: Globe,
-  crown: Crown,
-  users: Users,
-  database: FileText,
-  chart: RefreshCw,
-};
-
-function Users() { return null; }
-Users.displayName = 'Users';
 
 const FREE_FEATURES = [
   'Tableau de bord de base',

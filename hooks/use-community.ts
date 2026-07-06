@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 import type { Group, Post, Comment, Member } from '@/types/community';
 import type { PaginatedResponse } from '@/types/api';
 import { toast } from 'sonner';
@@ -265,8 +266,8 @@ export function useGroupMembers(groupId: string) {
   return useQuery({
     queryKey: ['groups', groupId, 'members'],
     queryFn: async () => {
-      const raw = await apiClient.get<any[]>(`/community/groups/${groupId}/members`);
-      return (raw || []).map(mapBackendMember);
+      const raw = await apiClient.get<unknown>(`/community/groups/${groupId}/members`);
+      return ensureArray<any>(raw, 'members').map(mapBackendMember);
     },
     enabled: isValidGroupId(groupId),
   });
@@ -314,8 +315,8 @@ export function useTrendingGroups() {
   return useQuery({
     queryKey: ['community', 'trending-groups'],
     queryFn: () =>
-      apiClient.get<Array<{ id: string; name: string; members_count: number; growth_percent: number }>>(
-        '/community/trending'
+      apiClient.get<unknown>('/community/trending').then((r) =>
+        ensureArray<{ id: string; name: string; members_count: number; growth_percent: number }>(r, 'groups')
       ),
     staleTime: 120_000,
     retry: false,
@@ -380,10 +381,10 @@ export function useTrendingPosts(limit = 10) {
   return useQuery({
     queryKey: ['community', 'trending-posts', limit],
     queryFn: async () => {
-      const raw = await apiClient.get<any[]>('/community/trending-posts', {
+      const raw = await apiClient.get<unknown>('/community/trending-posts', {
         params: { limit },
       });
-      return (raw || []).map(mapBackendPost);
+      return ensureArray<any>(raw, 'posts').map(mapBackendPost);
     },
     staleTime: 60_000,
     retry: false,
@@ -393,7 +394,7 @@ export function useTrendingPosts(limit = 10) {
 export function useGroupMessages(groupId: string, opts: { enabled?: boolean; refetchInterval?: number } = {}) {
   return useQuery({
     queryKey: ['groups', groupId, 'messages'],
-    queryFn: () => apiClient.get<any[]>(`/community/groups/${groupId}/messages`),
+    queryFn: () => apiClient.get<unknown>(`/community/groups/${groupId}/messages`).then((r) => ensureArray<any>(r, 'messages')),
     enabled: !!groupId && opts.enabled !== false,
     // Stop polling on error — prevents infinite 503 error storm when backend is down
     refetchInterval: (query) => {
@@ -525,7 +526,7 @@ export interface Meetup {
 export function useGroupMeetups(groupId: string) {
   return useQuery({
     queryKey: ['groups', groupId, 'meetups'],
-    queryFn: () => apiClient.get<Meetup[]>(`/community/groups/${groupId}/meetups`),
+    queryFn: () => apiClient.get<unknown>(`/community/groups/${groupId}/meetups`).then((r) => ensureArray<Meetup>(r, 'meetups')),
     enabled: !!groupId,
   });
 }
@@ -631,7 +632,7 @@ export function useJoinRequests(groupId: string, enabled: boolean = true) {
     queryKey: ['groups', groupId, 'join-requests'],
     queryFn: async () => {
       try {
-        return await apiClient.get<any[]>(`/community/groups/${groupId}/join-requests`);
+        return await apiClient.get<unknown>(`/community/groups/${groupId}/join-requests`).then((r) => ensureArray<any>(r, 'requests'));
       } catch {
         return [];
       }

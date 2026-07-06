@@ -16,19 +16,19 @@ function AuthCallbackContent() {
     const data = searchParams.get('data');
     if (data) {
       try {
-        const decoded = JSON.parse(atob(data));
+        let decoded;
+        try {
+          decoded = JSON.parse(atob(data));
+        } catch {
+          decoded = JSON.parse(atob(decodeURIComponent(data)));
+        }
         if (decoded.access_token) {
-          // Store tokens in localStorage + cookie
           persistAuthSession(
             decoded.access_token,
             decoded.refresh_token,
             3600
           );
 
-          // Sync Zustand auth store — without this, the persisted store still
-          // has isAuthenticated: false and the dashboard layout redirects to /login.
-          // mapBackendUser normalises the partial OAuth user object (id/email/username/full_name)
-          // into the full User shape; useAuth's /auth/me query will refresh it on next render.
           if (decoded.user) {
             useAuthStore.getState().setUser(mapBackendUser(decoded.user as Record<string, unknown>));
           }

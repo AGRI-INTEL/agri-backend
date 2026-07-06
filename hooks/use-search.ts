@@ -2,6 +2,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 
 export interface SearchResult {
   id: string;
@@ -19,9 +20,9 @@ export function useSearch() {
   const { data, isLoading } = useQuery({
     queryKey: ['search', query],
     queryFn: () =>
-      apiClient.get<SearchResult[]>('/search', {
+      apiClient.get<unknown>('/search', {
         params: { q: query, limit: 10 },
-      }),
+      }).then((r) => ensureArray<SearchResult>(r, 'results')),
     enabled: query.length >= 2,
   });
 

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 import type { FileItem, Folder } from '@/types/file';
 import { toast } from 'sonner';
 
@@ -12,7 +13,7 @@ import { toast } from 'sonner';
 export function useFolders() {
   return useQuery({
     queryKey: ['folders'],
-    queryFn: () => apiClient.get<Folder[]>('/files/folders'),
+    queryFn: () => apiClient.get<unknown>('/files/folders').then((r) => ensureArray<Folder>(r, 'folders')),
     staleTime: 60_000,
   });
 }
@@ -21,12 +22,12 @@ export function useFiles(folderId?: string, search?: string) {
   return useQuery({
     queryKey: ['files', folderId, search],
     queryFn: () =>
-      apiClient.get<FileItem[]>('/files', {
+      apiClient.get<unknown>('/files', {
         params: {
           folder_id: folderId || undefined,
           search: search || undefined,
         },
-      }),
+      }).then((r) => ensureArray<FileItem>(r, 'files')),
     staleTime: 30_000,
   });
 }
@@ -50,7 +51,7 @@ export function useRecentFiles(limit = 10) {
   return useQuery({
     queryKey: ['files', 'recent', limit],
     queryFn: () =>
-      apiClient.get<FileItem[]>('/files/recent', { params: { limit } }),
+      apiClient.get<unknown>('/files/recent', { params: { limit } }).then((r) => ensureArray<FileItem>(r, 'files')),
     staleTime: 30_000,
   });
 }

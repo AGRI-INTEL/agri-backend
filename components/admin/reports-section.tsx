@@ -22,7 +22,7 @@ import { apiClient } from '@/lib/api-client';
 import { useAdminStats } from '@/hooks/use-admin';
 import { exportAdminReportToPDF } from '@/lib/export-pdf';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, ensureArray } from '@/lib/utils';
 
 // ============================================================================
 // TYPES
@@ -128,7 +128,7 @@ const STATUS_CONFIG = {
 function useReportJobs() {
   return useQuery({
     queryKey: ['admin', 'reports'],
-    queryFn: () => apiClient.get<ReportJob[]>('/admin/reports'),
+    queryFn: () => apiClient.get<unknown>('/admin/reports').then((r) => ensureArray<ReportJob>(r, 'reports')),
     refetchInterval: 5000,
     staleTime: 3000,
   });

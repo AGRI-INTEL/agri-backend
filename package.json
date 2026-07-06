@@ -90,6 +90,7 @@
     "@testing-library/cypress": "^8.0.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "20.12.7",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

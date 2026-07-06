@@ -28,10 +28,7 @@ export type MessageStatus =
 export type LLMProvider =
   | 'kimi'       // Kimi K2.6 - Moonshot AI
   | 'deepseek'   // DeepSeek V3
-  | 'gpt4'       // GPT-4o - OpenAI
-  | 'claude'     // Claude 3.5 Sonnet
-  | 'gemini'     // Gemini 2.5 Pro
-  | 'demo';      // Demo / fallback mode
+  | 'openai';    // GPT-4o - OpenAI
 
 /**
  * Supported languages for the chatbot interface.
@@ -650,41 +647,14 @@ export const PROVIDER_INFO: Record<LLMProvider, {
     supports_vision: false,
     supports_tools: true,
   },
-  gpt4: {
-    name: 'GPT-4',
+  openai: {
+    name: 'GPT-4o',
     emoji: '🧠',
     description: 'GPT-4o - OpenAI',
     max_tokens: 128_000,
     supports_streaming: true,
     supports_vision: true,
     supports_tools: true,
-  },
-  claude: {
-    name: 'Claude',
-    emoji: '🧠',
-    description: 'Claude 3.5 Sonnet',
-    max_tokens: 200_000,
-    supports_streaming: true,
-    supports_vision: true,
-    supports_tools: true,
-  },
-  gemini: {
-    name: 'Gemini',
-    emoji: '🧠',
-    description: 'Gemini 2.5 Pro',
-    max_tokens: 1_000_000,
-    supports_streaming: true,
-    supports_vision: true,
-    supports_tools: true,
-  },
-  demo: {
-    name: 'Demo',
-    emoji: '🎮',
-    description: 'Mode démonstration',
-    max_tokens: 4_000,
-    supports_streaming: false,
-    supports_vision: false,
-    supports_tools: false,
   },
 };
 

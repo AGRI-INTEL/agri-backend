@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { ensureArray } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export interface Plan {
@@ -62,7 +63,7 @@ export function useCurrentSubscription() {
 export function usePlans() {
   return useQuery({
     queryKey: ['payments', 'plans'],
-    queryFn: () => apiClient.get<Plan[]>('/payments/plans'),
+    queryFn: () => apiClient.get<unknown>('/payments/plans').then((r) => ensureArray<Plan>(r, 'plans')),
     staleTime: 5 * 60_000,
   });
 }
@@ -70,14 +71,14 @@ export function usePlans() {
 export function useBillingHistory() {
   return useQuery({
     queryKey: ['payments', 'billing'],
-    queryFn: () => apiClient.get<BillingHistory[]>('/payments/billing'),
+    queryFn: () => apiClient.get<unknown>('/payments/billing').then((r) => ensureArray<BillingHistory>(r, 'billing')),
   });
 }
 
 export function usePaymentMethods() {
   return useQuery({
     queryKey: ['payments', 'methods'],
-    queryFn: () => apiClient.get<PaymentMethod[]>('/payments/methods'),
+    queryFn: () => apiClient.get<unknown>('/payments/methods').then((r) => ensureArray<PaymentMethod>(r, 'methods')),
   });
 }
 

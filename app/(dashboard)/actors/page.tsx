@@ -3,7 +3,7 @@
 import { useState, useMemo, useRef, useCallback, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, BadgeCheck, Star, RefreshCw, Download, FileText,
+  Users, UserX, BadgeCheck, Star, RefreshCw, Download, FileText,
   Upload, Trash2, ImageIcon, AlertTriangle, Activity, ChevronDown,
 } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -212,7 +212,7 @@ function ActorDetailPanel() {
           ) : actor ? (
             <ActorDetailView actor={actor} />
           ) : (
-            <EmptyState icon="👤" title="Acteur introuvable" description="Cet acteur n'existe pas ou a été supprimé." />
+            <EmptyState icon={UserX} title="Acteur introuvable" description="Cet acteur n'existe pas ou a été supprimé." />
           )}
         </div>
       </div>

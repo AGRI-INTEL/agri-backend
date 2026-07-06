@@ -10,7 +10,7 @@ export default function HalieutiquePage() {
       description="Pêcheurs, flotte et ressources halieutiques"
       icon={Fish}
       color="#0891B2"
-      backgroundImage="/images/sectors/halieutique.jpg"
+      backgroundImage="/images/sectors/halieutique.webp"
     />
   );
 }

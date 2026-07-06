@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
-import { formatRelativeDate } from '@/lib/utils';
+import { formatRelativeDate, ensureArray } from '@/lib/utils';
 import { StatsCards } from '@/components/dashboard/stats-cards';
 import { ProductionChart } from '@/components/dashboard/production-chart';
 import { WeatherWidget } from '@/components/dashboard/weather-widget';
@@ -66,6 +66,43 @@ const ACTIVITY_COLORS: Record<string, string> = {
   event_joined: '#60A5FA',
   post_bookmarked: '#F87171',
 };
+
+/**
+ * Le backend renvoie `{ activity: [...], total, limit, offset }` avec des items
+ * au format `{ user, target, timestamp, action }` — on normalise vers ActivityItem
+ * pour garantir un tableau (évite `activity.slice is not a function`).
+ */
+function normalizeActivity(raw: unknown): ActivityItem[] {
+  const anyRaw = raw as Record<string, unknown> | unknown[] | null | undefined;
+  const list = Array.isArray(anyRaw)
+    ? anyRaw
+    : ((anyRaw as Record<string, unknown>)?.activity ??
+       (anyRaw as Record<string, unknown>)?.items ??
+       (anyRaw as Record<string, unknown>)?.data ??
+       []);
+  if (!Array.isArray(list)) return [];
+  return list.map((entry) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const it = entry as Record<string, any>;
+    const type = it.type === 'comment_created' ? 'post_commented' : (it.type ?? 'post_created');
+    const actor = it.actor ?? {
+      id: String(it.user?.id ?? ''),
+      name: it.user?.full_name || it.user?.username || 'Un membre',
+      avatar: it.user?.avatar_url ?? undefined,
+      role: '',
+    };
+    const postContent = it.post?.content ?? it.target?.title ?? it.target?.content_preview;
+    const groupName = it.group?.name ?? it.target?.group_name;
+    return {
+      id: String(it.id ?? ''),
+      type,
+      actor,
+      post: postContent ? { content: postContent } : undefined,
+      group: groupName ? { name: groupName } : undefined,
+      created_at: it.created_at ?? it.timestamp ?? '',
+    } as unknown as ActivityItem;
+  });
+}
 
 function useGreeting() {
   const [time, setTime] = useState<Date | null>(null);
@@ -149,12 +186,12 @@ export function DashboardOverview() {
 
   const { data: production, isLoading: productionLoading } = useQuery({
     queryKey: ['dashboard', 'production'],
-    queryFn: () => apiClient.get<ProductionDataPoint[]>('/dashboard/production'),
+    queryFn: () => apiClient.get<unknown>('/dashboard/production').then((r) => ensureArray<ProductionDataPoint>(r, 'production')),
   });
 
   const { data: activity, isLoading: activityLoading } = useQuery({
     queryKey: ['community', 'activity'],
-    queryFn: () => apiClient.get<ActivityItem[]>('/community/activity'),
+    queryFn: async () => normalizeActivity(await apiClient.get<unknown>('/community/activity')),
     refetchInterval: 30_000,
   });
 
@@ -174,7 +211,7 @@ export function DashboardOverview() {
       <div className="relative overflow-hidden bg-background">
         <div className="absolute inset-0 z-0">
           <Image
-            src="/fond-landscape.jpg"
+            src="/fond-landscape.webp"
             alt=""
             fill
             priority
@@ -385,7 +422,7 @@ export function DashboardOverview() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-foreground">
-                          <span className="font-semibold">{item.actor.name}</span>
+                          <span className="font-semibold">{item.actor?.name || 'Un membre'}</span>
                           {' '}{actionLabel}
                           {targetName ? (
                             <span className="text-muted-foreground/80"> {targetName}</span>

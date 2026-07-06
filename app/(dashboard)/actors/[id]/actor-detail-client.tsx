@@ -7,6 +7,7 @@ import { LoadingSkeleton } from '@/components/shared/loading-skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { useActor } from '@/hooks/use-actors';
 import type { ActorRow } from '@/components/actors/actor-card';
+import { UserX } from 'lucide-react';
 
 export default function ActorDetailClient(_: { params: Promise<{ id: string }> }) {
   // In static export, params always contains the build-time value ('_').
@@ -20,7 +21,7 @@ export default function ActorDetailClient(_: { params: Promise<{ id: string }> }
   if (!id || id === '_') {
     return (
       <PageWrapper>
-        <EmptyState icon="👤" title="Acteur introuvable" description="Identifiant d'acteur invalide." />
+        <EmptyState icon={UserX} title="Acteur introuvable" description="Identifiant d'acteur invalide." />
       </PageWrapper>
     );
   }
@@ -36,7 +37,7 @@ export default function ActorDetailClient(_: { params: Promise<{ id: string }> }
   if (!actor) {
     return (
       <PageWrapper>
-        <EmptyState icon="👤" title="Acteur introuvable" description="Cet acteur n'existe pas ou a été supprimé." />
+        <EmptyState icon={UserX} title="Acteur introuvable" description="Cet acteur n'existe pas ou a été supprimé." />
       </PageWrapper>
     );
   }

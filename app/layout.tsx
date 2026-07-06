@@ -15,7 +15,7 @@ const inter = localFont({
   ],
   variable: '--font-inter',
   display: 'swap',
-  preload: true,
+  preload: false,
 });
 
 const playfair = localFont({
@@ -27,7 +27,9 @@ const playfair = localFont({
   ],
   variable: '--font-display',
   display: 'swap',
-  preload: true,
+  // Police décorative (titres) : chargée à la demande pour éviter les
+  // warnings "preloaded but not used" sur les pages qui ne l'affichent pas d'emblée
+  preload: false,
 });
 
 const mono = localFont({

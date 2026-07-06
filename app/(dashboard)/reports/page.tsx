@@ -7,18 +7,17 @@ import {
   CheckCircle2, Clock, XCircle, Loader2, BarChart3,
 } from 'lucide-react';
 import { PageWrapper } from '@/components/layout/page-wrapper';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api-client';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn, formatDate, formatFileSize } from '@/lib/utils';
 import {
   useReports, useGenerateReport, useDownloadReport, useDeleteReport,
@@ -217,7 +216,7 @@ export default function ReportsPage() {
   const { data, isLoading, isError, refetch, isFetching } = useReports();
   const downloadReport = useDownloadReport();
   const deleteReport = useDeleteReport();
-  const qc = useQueryClient();
+  const _qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
 

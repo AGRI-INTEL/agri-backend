@@ -10,7 +10,7 @@ export default function ProductionPage() {
       description="Producteurs, cultures et superficies agricoles"
       icon={Sprout}
       color="#16A34A"
-      backgroundImage="/images/sectors/vegetal.jpg"
+      backgroundImage="/images/sectors/vegetal.webp"
     />
   );
 }

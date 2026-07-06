@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   Bell, CheckCheck, AlertTriangle, AlertCircle, Info,
-  RefreshCw, Zap,
+  RefreshCw, Zap, BellOff,
   Eye, CheckCircle, ShieldAlert,
 } from 'lucide-react';
 import { motion } from '@/lib/motion';
@@ -50,13 +50,7 @@ const STAT_CARDS = [
 export default function AlertsPage() {
   const [filters, setFilters] = useState<AlertFilters>({ limit: 50 });
   const [activeView, setActiveView] = useState<'all' | 'unread' | 'critical'>('all');
-  const [mounted, setMounted] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    setLastUpdate(new Date());
-  }, []);
 
   const { data, isLoading, refetch, isFetching } = useAlerts(filters);
   const { data: statsData, isLoading: statsLoading } = useAlertStats();
@@ -131,7 +125,7 @@ export default function AlertsPage() {
                 <span>Centre de surveillance en temps réel</span>
                 <span className={cn('h-2 w-2 rounded-full', isFetching ? 'bg-yellow-300 animate-pulse' : 'bg-green-300 animate-pulse')} />
                 <span className="text-white/50">
-                  {mounted && lastUpdate ? lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '...'}
+                  {lastUpdate ? lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '...'}
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3">
@@ -300,7 +294,7 @@ export default function AlertsPage() {
 
         {/* ── View tabs ── */}
         <div className="flex flex-col gap-3">
-          <div className="flex gap-1 border-b border-border">
+          <div className="flex gap-1 border-b border-border" role="tablist" aria-label="Filtre des alertes">
             {[
               { id: 'all', label: 'Toutes', count: allAlerts.length },
               { id: 'unread', label: 'Non lues', count: unreadCount },
@@ -308,6 +302,9 @@ export default function AlertsPage() {
             ].map((tab) => (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={activeView === tab.id}
+                aria-controls={`alerts-panel-${tab.id}`}
                 onClick={() => setActiveView(tab.id as typeof activeView)}
                 className={cn(
                   'flex items-center gap-1.5 px-4 py-2.5 border-b-2 text-sm font-medium transition-colors',
@@ -332,12 +329,12 @@ export default function AlertsPage() {
         </div>
 
         {/* ── Alerts List ── */}
-        <div className="space-y-2">
+        <div className="space-y-2" role="tabpanel" id={`alerts-panel-${activeView}`}>
           {isLoading ? (
             <LoadingSkeleton variant="card" count={5} />
           ) : alerts.length === 0 ? (
             <EmptyState
-              icon="🔔"
+              icon={BellOff}
               title={activeView === 'unread' ? 'Aucune alerte non lue' : activeView === 'critical' ? 'Aucune alerte critique' : 'Aucune alerte'}
               description="Vous serez notifié ici dès qu'un événement important survient."
             />

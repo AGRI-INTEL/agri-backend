@@ -1,8 +1,16 @@
-// NOTE: In static export mode (output: 'export'), Next.js middleware is ignored entirely.
-// These guards only apply during `next dev` / `next start`. In production, the SPA
-// handles auth checks client-side via Zustand + API client circuit breaker.
+// NOTE: In static export mode (output: 'export'), Next.js middleware is IGNORED entirely.
+// These guards only apply during `next dev` / `next start` (non-export modes).
+// In production (static export + Apache/PHP), auth is handled client-side:
+//   - Zustand auth-store.ts (persisted to localStorage)
+//   - API client circuit breaker (lib/api-client.ts)
+//   - Route guards in layout.tsx and page-level client components
+//
+// This file is kept for development convenience only.
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+
+// Skip all middleware when running static export (set in next.config.ts)
+const IS_STATIC_EXPORT = process.env.NEXT_STATIC_EXPORT === 'true';
 
 const PROTECTED_ROUTES = [
   '/dashboard', '/production', '/animal', '/halieutique', '/forestier',
@@ -24,15 +32,16 @@ function isAuthRoute(pathname: string): boolean {
 }
 
 export function middleware(request: NextRequest) {
+  // Short-circuit in static export: all auth happens client-side
+  if (IS_STATIC_EXPORT) {
+    return NextResponse.next();
+  }
+
   const { pathname } = request.nextUrl;
 
-  // Security note:
-  // We intentionally avoid decoding/parsing JWT payloads in middleware.
-  // Without server-side signature verification, treating a client-controlled cookie
-  // as an authenticated session is unsafe.
   const token = request.cookies.get('access_token')?.value;
   const authToken = request.cookies.get('auth_token')?.value;
-  const isAuthenticated = Boolean(token || authToken) && Boolean(token?.trim().length || authToken?.trim().length);
+  const isAuthenticated = Boolean(token || authToken);
 
   if (isAuthRoute(pathname) && isAuthenticated) {
     return NextResponse.redirect(new URL('/', request.url));
