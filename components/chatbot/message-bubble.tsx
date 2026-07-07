@@ -5,7 +5,6 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ThumbsUp, ThumbsDown, RotateCcw, Copy, Share2, Bot, Check, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { formatRelativeDate, cn } from '@/lib/utils';
 import type { Message } from '@/types/chatbot';
 
@@ -31,7 +30,7 @@ function CodeBlock({ language, code }: { language?: string; code: string }) {
   );
 }
 
-export function MessageBubble({ message, onRegenerate, userName = 'Vous' }: MessageBubbleProps) {
+export function MessageBubble({ message, onRegenerate, userName: _userName = 'Vous' }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const [copied, setCopied] = useState(false);
 

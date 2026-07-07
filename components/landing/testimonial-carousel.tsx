@@ -95,6 +95,7 @@ export function TestimonialCarousel() {
     <section
       className="py-24 px-4 scroll-mt-20 relative overflow-hidden bg-background border-t border-b border-border/20"
       id="temoignages"
+      data-community-section
       aria-labelledby="testimonials-heading"
     >
       {/* Subtle ambient bloom */}

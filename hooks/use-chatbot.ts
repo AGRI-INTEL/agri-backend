@@ -123,7 +123,7 @@ export function useChatbot() {
       const response = await apiClient.post<ChatResponse>(
         '/chatbot/messages',
         { content, conversation_id: convId, provider },
-        { signal: abortRef.current.signal },
+        { signal: abortRef.current.signal, timeout: 120000 },
       );
 
       if (!response || response.error) {
@@ -210,11 +210,36 @@ export function useChatbot() {
   );
 
   const sendMediaMessage = useCallback(
-    async (content: string, _files: File[]) => {
+    async (content: string, files: File[]) => {
       const convId =
         activeConversationId ??
         (await createConversation.mutateAsync()).id;
-      await sendMessage.mutateAsync({ content, convId });
+
+      let enrichedContent = content;
+
+      if (files.length > 0) {
+        for (const file of files) {
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('question', content);
+
+            const result = await apiClient.upload<{
+              status: string;
+              analysis?: string;
+              ai_powered?: boolean;
+            }>('/chatbot/analyze-image', formData, { timeout: 120000 });
+
+            if (result.analysis) {
+              enrichedContent += `\n\n[Analyse d'image: ${file.name}]\n${result.analysis}`;
+            }
+          } catch {
+            enrichedContent += `\n\n[Image: ${file.name}] (analyse indisponible)`;
+          }
+        }
+      }
+
+      await sendMessage.mutateAsync({ content: enrichedContent, convId });
     },
     [activeConversationId, createConversation, sendMessage],
   );

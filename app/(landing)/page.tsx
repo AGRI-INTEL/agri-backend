@@ -4,7 +4,7 @@ import { AnimatedStatsBar } from '@/components/landing/stats-bar';
 import { FeaturesGrid } from '@/components/landing/features-grid';
 import { SectorShowcase } from '@/components/landing/sector-showcase';
 import { DemoSection } from '@/components/landing/demo-section';
-import { TestimonialCarousel } from '@/components/landing/testimonial-carousel';
+import { CommunitySection } from '@/components/landing/community-section';
 import { PricingCards } from '@/components/landing/pricing-cards';
 import { CTABanner } from '@/components/landing/cta-banner';
 
@@ -59,7 +59,7 @@ export default function LandingPage() {
       <FeaturesGrid />
       <SectorShowcase />
       <DemoSection />
-      <TestimonialCarousel />
+      <CommunitySection />
       <PricingCards />
       <CTABanner />
     </>

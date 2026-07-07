@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from '@/lib/motion';
 import {
   Send, Paperclip, Camera, Plus, Bot, Sparkles, TrendingUp,
-  Cloud, DollarSign, Calendar, HelpCircle, X, Loader2,
+  Cloud, DollarSign, Calendar, HelpCircle, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -132,10 +132,10 @@ export function ChatInterface() {
     e.target.value = '';
   };
 
-  const handleVoiceSend = async (blob: Blob) => {
-    const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
-    await sendMediaMessage('', [file]);
-  };
+  // const handleVoiceSend = async (blob: Blob) => {
+  //   const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
+  //   await sendMediaMessage('', [file]);
+  // };
 
   const canSend = (input.trim().length > 0 || pendingFiles.length > 0) && !isLoading;
 
